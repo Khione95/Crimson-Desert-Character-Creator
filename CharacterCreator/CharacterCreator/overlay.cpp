@@ -8,6 +8,7 @@
 #include <d3dcompiler.h>
 #include <dxgi1_4.h>
 #include <wincodec.h>
+#include <tlhelp32.h>
 
 #include "MinHook.h"
 
@@ -1023,8 +1024,152 @@ static void OnSwapChainCreated(IUnknown* device, IUnknown* swapChain)
     chain3->Release();
 }
 
+// ---------------------------------------------------------------------------
+// Diagnostics: who owns the swap chain creation functions. Another overlay mod
+// that hooks the same functions (Master Looter did) shows up here: the first
+// bytes of each entry and where a jump there leads, before and after this
+// plugin hooks, where this plugin's hook passes the call on to, and which
+// function the game actually calls.
+// ---------------------------------------------------------------------------
+
+static const char* const CREATE_NAMES[] = { "CreateSwapChain", "CreateSwapChainForHwnd", "CreateSwapChainForCoreWindow",
+                                            "CreateSwapChainForComposition" };
+static const int CREATE_SLOTS[] = { 10, 15, 16, 24 };
+static void* g_createEntries[4];
+
+static void ModuleOf(const void* p, char* out, size_t size)
+{
+    HMODULE module = NULL;
+    char path[MAX_PATH];
+
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            (LPCSTR)p, &module) && module && GetModuleFileNameA(module, path, MAX_PATH))
+    {
+        const char* name = strrchr(path, '\\');
+        strcpy_s(out, size, name ? name + 1 : path);
+    }
+    else
+    {
+        strcpy_s(out, size, "no module");
+    }
+}
+
+// Where a jump at p leads, or NULL (E9 rel32, EB rel8, FF 25 [rip], mov rax / jmp rax).
+static const BYTE* JumpTarget(const BYTE* b)
+{
+    if (b[0] == 0xE9)
+        return b + 5 + *(const INT32*)(b + 1);
+    if (b[0] == 0xEB)
+        return b + 2 + *(const INT8*)(b + 1);
+    if (b[0] == 0xFF && b[1] == 0x25)
+        return *(const BYTE* const*)(b + 6 + *(const INT32*)(b + 2));
+    if (b[0] == 0x48 && b[1] == 0xB8 && b[10] == 0xFF && b[11] == 0xE0)
+        return *(const BYTE* const*)(b + 2);
+    return NULL;
+}
+
+static void DescribeCode(const char* what, const void* p)
+{
+    char line[512];
+    int len = 0;
+
+    __try
+    {
+        const BYTE* b = (const BYTE*)p;
+        char module[64];
+        ModuleOf(b, module, sizeof(module));
+        len += sprintf_s(line + len, sizeof(line) - len, "%s @ %p in %s:", what, p, module);
+
+        for (int i = 0; i < 12; ++i)
+            len += sprintf_s(line + len, sizeof(line) - len, " %02X", b[i]);
+
+        // Follow a chain of jumps (hooks stacked on each other).
+        for (int hop = 0; hop < 5 && b; ++hop)
+        {
+            const BYTE* next = JumpTarget(b);
+
+            if (!next || next == b)
+                break;
+
+            ModuleOf(next, module, sizeof(module));
+            len += sprintf_s(line + len, sizeof(line) - len, " -> %p (%s)", next, module);
+            b = next;
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        len += sprintf_s(line + len, sizeof(line) - len, " (unreadable)");
+    }
+
+    Log("overlay diag: %s", line);
+}
+
+static void DescribeCreationEntries(const char* when)
+{
+    Log("overlay diag: swap chain creation entries %s", when);
+
+    for (int i = 0; i < 4; ++i)
+        if (g_createEntries[i])
+            DescribeCode(CREATE_NAMES[i], g_createEntries[i]);
+}
+
+static void LogLoadedPlugins()
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+
+    if (snap == INVALID_HANDLE_VALUE)
+        return;
+
+    MODULEENTRY32 me = { sizeof(me) };
+    char list[1024] = "";
+
+    for (BOOL ok = Module32First(snap, &me); ok; ok = Module32Next(snap, &me))
+    {
+        char name[MAX_PATH];
+        size_t converted = 0;
+        wcstombs_s(&converted, name, me.szModule, _TRUNCATE);
+        const char* dot = strrchr(name, '.');
+
+        // Plugins, and system libraries loaded from the game folder (proxies).
+        bool plugin = dot && _stricmp(dot, ".asi") == 0;
+        char folder[MAX_PATH];
+        wcstombs_s(&converted, folder, me.szExePath, _TRUNCATE);
+        _strlwr_s(folder);
+        bool proxy = (_stricmp(name, "dxgi.dll") == 0 || _stricmp(name, "d3d12.dll") == 0 || _stricmp(name, "winmm.dll") == 0 ||
+                      _stricmp(name, "version.dll") == 0 || _stricmp(name, "dinput8.dll") == 0) && !strstr(folder, "\\system32\\");
+
+        if ((plugin || proxy) && strlen(list) + strlen(name) + 3 < sizeof(list))
+        {
+            strcat_s(list, " ");
+            strcat_s(list, name);
+            if (proxy)
+                strcat_s(list, "(game folder)");
+        }
+    }
+
+    CloseHandle(snap);
+    Log("overlay diag: plugins loaded:%s", list[0] ? list : " none");
+}
+
+static volatile LONG g_createCalls = 0;
+
+static void NoteCreation(const char* how, UINT width, UINT height, HWND window)
+{
+    LONG n = InterlockedIncrement(&g_createCalls);
+
+    if (n > 6)
+        return;
+
+    Log("overlay diag: the game called %s (%ux%u, window %p)", how, width, height, window);
+
+    if (n == 1)
+        DescribeCreationEntries("when the game made its first swap chain");
+}
+
 static HRESULT STDMETHODCALLTYPE HookedCreateSwapChain(IDXGIFactory* self, IUnknown* device, DXGI_SWAP_CHAIN_DESC* desc, IDXGISwapChain** out)
 {
+    NoteCreation("CreateSwapChain", desc ? desc->BufferDesc.Width : 0, desc ? desc->BufferDesc.Height : 0,
+        desc ? desc->OutputWindow : NULL);
     HRESULT hr = g_originalCreateSwapChain(self, device, desc, out);
 
     if (SUCCEEDED(hr) && out && *out)
@@ -1036,6 +1181,7 @@ static HRESULT STDMETHODCALLTYPE HookedCreateSwapChain(IDXGIFactory* self, IUnkn
 static HRESULT STDMETHODCALLTYPE HookedCreateSwapChainForHwnd(IDXGIFactory2* self, IUnknown* device, HWND window,
     const DXGI_SWAP_CHAIN_DESC1* desc, const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* fullscreen, IDXGIOutput* output, IDXGISwapChain1** out)
 {
+    NoteCreation("CreateSwapChainForHwnd", desc ? desc->Width : 0, desc ? desc->Height : 0, window);
     HRESULT hr = g_originalCreateSwapChainForHwnd(self, device, window, desc, fullscreen, output, out);
 
     if (SUCCEEDED(hr) && out && *out)
@@ -1075,6 +1221,180 @@ static HRESULT CreateSystemFactory(IDXGIFactory2** factory)
     return create(__uuidof(IDXGIFactory2), (void**)factory);
 }
 
+// Other overlay mods (Master Looter, Steam's overlay, RivaTuner) hook the same
+// creation functions, often at the same moment on their own threads. Two mods
+// that each read the function before either writes its jump both pass calls on
+// to what they read, and whichever writes last silently drops the other. So:
+// the jump is only written if the function is still what was read, and until
+// the game has made its swap chain, a jump written over this plugin's is
+// chained back behind it.
+
+struct CreationHook
+{
+    BYTE* entry;
+    void** original;            // where this plugin's hook passes calls on to
+    const BYTE* relay;          // this plugin's jump target, once hooked
+    const BYTE* passedOnTo;     // the code this plugin passes calls on to
+    const char* name;
+};
+
+static CreationHook g_creationHooks[2];
+
+// Writes a jump at an entry that starts with a jump (Steam's overlay puts one
+// there), only if its first 8 bytes are still `expected`: one atomic
+// compare-and-swap, so another mod writing in the meantime makes it fail
+// instead of being overwritten. A single jump instruction needs no threads
+// paused: a thread is either before it or past it.
+static bool SwapJump(BYTE* entry, LONG64 expected, const BYTE* to)
+{
+    if (((ULONG_PTR)entry & 7) != 0 || (BYTE)expected != 0xE9)
+        return false;
+
+    LONG64 code = expected;
+    BYTE* bytes = (BYTE*)&code;
+    *(INT32*)(bytes + 1) = (INT32)(to - (entry + 5));
+
+    DWORD protect;
+
+    if (!VirtualProtect(entry, 8, PAGE_EXECUTE_READWRITE, &protect))
+        return false;
+
+    LONG64 before = InterlockedCompareExchange64((volatile LONG64*)entry, code, expected);
+    VirtualProtect(entry, 8, protect, &protect);
+    FlushInstructionCache(GetCurrentProcess(), entry, 8);
+    return before == expected;
+}
+
+static bool HookCreationEntry(CreationHook& hook, void* detour)
+{
+    for (int attempt = 0; attempt < 20; ++attempt)
+    {
+        LONG64 seen = *(volatile LONG64*)hook.entry;
+
+        if (MH_CreateHook(hook.entry, detour, hook.original) != MH_OK)
+            return false;
+
+        // MinHook's relay (the jump to the detour) follows the trampoline,
+        // which for an entry that is a jump is one 14-byte jmp [rip].
+        const BYTE* trampoline = (const BYTE*)*hook.original;
+        const BYTE* relay = trampoline + 14;
+        bool direct = trampoline[0] == 0xFF && trampoline[1] == 0x25 && relay[0] == 0xFF && relay[1] == 0x25 &&
+                      *(const INT32*)(relay + 2) == 0 && *(void* const*)(relay + 6) == detour;
+
+        if (direct ? SwapJump(hook.entry, seen, relay)
+                   : *(volatile LONG64*)hook.entry == seen && MH_EnableHook(hook.entry) == MH_OK)
+        {
+            hook.relay = direct ? relay : JumpTarget(hook.entry);
+            hook.passedOnTo = JumpTarget(trampoline);
+            return true;
+        }
+
+        // Not written, so removing only forgets the prepared hook.
+        Log("overlay: another mod hooked %s while this plugin was preparing - preparing again on top of it", hook.name);
+        MH_RemoveHook(hook.entry);
+        Sleep(10);
+    }
+
+    return false;
+}
+
+static bool HookCreationEntries(void* createSwapChain, void* createForHwnd)
+{
+    g_creationHooks[0] = { (BYTE*)createSwapChain, (void**)&g_originalCreateSwapChain, NULL, NULL, "CreateSwapChain" };
+    g_creationHooks[1] = { (BYTE*)createForHwnd, (void**)&g_originalCreateSwapChainForHwnd, NULL, NULL, "CreateSwapChainForHwnd" };
+
+    return HookCreationEntry(g_creationHooks[0], (void*)&HookedCreateSwapChain) &&
+           HookCreationEntry(g_creationHooks[1], (void*)&HookedCreateSwapChainForHwnd);
+}
+
+// Where a MinHook hook stacked over this plugin's passes its calls on to: its
+// relay (the entry's jump target) sits 14 bytes after its trampoline, which
+// for a hooked jump is a single jmp [rip].
+static const BYTE* MinHookPassesOnTo(const BYTE* relay)
+{
+    const BYTE* trampoline = relay - 14;
+
+    if (trampoline[0] == 0xFF && trampoline[1] == 0x25 && *(const INT32*)(trampoline + 2) == 0)
+        return *(const BYTE* const*)(trampoline + 6);
+
+    return NULL;
+}
+
+static void GuardCreationHook(CreationHook& hook)
+{
+    __try
+    {
+        LONG64 current = *(volatile LONG64*)hook.entry;
+        const BYTE* first = (BYTE)current == 0xE9 ? hook.entry + 5 + (INT32)(current >> 8) : JumpTarget(hook.entry);
+
+        if (!hook.relay || first == hook.relay)
+            return;
+
+        if (!first)
+        {
+            Log("overlay: another mod restored %s to its original code - this plugin's hook on it is gone", hook.name);
+            hook.relay = NULL;
+            return;
+        }
+
+        // A mod that stacked on top properly passes its calls on to this
+        // plugin's relay; one that read the function before this plugin
+        // hooked it passes them on to what this plugin passes them on to.
+        const BYTE* theirs = MinHookPassesOnTo(first);
+
+        if (theirs == hook.relay)
+        {
+            char module[64];
+            ModuleOf(JumpTarget(first), module, sizeof(module));
+            Log("overlay: %s hooked %s on top of this plugin - both run", module, hook.name);
+            hook.relay = NULL;
+            return;
+        }
+
+        if (!theirs || theirs != hook.passedOnTo)
+        {
+            Log("overlay: another mod rehooked %s in a way this plugin cannot follow - leaving it alone", hook.name);
+            hook.relay = NULL;
+            return;
+        }
+
+        // Their jump replaced this plugin's: put this plugin back in front and
+        // pass calls on to them, so both run.
+        void* passedOnBefore = *hook.original;
+        *hook.original = (void*)first;
+
+        if (!SwapJump(hook.entry, current, hook.relay))
+        {
+            *hook.original = passedOnBefore;    // changed again - looked at on the next pass
+            return;
+        }
+
+        char module[64];
+        ModuleOf(JumpTarget(first), module, sizeof(module));
+        Log("overlay: %s wrote its hook over this plugin's on %s - chained them: this plugin, then %s", module, hook.name, module);
+        hook.passedOnTo = first;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        hook.relay = NULL;
+    }
+}
+
+static DWORD WINAPI GuardCreationHooks(LPVOID)
+{
+    // Until the game has made its swap chain (the other mods hook in their
+    // first seconds too), at most a minute.
+    for (int i = 0; i < 60 * 40 && !g_swapChainHooked; ++i)
+    {
+        for (CreationHook& hook : g_creationHooks)
+            GuardCreationHook(hook);
+
+        Sleep(25);
+    }
+
+    return 0;
+}
+
 bool OverlayEarlyInit()
 {
     IDXGIFactory2* factory = NULL;
@@ -1088,14 +1408,16 @@ bool OverlayEarlyInit()
     void** vtable = *(void***)factory;
     void* createSwapChain = vtable[10];         // IDXGIFactory::CreateSwapChain
     void* createForHwnd = vtable[15];           // IDXGIFactory2::CreateSwapChainForHwnd
+    for (int i = 0; i < 4; ++i)
+        g_createEntries[i] = vtable[CREATE_SLOTS[i]];
     factory->Release();
+
+    LogLoadedPlugins();
+    DescribeCreationEntries("before this plugin hooks them");
 
     MH_STATUS init = MH_Initialize();    // other modules may have started MinHook already
 
-    if ((init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) ||
-        MH_CreateHook(createSwapChain, (void*)&HookedCreateSwapChain, (void**)&g_originalCreateSwapChain) != MH_OK ||
-        MH_CreateHook(createForHwnd, (void*)&HookedCreateSwapChainForHwnd, (void**)&g_originalCreateSwapChainForHwnd) != MH_OK ||
-        MH_EnableHook(createSwapChain) != MH_OK || MH_EnableHook(createForHwnd) != MH_OK)
+    if ((init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) || !HookCreationEntries(createSwapChain, createForHwnd))
     {
         Log("overlay: could not watch for the game's swap chain");
         return false;
@@ -1103,6 +1425,14 @@ bool OverlayEarlyInit()
 
     g_watching = true;
     Log("overlay: watching for the game's swap chain");
+    DescribeCreationEntries("after this plugin hooked CreateSwapChain and CreateSwapChainForHwnd");
+    DescribeCode("this plugin passes CreateSwapChain on to", (const void*)g_originalCreateSwapChain);
+    DescribeCode("this plugin passes CreateSwapChainForHwnd on to", (const void*)g_originalCreateSwapChainForHwnd);
+
+    HANDLE guard = CreateThread(NULL, 0, GuardCreationHooks, NULL, 0, NULL);
+    if (guard)
+        CloseHandle(guard);
+
     return true;
 }
 

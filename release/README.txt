@@ -1,4 +1,4 @@
-Character Creator 9.1.0 - Crimson Desert
+Character Creator 9.1.1 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,

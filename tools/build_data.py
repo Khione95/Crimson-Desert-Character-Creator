@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.0'
+VERSION = '9.1.1'
 DESCRIPTION = ('In-game appearance editor for Kliff, Damiane and Oongka (F6 / F7 / F8): gender, race, body, '
                'head, hair, beard, eyebrows, eye colour, tattoos, scars and paint. Needs CharacterCreator.asi.')
 
