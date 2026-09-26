@@ -1,0 +1,96 @@
+[spoiler=Legacy description (8.x - barber version)]
+[size=4][b]Description[/b][/size]
+Create your own character with deep customization options beyond the base game.
+This mod adds:
+• Head Presets
+• Body Types (Overweight, skinny etc.)
+• Face Details
+• Skin Color options
+• Many more added Hair and Beard options. More color options for Hair styles and Beards
+• Height (By editing a file)
+
+All customization is done through the barber.
+
+If you haven't unlocked the barber yet, you can use: [url=https://www.nexusmods.com/crimsondesert/mods/3301]Early Barber at Street Shops[/url]
+
+[b]🔹 How it works[/b]
+• The first tab is used for selecting Head Presets/Body Type/Face Details and Skin Colors. You can change your skin color from the Color sub tab of the first tab.
+• Press F6 to switch modes:
+  - Head Mode → choose face/head presets
+  - Body Mode → adjust body shape from the same tab
+  - Face Details Mode → adjust face details, some of them can even change eye color
+Press F6 while NOT in the first tab (e.g. while in Hair, Beard, etc.)
+
+[b]IMPORTANT WARNING[/b]
+Just like Barber Unlocked, this mod will create a dependency. If the hair that you choose from this mod becomes unavailable whether by another mod like Barber Unlocked or removal of this mod, the game will crash when you open the barber UI. To prevent this, make sure all the options in the barber UI are set to default slots (such as the first option for hair).
+
+[size=4][b]⚙️ Installation Instructions[/b][/size]
+[b]🔹 Requirements[/b]
+• [url=https://www.nexusmods.com/crimsondesert/mods/633]Definitive Mod Manager[/url]
+
+[b]🔹 Installation for [url=https://www.nexusmods.com/crimsondesert/mods/633]Definitive Mod Manager (DMM)[/url][/b]
+• Download the main mod
+• Move the "CharacterCreator.zip" zip into the "Mods" tab of the Definitive Mod Manager UI.
+• Choose your preferred race and gender from the dropdown menu and enable it.
+• Enable "FemaleAnimations" if you are playing as female.
+• (Optional) Install [url=https://www.nexusmods.com/crimsondesert/mods/3029]Character Creator - Female Armor Module[/url] if you are playing as a female character.
+• Go to the "ASI Mods" tab and enable "Character Creator".
+• Click on "Mount Mods"
+• Launch the game.
+(You might also need to click on Install version.dll in the ASI Mods tab.)
+
+[b]🔹 Height Customization[/b]
+The in-game Height options have been removed. Instead, you can manually set your character's height to any value you prefer.
+How to change your height:
+1. Navigate to: [code]Character Creator/(Preferred Race and Gender)/0009/character/appearance/1_pc/1_phm/cd_phm_macduff[/code]
+2. Open: [code]cd_phm_macduff_00000[/code]
+3. Find the following entry: [code]CharacterScale="??"[/code]
+4. Change the value to your desired height scale. For example: [code]CharacterScale="0.94"[/code] = default height for female human
+Increase the value to make your character taller, or decrease it to make your character shorter.
+If you are using the Face Fix optional file, do this from there since you will load it after.
+
+[b]BUG FIXES[/b]
+To fix the heels sinking bug, you can use: [url=https://www.nexusmods.com/crimsondesert/mods/3448]Female Kliff Heel Fix[/url]
+To fix the Greatsword broken out of combat dodge bug, you can use: [url=https://www.nexusmods.com/crimsondesert/mods/3477]Female Kliff Longsword Animation Fix[/url]
+Credits to [url=https://www.nexusmods.com/profile/sevnupp]sevnupp[/url]
+
+(See the Installation Video in the "Videos" tab. Outdated but you can get the idea.)
+
+[size=4][b]🎯 Usage[/b][/size]
+• Use F6 to switch between Head customization, Body customization and Face Detail customization.
+• Head, Body and Face Details are located in the first tab, but you cycle them by pressing F6.
+• Always switch outside the first tab to avoid crashes.
+
+[size=4][b]🗑️ Uninstall Instructions[/b][/size]
+To safely remove the mod without visual issues:
+1. Open the barber in-game
+2. Make sure you have access to the slots used by your custom character
+
+[b]🔹 Resetting your customization[/b]
+Assign your Head, Body, Face Details, Hair, Beard and (optional) Tattoos to a standard slot that Kliff can access.
+
+[b]Requirements[/b]
+[url=https://www.nexusmods.com/crimsondesert/mods/633]Definitive Mod Manager (DMM)[/url]
+[url=https://www.nexusmods.com/crimsondesert/mods/3029]Character Creator - Female Armor Module[/url] - if you are playing as a female character.
+
+[b]🔹 Important Notes[/b]
+• [s]Selecting a hairstyle may reset your skin color to some other color → You can fix this from the Color sub-tab in the first tab[/s]
+• If you select the female creator: starting a new game will load the female preset appearance (same for the races)
+• ❌ Not compatible with "Barber Unlocked" or any other mod that alters the barber UI or Kliff's model
+• [s]Your face will be blank until you choose a head preset with the barber.[/s]
+• If you are using the Female Animations module, it will change Kliff's crow flight to Damiane's gliding, but since the gliding effect relies on Damiane's shields you will not see the gliding effect. To fix this, you can use the [url=https://www.nexusmods.com/crimsondesert/mods/2571]Equip Everything[/url] mod and equip one of Damiane's shields. Equipping one of Kliff's shields will reset the effect, so you will need to re-equip one of Damiane's shields.
+[/spoiler]
+
+[size=4][b]Credits[/b][/size]
+• [url=https://www.nexusmods.com/profile/IamSlinky]Slinky[/url] - for the female animations (100% of it came from him), and CharacterCustomizationExtender, whose source and parameter map helped a lot
+• [url=https://www.nexusmods.com/profile/KevKStar]KevKStar[/url] - his Armor Swapper tool sped up my process significantly
+• [url=https://github.com/lazorr410/crimson-desert-unpacker]Lazorr[/url] for encryption and unpacker
+• [url=https://reshax.com/topic/18908-need-help-extracting-paz-pamt-files-from-crimson-desert-blackspace-engine/page/2/?&_rid=3118#findComment-103796]MrIkso[/url] for the patching guide
+• [url=https://www.nexusmods.com/crimsondesert/users/3465889]IzeDev[/url] for the awesome tool [url=https://www.nexusmods.com/crimsondesert/mods/84?tab=description]Crimson Browser[/url]
+• [url=https://www.nexusmods.com/profile/cracker]cracker[/url] for DMM
+• [url=https://www.nexusmods.com/profile/SoraSkySun]SoraSkySun[/url] for modding tools
+• [url=https://www.nexusmods.com/profile/tkhquang]tkhquang[/url] for helping me fix the NPC issues with the armors
+• [url=https://www.nexusmods.com/profile/AerowynX]AerowynX[/url] for DMM, general help and help with the NPC armor issue
+• [b]MinHook[/b] by Tsuda Kageyu (used by the 9.0 editor)
+
+If you like my mods, you can support me via:

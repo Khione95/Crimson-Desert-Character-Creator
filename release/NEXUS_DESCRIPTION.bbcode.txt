@@ -1,0 +1,73 @@
+[url=https://discord.gg/mdnVxNE3fw][size=4][b]DISCORD SERVER[/b][/size][/url]
+
+[size=5][b]Character Creator Enhanced[/b][/size]
+[b]An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere - no barber - and see every change live.[/b]
+
+Version 9.0 is a complete rewrite. The old version edited characters through the barber; this one has its own editor panel that works everywhere, for all three playable characters, with gender and race switching built in.
+
+[size=4][b]Features[/b][/size]
+• [b]Open anywhere[/b]: [b]F6[/b] Kliff, [b]F7[/b] Damiane, [b]F8[/b] Oongka
+• [b]Live preview[/b]: every change shows on the character at once, and is saved automatically - one look per character. Shop fitting and barber previews show your look too
+• [b]Gender and race[/b]: male or female, Human, Orc, Dwarf or Goblin - for each of the three characters. Kliff can also be [b]Female (male animations)[/b]: a female body that keeps his own animations, so his crow wings and two-handed swords work as usual
+• [b]Body[/b]: body shape, skin colour (with extra skin tones), skin shine
+• [b]Height[/b]: from -20% to +20%, previewed live
+• [b]Head[/b]: every head of the character's gender, from all four races
+• [b]Hair[/b]: every hair style of every race and gender, colour, length, shine
+• [b]Beard[/b]: every beard for every character (with a "None" option), colour, length
+• [b]Eyebrows[/b]: type, colour, length
+• [b]Face and body tattoos[/b]: type, colour, opacity, position, rotation and size
+• [b]Eye colour[/b]: 21 iris colours, from natural browns, blues and greens to red, gold, ice and cat eyes
+• [b]Scars[/b]: face and body, with colour, opacity, position and size
+• [b]Paint and dirt[/b]: face and body war paint and grime, with colour, opacity, position and size
+• [b]Female Armor Fit[/b] (optional download): male armor reshaped for a woman's body - bust, waist, shoulders, arms - used only when a woman wears it; men keep the original look
+
+[size=4][b]Controls[/b][/size]
+• [b]F6 / F7 / F8[/b] - open the editor for Kliff / Damiane / Oongka (the same key closes it and keeps your changes)
+• [b]Tab / Shift+Tab[/b] - next / previous area; [b]1 - 0[/b] jumps to areas 1 - 10
+• [b]Q / E[/b] (or [b][ / ][/b]) - previous / next page of an area
+• [b]Arrows or WASD[/b] - choose; on sliders Up/Down picks a value and Left/Right changes it ([b]Shift[/b] for steps of 10)
+• [b]Space / Enter[/b] - keep and close; [b]Esc[/b] - cancel everything changed since the editor was opened
+
+[size=4][b]Requirements[/b][/size]
+• [b]DMM[/b] (recommended) - it installs everything, including the .asi and the ASI loader
+• Or: another mod manager for the game files, plus the [b]Ultimate ASI Loader[/b] in the game's bin64 folder
+
+[size=4][b]Installation[/b][/size]
+[b]First remove the previous version:[/b] uninstall the old "Character Creator" package in your mod manager, delete [i]Character Creator.asi[/i] from [i]<game>\bin64[/i] if it is still there, and remove [i]Female Animations.field.json[/i] if you use it (the mod now switches gender itself).
+
+[b]With DMM (recommended)[/b]
+1. Import the downloaded zip in DMM as it is (don't unzip and re-zip it).
+2. Make sure both parts are enabled: [b]Character Creator / CC Files[/b] in the mod list, and [b]CharacterCreator[/b] in the ASI plugins.
+3. Click [b]Apply[/b]. DMM installs the game files, places [i]CharacterCreator.asi[/i] in bin64 and sets up the ASI loader.
+4. Start the game, load a save and press [b]F6[/b].
+
+[b]Manual install[/b] (another mod manager, or no .asi support)
+1. Install the game files with your mod manager as usual: the [b]CC Files[/b] folder inside [b]Character Creator[/b] holds the 0009 and 0012 folders ([i]Character Creator.field.json[/i] is only for DMM and changes nothing).
+2. Install the [b]Ultimate ASI Loader[/b] into [i]<game>\bin64[/i] if you do not have it yet (many mods use it, usually as winmm.dll).
+3. Copy [i]CharacterCreator.asi[/i] from the [b]Character Creator[/b] folder into [i]<game>\bin64[/i].
+4. Start the game, load a save and press [b]F6[/b].
+
+On its first start the plugin creates [i]<game>\bin64\CharacterCreator[/i] with its menu data and icons; your choices and the log are kept there too.
+
+[size=4][b]Female Armor Fit (optional)[/b][/size]
+A separate download in the Files tab. Most armor in the game only exists for men, and on a woman it looked broad, flat and had wobbly arms. With Female Armor Fit, over 800 male armor parts (chest, legs, gloves, boots, helmets, shoulders, cloaks...) are reshaped to the female body: bust, narrower waist and shoulders, arms and sleeves that fit. The game switches to the reshaped version only while a woman (any race) wears the piece - men and NPCs keep the original.
+1. Import [i]Female Armor Fit[/i] in DMM next to Character Creator and click [b]Apply[/b] (it is a pre-built archive, so it mounts in seconds).
+2. Don't use it together with mods that also replace the game's part table (for example Cloak Remover) or that swap the same armor pieces to other armor for women (for example my Female Armor Module) - use one or the other.
+3. It is made for the current game version. After a game update, disable it until an updated version is out.
+A few pieces with unusual models still keep their male shape.
+
+[size=4][b]Good to know[/b][/size]
+• [b]Gender, race and height apply after a restart.[/b] Choose them (in the main menu if you like), then restart the game - a reminder appears when you close the editor. Body, head and hair are switched to ones that fit automatically.
+• [b]Height[/b] shows at once as a preview, but until you restart, arms and shoulders look off while moving. After the restart the character is built at that height and moves normally.
+• [b]Heads of other races[/b] were made for their own race's body, so some may not sit perfectly at the neck.
+• [b]Lip sync[/b]: a character played as the other gender keeps their own mouth movements in dialogue, matching what they say.
+• [b]Eye colour[/b] changes at once for most heads - the head is swapped for about a second while the eyes reload. Some heads use the game's shared eye files (Kliff's and Oongka's own heads, Damiane's head and a few others): for these the editor tells you, and the new colour shows [b]after a restart[/b]. Characters and NPCs that share those eye files also share the colour.
+• [b]Characters without colours yet[/b] (Oongka early in the story, or anyone who never visited a barber) get them from the mod the first time you open the editor for them - colours and tattoos work a moment later. A barber visit does the same.
+• [b]The barber[/b] still works, but anything you set in the mod wins over it; things you never touched in the mod stay as the game has them.
+• Your choices live in [i]<game>\bin64\CharacterCreator[/i] (profile*.txt, eyes*.txt, identity*.txt - gender, race and height). Delete them to go back to the game's own looks.
+• [b]Uninstalling:[/b] saves remember body, head, hair and beard by their number in the mod's lists, so without the mod a character may pick up a different one. A barber visit sets it again.
+• Makeup and eyelashes are not included: the game does not apply them to the player characters.
+• [b]CharacterCreator.asi disappeared or flagged as a virus?[/b] Your antivirus removed it by mistake - a plugin that hooks into the game looks suspicious to them. Restore it (Windows: Windows Security > Virus & threat protection > Protection history) and add exclusions for [b]both[/b] the game folder ([i]...\steamapps\common\Crimson Desert[/i]) and your [b]DMM folder[/b] - DMM keeps its own copy of the .asi in its mods folder and copies it into the game on every Apply. (Windows: Windows Security > Virus & threat protection > Manage settings > Exclusions > Add an exclusion > Folder.)
+
+[size=4][b]Bug reports[/b][/size]
+Please attach [i]<game>\bin64\CharacterCreator\CharacterCreator.log[/i]. If you suspect the editor causes a crash, create a text file [i]disable.txt[/i] in that folder containing the word [i]overlay[/i] - it switches the editor panel off - and tell me whether the crash is gone.

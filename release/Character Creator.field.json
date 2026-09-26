@@ -1,0 +1,19 @@
+{
+  "format": 3,
+  "intents": [
+    {
+      "entry": "Kliff",
+      "field": "f36",
+      "key": 1,
+      "new": 1,
+      "op": "set"
+    }
+  ],
+  "modinfo": {
+    "author": "Khione",
+    "note": "Changes nothing (sets Kliff's f36 to its game value). DMM needs a field file beside the plugin to import this mod without an os error 32.",
+    "title": "Character Creator",
+    "version": "1.0"
+  },
+  "target": "characterinfo.pabgb"
+}

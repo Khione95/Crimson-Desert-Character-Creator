@@ -1,0 +1,11 @@
+# Visual Studio build output and caches
+.vs/
+x64/
+*.user
+build/
+build_safe/
+dist/
+__pycache__/
+armor_fit/
+armor_fit_stage/
+armor_fit_logs/

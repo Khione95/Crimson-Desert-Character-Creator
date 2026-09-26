@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ASI_Test/ASI_Test.vcxproj" Id="847a95af-0cfb-4a97-94da-c21e77ad7f65" />
+</Solution>
