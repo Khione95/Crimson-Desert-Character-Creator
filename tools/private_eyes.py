@@ -14,7 +14,6 @@ Per head:        character/bin__/prefab/<dir>/<prefix><name>.prefab
 Per eye model:   character/model/<dir>/<prefix><name>.pac
                  character/modelproperty/<dir>/<prefix><name>.pac_xml
                  ("eye" in the name written "eie", see model_copy_name)
-Per face shape:  character/binary/skeletonvariation/<dir>/<prefix><name>.pabc
 Part table:      character/bin__/partprefabtable.pappt with the head copies
 
 The copies' iris texture paths are marked with the prefix (zk_phm_00_eye_iris_
@@ -127,19 +126,6 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
         added_total += added
     write(out_dir, TABLE, table)
 
-    # The face shape (skeleton variation) of a head named in a character's
-    # file is found by the head's name: each copy gets its own.
-    shapes = {e['path'].rsplit('/', 1)[1][:-len('.pabc')]: e for e in game_files.entries(
-        r'^character/binary/skeletonvariation/.*/head/.*\.pabc$')}
-    shape_count = 0
-    for head in copies:
-        e = shapes.get(head)
-        if e:
-            data = game_files.read(e)
-            for prefix in PREFIXES:
-                write(out_dir, copy_name(e['path'], prefix), data)
-            shape_count += 1
-
     # Each character's head lists name their own copies: the Head entry
     # (ParamDesc Index="1") and slot 5, which the plugin sets to match the
     # head (menu.cpp) - the head the character is finally built with.
@@ -156,7 +142,7 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
         open(path, 'wb').write((b'\xef\xbb\xbf' if raw[:3] == b'\xef\xbb\xbf' else b'') + text.encode('utf-8'))
     open(list_file, 'w', encoding='utf-8').write(''.join(h + chr(10) for h in sorted(copies)))
     print(f'{len(copies)} heads x {len(PREFIXES)} characters ({added_total} added to the part table), '
-          f'{len(models)} eye models x {len(PREFIXES)}, {shape_count} face shapes x {len(PREFIXES)}')
+          f'{len(models)} eye models x {len(PREFIXES)}')
 
 
 def main():

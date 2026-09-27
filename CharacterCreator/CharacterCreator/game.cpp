@@ -257,6 +257,8 @@ struct Tracked
     bool preview;           // a copy made while the character was updated (shop, barber)
     uint8_t firstBeard;     // preview copies: the beard they started with
     bool beardNoted;
+    bool shapePending;      // the first head waits for its face shape rebuild
+    bool shapeDone;
     uint8_t snap[0x300];    // research: the controller as last seen while it is built
     DWORD snapAt;
     bool snapped;
@@ -480,10 +482,30 @@ typedef bool(__fastcall* GrowBytesFn)(uintptr_t vector, uint32_t capacity);
 static uint8_t g_startValues[CHARACTER_COUNT][DECORATION_COUNT];
 static bool g_startKnown[CHARACTER_COUNT] = {};
 
-// Values are created only once the editor has been opened for the character:
-// created automatically, they were made while some players' games were still
-// on the loading screen, and the rebuild crashed the game.
+// Values are created once the editor has been opened for the character, or
+// on their own well after the character appeared when a look was saved for
+// them: created at once, they were made while some players' games were still
+// on the loading screen, and the rebuild crashed the game. Without values the
+// game shows the saved head without its face shape and nothing of the look.
 static volatile LONG g_valuesWanted[CHARACTER_COUNT];
+static const DWORD AUTO_VALUES_MS = 45000;
+
+static bool HasSavedLook(int ch)
+{
+    Appearance desired;
+    AppearanceMask mask;
+    GameGetDesired(ch, &desired, &mask);
+
+    for (int i = 0; i < MESH_SLOT_COUNT; ++i)
+        if (mask.mesh[i])
+            return true;
+
+    for (int i = 0; i < DECORATION_COUNT; ++i)
+        if (mask.decoration[i])
+            return true;
+
+    return false;
+}
 
 void GameRequestValues(int ch)
 {
@@ -633,6 +655,9 @@ static void RequeueBeard(uintptr_t controller, Tracked* t)
     Log("preview: %S's beard swapped again (%d -> %d)", CHARACTER_NAMES[t->character], t->firstBeard, wanted);
 }
 
+static const DWORD SHAPE_AFTER_MS = 8000;     // after the last mesh change
+static const DWORD SHAPE_SETTLE_MS = 15000;   // after the character appeared
+
 static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 {
     int ch = t->character;
@@ -654,8 +679,16 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     // - unless another head is chosen, whose swap brings its shape.
     bool otherHead = mask.mesh[MESH_HEAD] && desired.mesh[MESH_HEAD] != 0 && desired.mesh[MESH_HEAD] != MESH_NONE;
 
-    if (!preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && !GameHeadRebuilding(ch))
+    // Not while the game is still loading and the look is being applied: a
+    // head swap right after the other mesh changes froze the loading screen.
+    if (!preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && !t->shapeDone)
+        t->shapePending = true;
+
+    if (t->shapePending && t->recolorStep < 0 && now - t->meshChangedAt >= SHAPE_AFTER_MS &&
+        now - t->firstSeen >= SHAPE_SETTLE_MS && !GameHeadRebuilding(ch))
     {
+        t->shapePending = false;
+        t->shapeDone = true;
         Log("%S: first head without its face shape - rebuilding it", CHARACTER_NAMES[ch]);
         GameReloadHead(ch);
     }
@@ -1102,10 +1135,17 @@ static void OnControllerUpdate(uintptr_t controller)
     // Settled without appearance values: create them once (not for preview
     // copies; disable.txt "values" leaves it to the barber). The look is
     // applied at the next check, not in the same frame as the rebuild.
-    if (t && !preview && g_valuesWanted[t->character] && !HasDecorations(controller) && !t->valuesTried &&
+    bool wanted = t && (g_valuesWanted[t->character] ||
+        (now - t->firstSeen >= AUTO_VALUES_MS && HasSavedLook(t->character)));
+
+    if (t && !preview && wanted && !HasDecorations(controller) && !t->valuesTried &&
         !PartDisabled("values"))
     {
         t->valuesTried = true;
+
+        if (!g_valuesWanted[t->character])
+            Log("%S: no appearance values after %lu s - creating them for the saved look", CHARACTER_NAMES[t->character],
+                AUTO_VALUES_MS / 1000);
 
         if (CreateValues(controller, t->character))
         {

@@ -289,6 +289,25 @@ static bool Setup(IDXGISwapChain* swapChain)
 
     g_rs.swapChain->Release();
 
+    // Direct3D 11 on 12 draws through a direct (graphics) queue. Frame
+    // generation (FSR, DLSS-G) makes its swap chain on a queue of its own,
+    // and drawing through that one crashed the game.
+    D3D12_COMMAND_QUEUE_DESC queueDesc = queue->GetDesc();
+
+    if (queueDesc.Type != D3D12_COMMAND_LIST_TYPE_DIRECT)
+    {
+        static bool logged = false;
+
+        if (!logged)
+        {
+            logged = true;
+            Log("overlay: the swap chain's queue is not a graphics queue (type %d, frame generation?) - the menu is not drawn",
+                (int)queueDesc.Type);
+        }
+
+        return false;
+    }
+
     ID3D12Device* device = NULL;
 
     if (FAILED(swapChain->GetDevice(IID_PPV_ARGS(&device))))

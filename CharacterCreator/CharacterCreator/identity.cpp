@@ -401,11 +401,10 @@ static void LogParsed(uintptr_t root)
         text(customization, "MeshParamFile"), text(child(child(root, "Nude"), "Prefab"), "Name"), hair);
 }
 
-// The heads the package has private copies of (tools/private_eyes.py): each
-// character wears their own copy (zk_..., zd_..., zo_... instead of cd_...),
-// whose eye files only they read, with the head's face shape copied too.
+// The heads the package has private copies of (tools/private_eyes.py): the
+// head slot shows the character's own copy (zk_..., zd_..., zo_...), whose eye
+// files only they read. Also the heads that have a prefab.
 static std::set<std::string> g_privateHeads;
-static const char* const PRIVATE_PREFIX[CHARACTER_COUNT] = { "zk_", "zd_", "zo_" };
 
 static void LoadPrivateHeads(const char* folder)
 {
@@ -447,13 +446,16 @@ static std::string ChosenHead(int ch)
     return std::string();
 }
 
-// The character's file names the head chosen in the editor (its private
-// copy), the one the head slot shows. With another head named here, the skin
-// (scars, tattoos, paint, dirt) was laid out for that one and came out in the
-// wrong places on the chosen head. A named head is there even when the plugin
-// cannot set the head slot (a character without appearance values, a shop
-// preview); an empty one left them without a face. Its head scale was meant
-// for the file's own head: 1 for any other (as the Face Fix mod had it).
+// The character's file names the head chosen in the editor, the one the head
+// slot shows. With another head named here, the skin (scars, tattoos, paint,
+// dirt) was laid out for that one and came out in the wrong places on the
+// chosen head. A named head is there even when the plugin cannot set the head
+// slot (a character without appearance values, a shop preview); an empty one
+// left them without a face. It is the game's own head, not the character's
+// private copy: only the game's own heads come with their face shape here,
+// and they are in any part table (another mod's included). The slot then
+// shows the private copy (eye colour). Its head scale was meant for the
+// file's own head: 1 for any other (as the Face Fix mod had it).
 static void NameChosenHead(uintptr_t root, int ch)
 {
     // Only heads with a prefab (those the package has copies of): a few in
@@ -471,7 +473,6 @@ static void NameChosenHead(uintptr_t root, int ch)
         return;
 
     bool own = head == text;
-    head = std::string(PRIVATE_PREFIX[ch]) + head.substr(3);
 
     if (head != text && SetValue(name, head, ch, 3, "head"))
         Log("base character: %S's file names their chosen head %s", CHARACTER_NAMES[ch], head.c_str());
