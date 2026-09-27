@@ -660,6 +660,26 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         GameReloadHead(ch);
     }
 
+    // A preview copy (barber, shop) has no head rebuild: both swaps are
+    // queued at once, to the next head and back.
+    if (preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && ReadMeshOptionCount(controller, MESH_HEAD) > 1)
+    {
+        uint8_t away[3] = { (uint8_t)MESH_HEAD, 0, 1 };
+        uint8_t back[3] = { (uint8_t)MESH_HEAD, 1, 0 };
+        g_queueMeshChange(controller + 0xF8, away);
+        g_queueMeshChange(controller + 0xF8, back);
+
+        uintptr_t mesh;
+        uint32_t count;
+
+        if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_HEAD < count)
+            *(uint8_t*)(mesh + MESH_HEAD) = 0;
+
+        g_rebuild(controller);
+        Log("preview: %S's first head swapped away and back for its face shape", CHARACTER_NAMES[ch]);
+        return;
+    }
+
     int decorationChanges = 0, meshChanges = 0;
     bool decorations = HasDecorations(controller);
 

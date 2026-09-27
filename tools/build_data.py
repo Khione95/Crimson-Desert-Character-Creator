@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.2'
+VERSION = '9.1.3'
 # Female Armor Fit's part table, from its released package (see private_eyes.py).
 ARMOR_FIT_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'armor_fit_released',
                                'character', 'bin__', 'partprefabtable.pappt')

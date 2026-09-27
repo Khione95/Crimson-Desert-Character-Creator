@@ -2,6 +2,7 @@
 #include "identity.h"
 #include "addresses.h"
 #include "chartable.h"
+#include "game.h"
 #include "log.h"
 #include "switches.h"
 
@@ -406,8 +407,19 @@ static void LogParsed(uintptr_t root)
 // characters' own copies (private_eyes.py).
 // Its head scale goes back to 1 as well (as the Face Fix mod had it: no
 // HeadScale): the scale was meant for the file's own head.
+// Only when a head was chosen in the editor, which the plugin then puts on:
+// without one the file's head is the character's head (a character the game
+// has no appearance values for, like Oongka early on, is never given one by
+// the plugin and was left without a head).
 static void EmptyHead(uintptr_t root, int ch)
 {
+    Appearance desired;
+    AppearanceMask mask;
+    GameGetDesired(ch, &desired, &mask);
+
+    if (!mask.mesh[MESH_HEAD] || desired.mesh[MESH_HEAD] == MESH_NONE)
+        return;
+
     uintptr_t head = Child(Child(root, "Head"), "Prefab");
     uintptr_t name = Attribute(head, "Name");
     const char* text = name ? (const char*)Ptr(name, 0x08) : NULL;
