@@ -7,6 +7,7 @@
 #include "commands.h"
 #include "game.h"
 #include "height.h"
+#include "hotkeys.h"
 #include "identity.h"
 #include "lipsync.h"
 #include "log.h"
@@ -35,8 +36,8 @@ static bool IsGameProcess()
     return _stricmp(name, "CrimsonDesert.exe") == 0;
 }
 
-// <folder of the .asi>\CharacterCreator
-static void DataFolder(char* out, size_t size)
+// The folder of the .asi.
+static void PluginFolder(char* out, size_t size)
 {
     GetModuleFileNameA(g_module, out, (DWORD)size);
 
@@ -44,7 +45,12 @@ static void DataFolder(char* out, size_t size)
 
     if (slash)
         *slash = 0;
+}
 
+// <folder of the .asi>\CharacterCreator
+static void DataFolder(char* out, size_t size)
+{
+    PluginFolder(out, size);
     strcat_s(out, size, "\\CharacterCreator");
     CreateDirectoryA(out, NULL);
 }
@@ -71,6 +77,10 @@ static DWORD WINAPI MainThread(LPVOID)
     LogOpen(logPath);
     Log("Character Creator starting");
     SwitchesLoad(folder);
+
+    char pluginFolder[MAX_PATH];
+    PluginFolder(pluginFolder, sizeof(pluginFolder));
+    HotkeysLoad(pluginFolder);
 
     // Before the game creates its swap chain.
     if (!PartDisabled("overlay"))
@@ -119,14 +129,12 @@ static DWORD WINAPI MainThread(LPVOID)
         MenuPoll();
 
 
-        // F6 / F7 / F8 open and close the editor for Kliff / Damiane / Oongka.
-        // Uses the "is down" bit: the "pressed since last call" bit is shared
-        // between programs.
-        static const int KEYS[CHARACTER_COUNT] = { VK_F6, VK_F7, VK_F8 };
-
+        // F6 / F7 / F8 (CharacterCreator.ini) open and close the editor for
+        // Kliff / Damiane / Oongka. Uses the "is down" bit: the "pressed since
+        // last call" bit is shared between programs.
         for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
         {
-            bool down = (GetAsyncKeyState(KEYS[ch]) & 0x8000) != 0;
+            bool down = HotkeyDown(ch);
 
             if (down && !keyDown[ch])
                 MenuToggle(ch);

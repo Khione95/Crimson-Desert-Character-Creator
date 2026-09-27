@@ -17,7 +17,8 @@
 // shared eye files are left alone (NPCs read them too): the player
 // characters wear copies of their heads with their own eye files, whose iris
 // paths are marked (tools/private_eyes.py). The game keeps eye files loaded
-// for the session, so a new colour is read when the game next starts.
+// while a head uses them: a new colour is read after the menu rebuilds the
+// head through one with other eyes.
 
 struct EyeColour
 {
@@ -35,4 +36,8 @@ void EyesInit(const char* folder);
 // eyes load. Stored in eyes.txt (Kliff), eyes_damiane.txt, eyes_oongka.txt.
 void EyesChoose(int ch, int colour);
 int EyesChosen(int ch);
+
+// How many times the character's own eye files have been read (the head
+// rebuild checks the eyes were read again on the way back).
+LONG EyesReadCount(int ch);
 

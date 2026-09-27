@@ -167,6 +167,7 @@
     <ClInclude Include="lipsync.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="height.h" />
+    <ClInclude Include="hotkeys.h" />
     <None Include="signatures.inc" />
     <ClInclude Include="identity.h" />
     <ClInclude Include="log.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="data_pack.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="eyes.cpp" />
+    <ClCompile Include="hotkeys.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="lipsync.cpp" />

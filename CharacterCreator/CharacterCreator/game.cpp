@@ -647,6 +647,19 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 
     bool preview = t->preview;
 
+    // The character's file names no head (identity.cpp), so the game builds
+    // them with the head list's first head, but without its face shape
+    // (skeleton variation): that comes with a real head swap. Setting the
+    // same head again is no swap, so the head is rebuilt through another one
+    // - unless another head is chosen, whose swap brings its shape.
+    bool otherHead = mask.mesh[MESH_HEAD] && desired.mesh[MESH_HEAD] != 0 && desired.mesh[MESH_HEAD] != MESH_NONE;
+
+    if (!preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && !GameHeadRebuilding(ch))
+    {
+        Log("%S: first head without its face shape - rebuilding it", CHARACTER_NAMES[ch]);
+        GameReloadHead(ch);
+    }
+
     int decorationChanges = 0, meshChanges = 0;
     bool decorations = HasDecorations(controller);
 
@@ -778,14 +791,17 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 //  - the other head has to stay about a second, otherwise coming back also
 //    reuses the old head;
 //  - the head comes back without its skin colour, and re-sending the same
-//    value does not fix it: the value is moved one step and back.
+//    value does not fix it: the value is moved one step and back;
+//  - a rebuild right after another (colours picked quickly) can come back to
+//    eyes the game still holds: it is done again, away for longer, when the
+//    eyes were not read on the way back.
 
 enum HeadPhase { HEAD_IDLE, HEAD_AWAY, HEAD_BACK, HEAD_NUDGED };
 
 static const int SKIN_COLOR = 22;
 static const DWORD SKIN_NUDGE_AFTER_MS = 1200;
 static const DWORD SKIN_RESTORE_AFTER_MS = 100;
-
+static const int RETRY_AWAY_MS = 2500;
 
 static volatile LONG g_headRequested[CHARACTER_COUNT] = {};
 static volatile LONG g_headAwayMs[CHARACTER_COUNT] = { HEAD_AWAY_MS, HEAD_AWAY_MS, HEAD_AWAY_MS };
@@ -794,6 +810,8 @@ static HeadPhase g_headPhase = HEAD_IDLE;
 static int g_headCharacter = -1;
 static uint8_t g_headReturn = 0, g_headAway = 0, g_skin = 0;
 static DWORD g_headAt = 0;
+static LONG g_eyeReadsAtBack = 0;
+static volatile LONG g_headRetried[CHARACTER_COUNT] = {};
 
 void GameReloadHead(int ch, int awayMs, int awayOption)
 {
@@ -802,6 +820,7 @@ void GameReloadHead(int ch, int awayMs, int awayOption)
 
     InterlockedExchange(&g_headAwayMs[ch], awayMs);
     InterlockedExchange(&g_headAwayOption[ch], awayOption);
+    InterlockedExchange(&g_headRetried[ch], 0);
     InterlockedExchange(&g_headRequested[ch], 1);
 }
 
@@ -842,19 +861,17 @@ static bool StartHeadReload(uintptr_t controller, int ch, DWORD now)
     uint8_t head = current.mesh[MESH_HEAD];
     uint32_t options = ReadMeshOptionCount(controller, MESH_HEAD);
 
-    if (head == MESH_NONE || options < 2)
+    // An empty slot shows option 0.
+    if (head == MESH_NONE)
+        head = 0;
+
+    if (options < 2)
         return false;
 
     LONG away = g_headAwayOption[ch];
 
     if (away < 0 && g_headChooser)
         away = g_headChooser(ch, head);
-
-    if (away == HEAD_NO_REBUILD)
-    {
-        Log("head rebuild (%S): head %d has shared eyes - its eye colour applies after a restart", CHARACTER_NAMES[ch], head);
-        return false;
-    }
 
     if (away < 0 || away == head || (uint32_t)away >= options)
         away = head + 1 < (int)options ? head + 1 : head - 1;
@@ -868,6 +885,17 @@ static bool StartHeadReload(uintptr_t controller, int ch, DWORD now)
     g_headPhase = HEAD_AWAY;
     Log("head rebuild (%S): head %d -> %d", CHARACTER_NAMES[ch], head, (int)away);
     return true;
+}
+
+// Once per request, unless another one is already waiting.
+static void RetryIfEyesKept(int ch)
+{
+    if (EyesReadCount(ch) != g_eyeReadsAtBack || g_headRequested[ch] || InterlockedExchange(&g_headRetried[ch], 1))
+        return;
+
+    Log("head rebuild (%S): the eyes were not read again - once more, away for longer", CHARACTER_NAMES[ch]);
+    InterlockedExchange(&g_headAwayMs[ch], RETRY_AWAY_MS);
+    InterlockedExchange(&g_headRequested[ch], 1);
 }
 
 // Returns true while this character's rebuild is in progress (its look must
@@ -893,6 +921,7 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
         if (now - g_headAt < (DWORD)g_headAwayMs[ch])
             return true;
 
+        g_eyeReadsAtBack = EyesReadCount(ch);
         SwitchHead(controller, g_headAway, g_headReturn);
         g_headAt = now;
         g_headPhase = HEAD_BACK;
@@ -910,6 +939,7 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
             g_headPhase = HEAD_IDLE;
             g_headCharacter = -1;
             Log("head rebuild (%S): done", CHARACTER_NAMES[ch]);
+            RetryIfEyesKept(ch);
             return false;
         }
 
@@ -928,6 +958,7 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
         g_headPhase = HEAD_IDLE;
         g_headCharacter = -1;
         Log("head rebuild (%S): done (skin colour %d restored)", CHARACTER_NAMES[ch], g_skin);
+        RetryIfEyesKept(ch);
         return false;
 
     default:

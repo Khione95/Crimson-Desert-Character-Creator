@@ -99,8 +99,6 @@ void GameReloadHead(int ch, int awayMs = HEAD_AWAY_MS, int awayOption = -1);
 
 // Picks the head shown during a rebuild when none was given (the menu knows
 // which heads have other eyes): chooser(character, current head) -> option.
-// HEAD_NO_REBUILD: the head cannot show a new eye colour until a restart.
-static const int HEAD_NO_REBUILD = -2;
 typedef int (*HeadChooser)(int ch, int currentHead);
 void GameSetHeadChooser(HeadChooser chooser);
 

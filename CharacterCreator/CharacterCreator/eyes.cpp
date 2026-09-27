@@ -45,6 +45,12 @@ const int EYE_COLOUR_COUNT = sizeof(EYE_COLOURS) / sizeof(EYE_COLOURS[0]);
 
 static char g_path[CHARACTER_COUNT][MAX_PATH];
 static volatile LONG g_chosen[CHARACTER_COUNT] = {};
+static volatile LONG g_reads[CHARACTER_COUNT] = {};
+
+LONG EyesReadCount(int ch)
+{
+    return ch >= 0 && ch < CHARACTER_COUNT ? g_reads[ch] : 0;
+}
 
 // ---------------------------------------------------------------------------
 // Chosen colour
@@ -312,6 +318,7 @@ static uintptr_t __fastcall HookedLoad(void* a, void* rootOut, void* file, uintp
     for (int ch = 0; swapped > 0 && ch < CHARACTER_COUNT; ++ch)
         if (counts[ch])
         {
+            InterlockedIncrement(&g_reads[ch]);
             int colour = g_chosen[ch];
             Log("eyes: %S's eyes read with %s (%d places)", CHARACTER_NAMES[ch],
                 colour > 0 ? EYE_COLOURS[colour].texture : "the game's iris", counts[ch]);

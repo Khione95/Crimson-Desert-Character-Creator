@@ -2,6 +2,7 @@
 #include "menu.h"
 #include "eyes.h"
 #include "game.h"
+#include "hotkeys.h"
 #include "identity.h"
 #include "log.h"
 #include "menu_data.h"
@@ -114,7 +115,12 @@ static const Tab TABS[] =
 static const int MAKEUP_FIRST = 141, MAKEUP_LAST = 183;
 
 static const int TAB_COUNT = sizeof(TABS) / sizeof(TABS[0]);
-static const int GRID_COLUMNS = 4;
+static const int GRID_COLUMNS = 3;
+static const int TAB_ROWS = 3;
+
+// The panel's width (at 1080 lines; it scales with the screen height). It
+// stays within the right third of a 16:9 screen, clear of the character.
+static const float PANEL_WIDTH = 600.0f, PANEL_FADE = 90.0f;
 
 // The third is a woman who keeps the male animations (see identity.h).
 static const wchar_t* GENDERS[] = { L"Male", L"Female", L"Female (male animations)" };
@@ -231,12 +237,9 @@ static bool OptionFits(const MeshOption& m)
 // eyeleft/right) that many heads share; the game only reads them again if the
 // head shown for that moment has other eyes. Preferred: the nearest such head
 // of the same race and gender, then of the same gender, then any.
-// The game's shared eye files: other characters in the world (Oongka, NPCs)
-// keep them loaded, so a rebuild cannot make the game read them again.
-static bool SharedEyes(const std::string& eyes)
-{
-    return eyes == "cd_phm_00_eyeleft_00_0001" || eyes == "cd_phw_00_eyeleft_00_0001";
-}
+// The player characters wear their own copies of the heads and eyes
+// (private_eyes.py), which nobody else keeps loaded: once the head shown has
+// other eyes, the game lets go of them and reads them again on the way back.
 
 static std::string EyesOf(int ch, int head)
 {
@@ -247,15 +250,10 @@ static std::string EyesOf(int ch, int head)
     return std::string();
 }
 
-// Returns HEAD_NO_REBUILD for heads with shared eyes (their colour applies
-// after a restart).
 static int ChooseAwayHead(int ch, int current)
 {
     uint32_t loaded = GameMeshOptionCount(ch, MESH_HEAD);
     std::string currentEyes = EyesOf(ch, current);
-
-    if (SharedEyes(currentEyes))
-        return HEAD_NO_REBUILD;
 
     int gender, race;
     BuiltAs(ch, &gender, &race);
@@ -268,7 +266,10 @@ static int ChooseAwayHead(int ch, int current)
         if (m.slot != MESH_HEAD || index == current || (loaded && (uint32_t)index >= loaded))
             continue;
 
-        bool otherEyes = currentEyes.empty() || m.eyes.empty() || m.eyes != currentEyes;
+        // A head without known eyes may be no head at all (the game's list
+        // has an eyebrow part among Damiane's heads): switching to it does
+        // nothing.
+        bool otherEyes = !m.eyes.empty() && m.eyes != currentEyes;
         bool fits = OptionFitsFor(m, gender, race);
         bool sameGender = false;
 
@@ -487,6 +488,18 @@ static void SetValue(int index, int value)
         ReloadHead();
 }
 
+// The opacity value of a scar, tattoo or paint type, or -1.
+static int OpacityOf(int type)
+{
+    static const int PAIRS[][2] = { { 13, 19 }, { 132, 138 }, { 63, 69 }, { 114, 120 }, { 72, 78 }, { 123, 129 } };
+
+    for (const auto& p : PAIRS)
+        if (p[0] == type)
+            return p[1];
+
+    return -1;
+}
+
 static void Choose(const Page& page, const Item& item)
 {
     switch (page.kind)
@@ -511,13 +524,29 @@ static void Choose(const Page& page, const Item& item)
 
     case PAGE_COLOR:
     case PAGE_TYPE:
+    {
+        // "None" alone could leave a paint or tattoo on (one still loading
+        // when it was chosen): its opacity goes to 0 as well, and back to full
+        // when one is chosen again.
+        int opacity = OpacityOf(page.target);
+
+        if (opacity >= 0 && item.value == 0)
+            SetValue(opacity, 0);
+        else if (opacity >= 0 && g_view.decoration[opacity] == 0)
+            SetValue(opacity, g_data.params[opacity].known ? g_data.params[opacity].max : 100);
+
         SetValue(page.target, item.value);
         break;
+    }
 
     case PAGE_EYES:
-        // The game keeps eye files loaded for the session: a new colour is
-        // read when the game next starts.
-        EyesChoose(g_char, item.value);
+        // The colour is swapped in while the eye files are read, so the head
+        // is rebuilt through one with other eyes.
+        if (EyesChosen(g_char) != item.value)
+        {
+            EyesChoose(g_char, item.value);
+            ReloadHead();
+        }
         break;
 
     case PAGE_SLIDERS:
@@ -605,10 +634,6 @@ static std::wstring RestartNeeded(int ch)
     if (IdentityHeight(ch) != IdentityLoadedHeight(ch))
         what += std::wstring(what.empty() ? L"" : L", ") + L"height";
 
-    // Heads using the game's shared eye files only take a new colour at start.
-    if (EyesChosen(ch) != g_openEyes)
-        what += std::wstring(what.empty() ? L"" : L", ") + L"eye colour";
-
     return what;
 }
 
@@ -666,10 +691,12 @@ static void Cancel()
     for (int i = MAKEUP_FIRST; i <= MAKEUP_LAST; ++i)
         makeupTouched = makeupTouched || g_touched.decoration[i];
 
-    if (EyesChosen(g_char) != g_openEyes)
+    bool eyesTouched = EyesChosen(g_char) != g_openEyes;
+
+    if (eyesTouched)
         EyesChoose(g_char, g_openEyes);
 
-    if (makeupTouched)
+    if (makeupTouched || eyesTouched)
         ReloadHead();
 
     OverlaySetVisible(false);
@@ -984,6 +1011,7 @@ struct Style
     IDWriteTextFormat* caption;
     IDWriteTextFormat* tab;
     IDWriteTextFormat* big;
+    IDWriteTextFormat* note;    // caption size, wraps onto a second line
     ID2D1SolidColorBrush* gold;
     ID2D1SolidColorBrush* text;
     ID2D1SolidColorBrush* dim;
@@ -1023,11 +1051,15 @@ static void MakeStyle(const OverlayDrawContext& ctx)
     Style& st = g_style;
 
     st.scale = s;
-    st.title = Font(ctx.write, 30 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
+    st.title = Font(ctx.write, 26 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
     st.body = Font(ctx.write, 20 * s, DWRITE_TEXT_ALIGNMENT_LEADING);
     st.caption = Font(ctx.write, 17 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
     st.tab = Font(ctx.write, 17 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
     st.big = Font(ctx.write, 24 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
+    st.note = Font(ctx.write, 17 * s, DWRITE_TEXT_ALIGNMENT_CENTER);
+
+    if (st.note)
+        st.note->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
 
     dc->CreateSolidColorBrush(D2D1::ColorF(0.93f, 0.76f, 0.45f), &st.gold);
     dc->CreateSolidColorBrush(D2D1::ColorF(0.93f, 0.91f, 0.87f), &st.text);
@@ -1100,7 +1132,9 @@ static void DrawNotice(ID2D1DeviceContext* dc, const OverlayDrawContext& ctx)
     Text(dc, L"This version of the game is not supported by this version of Character Creator. "
         L"Nothing has been changed. Please check the mod page for an update.",
         st.big, D2D1::RectF(x0 + 36 * s, y0 + 96 * s, x1 - 36 * s, y1 - 60 * s), st.text);
-    Text(dc, L"[F6] Close", st.big, D2D1::RectF(x0 + 36 * s, y1 - 56 * s, x1, y1 - 16 * s), st.dim);
+    wchar_t close[64];
+    swprintf_s(close, L"[%s] Close", HotkeyName(g_char));
+    Text(dc, close, st.big, D2D1::RectF(x0 + 36 * s, y1 - 56 * s, x1, y1 - 16 * s), st.dim);
 }
 
 // The restart notice, top right, while the editor is closed.
@@ -1208,14 +1242,14 @@ void MenuDraw(const OverlayDrawContext& ctx)
     BuildItems(page, &items, &selected);
 
     // Panel on the right
-    float x0 = ctx.width - 900 * s, x1 = ctx.width - 24 * s;
+    float x0 = ctx.width - (PANEL_WIDTH + 24) * s, x1 = ctx.width - 24 * s;
     float y0 = 50 * s, y1 = ctx.height - 50 * s;
-    float fadeX = x0 - 160 * s;
+    float fadeX = x0 - PANEL_FADE * s;
     st.panel->SetStartPoint(D2D1::Point2F(fadeX, 0));
     st.panel->SetEndPoint(D2D1::Point2F(x1, 0));
     dc->FillRectangle(D2D1::RectF(fadeX, y0, x1, y1), st.panel);
-    dc->DrawLine(D2D1::Point2F(fadeX + 120 * s, y0), D2D1::Point2F(x1, y0), st.line, 1.2f * s);
-    dc->DrawLine(D2D1::Point2F(fadeX + 120 * s, y1), D2D1::Point2F(x1, y1), st.line, 1.2f * s);
+    dc->DrawLine(D2D1::Point2F(fadeX + 70 * s, y0), D2D1::Point2F(x1, y0), st.line, 1.2f * s);
+    dc->DrawLine(D2D1::Point2F(fadeX + 70 * s, y1), D2D1::Point2F(x1, y1), st.line, 1.2f * s);
 
     // Title: "Hair 1/3: Hair 12 / 61"
     wchar_t title[256];
@@ -1254,14 +1288,14 @@ void MenuDraw(const OverlayDrawContext& ctx)
     if (last < tab.pageCount - 1)
         subs += L"  >";
 
-    float gx0 = x0 + 36 * s, gx1 = x1 - 36 * s;
-    Text(dc, subs, st.body, D2D1::RectF(gx0, y0 + 84 * s, gx1, y0 + 112 * s), st.text);
-    Text(dc, L"Tab: area     Q / E or [ / ]: parameter     Arrows: choose", st.body,
-        D2D1::RectF(gx0, y0 + 114 * s, gx1, y0 + 142 * s), st.dim);
+    float gx0 = x0 + 24 * s, gx1 = x1 - 24 * s;
+    Text(dc, subs, st.caption, D2D1::RectF(gx0, y0 + 76 * s, gx1, y0 + 104 * s), st.text);
+    Text(dc, L"Tab: area    Q / E: page    Arrows: choose", st.caption,
+        D2D1::RectF(gx0, y0 + 104 * s, gx1, y0 + 132 * s), st.dim);
 
-    // Tab bar, two rows
-    const int perRow = (TAB_COUNT + 1) / 2;
-    float tabTop = y0 + 158 * s, tabH = 42 * s, tabGap = 4 * s;
+    // Tab bar
+    const int perRow = (TAB_COUNT + TAB_ROWS - 1) / TAB_ROWS;
+    float tabTop = y0 + 144 * s, tabH = 36 * s, tabGap = 4 * s;
     float tabW = (gx1 - gx0 - tabGap * (perRow - 1)) / perRow;
 
     for (int i = 0; i < TAB_COUNT; ++i)
@@ -1270,12 +1304,11 @@ void MenuDraw(const OverlayDrawContext& ctx)
         float ty = tabTop + (i / perRow) * (tabH + tabGap);
         D2D1_RECT_F r = D2D1::RectF(tx, ty, tx + tabW, ty + tabH);
         dc->FillRectangle(r, i == g_tab ? st.tabOn : st.tabOff);
-        Text(dc, i == g_tab ? std::wstring(L"[ ") + TabLabel(TABS[i]) + L" ]" : TabLabel(TABS[i]), st.tab, r,
-            i == g_tab ? st.text : st.dim);
+        Text(dc, TabLabel(TABS[i]), st.tab, r, i == g_tab ? st.gold : st.dim);
     }
 
-    float contentTop = tabTop + 2 * (tabH + tabGap) + 20 * s;
-    float footerTop = y1 - 64 * s;
+    float contentTop = tabTop + TAB_ROWS * (tabH + tabGap) + 16 * s;
+    float footerTop = y1 - 76 * s;
 
     if (page.kind == PAGE_SLIDERS)
     {
@@ -1306,9 +1339,9 @@ void MenuDraw(const OverlayDrawContext& ctx)
             bool on = i == g_sliderRow;
 
             Text(dc, on ? std::wstring(L"[ ") + page.sliderNames[i] + L" ]" : page.sliderNames[i], st.body,
-                D2D1::RectF(gx0, ry, gx0 + 200 * s, ry + 40 * s), on ? st.gold : st.text);
+                D2D1::RectF(gx0, ry, gx0 + 190 * s, ry + 40 * s), on ? st.gold : st.text);
 
-            float bx0 = gx0 + 210 * s, bx1 = gx1 - 90 * s, by = ry + 14 * s;
+            float bx0 = gx0 + 196 * s, bx1 = gx1 - 80 * s, by = ry + 14 * s;
             float fill = (float)(value - lo) / (float)(hi - lo);
             dc->FillRectangle(D2D1::RectF(bx0, by, bx1, by + 12 * s), st.barBack);
             dc->FillRectangle(D2D1::RectF(bx0, by, bx0 + (bx1 - bx0) * fill, by + 12 * s), on ? st.gold : st.dim);
@@ -1328,7 +1361,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
     {
         // Grid of options
         float cellW = (gx1 - gx0) / GRID_COLUMNS;
-        float cellH = 200 * s;
+        float cellH = 190 * s;
         int visibleRows = (int)((footerTop - contentTop) / cellH);
 
         if (visibleRows < 1) visibleRows = 1;
@@ -1410,7 +1443,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
 
     if (page.kind == PAGE_EYES)
     {
-        note = L"Eye colour applies after restarting the game (only your character's eyes change, not NPCs').";
+        note = L"Only your character's eyes change, not NPCs'.";
     }
 
     wchar_t absent[160];
@@ -1430,11 +1463,19 @@ void MenuDraw(const OverlayDrawContext& ctx)
         note = absent;
     }
 
+    // Notes may take two lines.
     if (note)
-        Text(dc, note, st.caption, D2D1::RectF(gx0, footerTop - 34 * s, gx1, footerTop - 6 * s), st.dim);
+        Text(dc, note, st.note, D2D1::RectF(gx0, footerTop - 52 * s, gx1, footerTop - 4 * s), st.dim);
 
     dc->DrawLine(D2D1::Point2F(gx0, footerTop), D2D1::Point2F(gx1, footerTop), st.line, 1.0f * s);
-    Text(dc, L"[Space] Keep     [Esc] Cancel     [F6] Kliff  [F7] Damiane  [F8] Oongka", st.big, D2D1::RectF(x0, footerTop + 8 * s, x1, y1 - 8 * s), st.text);
+    std::wstring keys;
+
+    for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
+        if (HotkeyName(ch)[0])
+            keys += std::wstring(keys.empty() ? L"[" : L"    [") + HotkeyName(ch) + L"] " + CHARACTER_NAMES[ch];
+
+    Text(dc, L"[Space] Keep     [Esc] Cancel", st.big, D2D1::RectF(x0, footerTop + 6 * s, x1, footerTop + 40 * s), st.text);
+    Text(dc, keys.c_str(), st.caption, D2D1::RectF(x0, footerTop + 40 * s, x1, y1 - 6 * s), st.dim);
 
     ReleaseSRWLockExclusive(&g_lock);
 }

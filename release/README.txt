@@ -1,4 +1,4 @@
-Character Creator 9.1.1 - Crimson Desert
+Character Creator 9.1.2 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -38,7 +38,9 @@ menu data and icons; your choices and the log are kept there too.
 CONTROLS
 --------
   F6 / F7 / F8      open the editor for Kliff / Damiane / Oongka
-                    (the same key closes it and keeps the changes)
+                    (the same key closes it and keeps the changes;
+                    other keys can be set in <game>\bin64\CharacterCreator.ini,
+                    made on the first start; DMM's ASI config can edit it)
   Tab / Shift+Tab   next / previous area
   1 - 0             jump to area 1 - 10
   Q / E or [ / ]   previous / next page of an area
@@ -93,11 +95,9 @@ GOOD TO KNOW
   sit perfectly at the neck.
 - Lip sync: a character played as the other gender keeps their own mouth
   movements in dialogue, matching what they say.
-- Eye colour changes at once for most heads: the head is swapped for about a
-  second while the eyes reload. Some heads use the game's shared eye files
-  (Kliff's and Oongka's own heads, Damiane's head and a few others); for these
-  the editor says so and the new colour shows after a restart. Characters and
-  NPCs that share those eye files also share the colour.
+- Eye colour changes at once: the head is swapped for about a second while
+  the eyes reload. Each character has their own copy of the heads and eyes, so
+  NPCs keep their own eye colour.
 - A character the game has not given colours yet (Oongka early in the story,
   anyone who never visited a barber) gets them from the mod the first time you
   open the editor for them; colours and tattoos work a moment later. A barber
@@ -111,8 +111,8 @@ GOOD TO KNOW
 - Uninstalling: saves remember body, head, hair and beard by their number in
   the mod's lists. Without the mod, a character may pick up a different one;
   a barber visit sets it again.
-- Makeup and eyelashes are not included: the game does not apply them to the
-  player characters.
+- Makeup and eyelash length are not included: the game does not apply them to
+  the player characters.
 - CharacterCreator.asi disappeared or flagged as a virus? Your antivirus
   removed it by mistake - a plugin that hooks into the game looks suspicious
   to them. Restore it (Windows Security > Virus & threat protection >
