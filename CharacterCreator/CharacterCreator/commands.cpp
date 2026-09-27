@@ -157,6 +157,31 @@ static void Run(const char* line)
         if (sscanf_s(line, "%*s %f %d", &value, &run) >= 1 && run >= 1 && run <= 16)
             ResearchFindFloats(value, run);
     }
+    else if (strcmp(kind, "track") == 0 || strcmp(kind, "narrow") == 0)
+    {
+        double value = 0;
+
+        if (sscanf_s(line, "%*s %lf", &value) == 1)
+            (kind[0] == 't' ? ResearchTrack : ResearchNarrow)(value);
+    }
+    else if (strcmp(kind, "trackrange") == 0)
+    {
+        float lo = 0, hi = 0;
+
+        if (sscanf_s(line, "%*s %f %f", &lo, &hi) == 2)
+            ResearchTrackRange(lo, hi);
+    }
+    else if (strcmp(kind, "up") == 0 || strcmp(kind, "down") == 0)
+        ResearchMoved(kind[0] == 'u');
+    else if (strcmp(kind, "findnear") == 0)
+    {
+        double a = 0, b = 0, c = 0;
+        unsigned long long span = 0x40;
+        char type[4] = "f";
+
+        if (sscanf_s(line, "%*s %lf %lf %lf %llx %3s", &a, &b, &c, &span, type, (unsigned)sizeof(type)) >= 3)
+            ResearchFindNear(a, b, c, (size_t)span, type[0]);
+    }
     else if (strcmp(kind, "setfloat") == 0)
     {
         unsigned long long address = 0;

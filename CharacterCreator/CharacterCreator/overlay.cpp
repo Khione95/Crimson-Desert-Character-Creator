@@ -55,6 +55,7 @@ struct RenderState
     bool failed;
     IDXGISwapChain3* swapChain;
     ID3D12CommandQueue* queue;      // the queue the Direct3D 11 device draws on
+    IUnknown* device12;             // the device it was made for (its identity, no reference kept)
     ID3D11Device* d11;
     ID3D11DeviceContext* d11Context;
     ID3D11On12Device* on12;
@@ -297,6 +298,13 @@ static bool Setup(IDXGISwapChain* swapChain)
     }
 
     g_rs.queue = queue;
+    IUnknown* identity = NULL;
+
+    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&identity))))
+    {
+        g_rs.device12 = identity;
+        identity->Release();
+    }
     IUnknown* queues[] = { queue };
     HRESULT hr = D3D11On12CreateDevice(device, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0,
         queues, 1, 0, &g_rs.d11, &g_rs.d11Context, NULL);
@@ -340,6 +348,8 @@ static bool Setup(IDXGISwapChain* swapChain)
     return true;
 }
 
+static bool SameDevice(ID3D12Resource* buffer);
+
 // Draws straight onto the back buffer (8-bit screens). Returns false if
 // Direct2D cannot draw on this format.
 static bool RenderDirect(IDXGISwapChain* self)
@@ -353,7 +363,8 @@ static bool RenderDirect(IDXGISwapChain* self)
     HRESULT hr = self->QueryInterface(IID_PPV_ARGS(&swapChain));
     const char* step = "swap chain";
 
-    if (SUCCEEDED(hr) && (step = "back buffer", SUCCEEDED(hr = swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer)))))
+    if (SUCCEEDED(hr) && (step = "back buffer", SUCCEEDED(hr = swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer)))) &&
+        SameDevice(buffer))
     {
         ReadSize(swapChain);
 
@@ -570,6 +581,28 @@ static bool PrepareImage(UINT width, UINT height)
     return ok;
 }
 
+// A frame generation tool (OptiScaler and others) can present buffers of its
+// own device: wrapping those for the game's device crashed the game. Nothing
+// is drawn on them.
+static bool SameDevice(ID3D12Resource* buffer)
+{
+    // Compared as IUnknown, the identity of a COM object (wrappers such as
+    // ReShade hand out other interface pointers of the same device).
+    IUnknown* device = NULL;
+    bool same = !g_rs.device12 || (SUCCEEDED(buffer->GetDevice(IID_PPV_ARGS(&device))) && device == g_rs.device12);
+    SafeRelease(device);
+
+    static bool logged = false;
+
+    if (!same && !logged)
+    {
+        logged = true;
+        Log("overlay: the screen belongs to another Direct3D device (frame generation?) - the menu is not drawn");
+    }
+
+    return same;
+}
+
 static bool RenderComposite(IDXGISwapChain* self)
 {
     if (!SetupComposite())
@@ -582,7 +615,8 @@ static bool RenderComposite(IDXGISwapChain* self)
     bool ok = false;
 
     if (SUCCEEDED(self->QueryInterface(IID_PPV_ARGS(&swapChain))) &&
-        SUCCEEDED(swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer))))
+        SUCCEEDED(swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer))) &&
+        SameDevice(buffer))
     {
         ReadSize(swapChain);
         UINT width = (UINT)g_rs.width, height = (UINT)g_rs.height;

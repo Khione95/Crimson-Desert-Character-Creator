@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "menu.h"
+#include "camera.h"
 #include "eyes.h"
 #include "game.h"
 #include "hotkeys.h"
@@ -150,7 +151,7 @@ static char g_folder[MAX_PATH];
 
 static SRWLOCK g_lock = SRWLOCK_INIT;
 static int g_char = CHAR_KLIFF;    // whose look the menu edits (F6 / F7 / F8)
-static int g_tab = 5;              // open on Hair
+static int g_tab = 0;              // open on the first tab (Gender)
 static int g_page[TAB_COUNT] = {};
 static int g_sliderRow = 0;
 static int g_scrollRow = 0;
@@ -640,6 +641,7 @@ static std::wstring RestartNeeded(int ch)
 static void Keep()
 {
     OverlaySetVisible(false);
+    CameraMenuClosed();
     ProfileSaveIfChanged();
     Log("menu: %S changes kept", CHARACTER_NAMES[g_char]);
 
@@ -700,6 +702,7 @@ static void Cancel()
         ReloadHead();
 
     OverlaySetVisible(false);
+    CameraMenuClosed();
     Log("menu: %S changes cancelled", CHARACTER_NAMES[g_char]);
 }
 
@@ -720,6 +723,7 @@ void MenuToggle(int ch)
     {
         Open(ch);
         OverlaySetVisible(true);
+        CameraMenuOpened(ch);
         Log("menu opened for %S", CHARACTER_NAMES[ch]);
         GameLogCharacter(ch);
     }
@@ -977,6 +981,11 @@ void MenuKey(int vk)
     case 'S':
         if (sliders) g_sliderRow = g_sliderRow + 1 < page.sliderCount ? g_sliderRow + 1 : g_sliderRow;
         else MoveSelection(GRID_COLUMNS);
+        break;
+
+    // The preview camera: face / body.
+    case 'R':
+        CameraToggleView();
         break;
 
     case VK_PRIOR:
@@ -1290,7 +1299,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
 
     float gx0 = x0 + 24 * s, gx1 = x1 - 24 * s;
     Text(dc, subs, st.caption, D2D1::RectF(gx0, y0 + 76 * s, gx1, y0 + 104 * s), st.text);
-    Text(dc, L"Tab: area    Q / E: page    Arrows: choose", st.caption,
+    Text(dc, L"Tab: area    Q / E: page    Arrows: choose    R: face / body    Mouse: turn", st.caption,
         D2D1::RectF(gx0, y0 + 104 * s, gx1, y0 + 132 * s), st.dim);
 
     // Tab bar

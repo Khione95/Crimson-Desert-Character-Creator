@@ -25,10 +25,16 @@ static bool WriteWhole(const char* path, const void* data, size_t size)
     return ok;
 }
 
-// "<version> <size of the packed data>": unpacking is skipped while it matches.
-static void Stamp(char* out, size_t size, const char* version, DWORD packed)
+// "<version> <size> <checksum of the packed data>": unpacking is skipped
+// while it matches. The checksum catches data changed within one version.
+static void Stamp(char* out, size_t size, const char* version, const BYTE* data, DWORD packed)
 {
-    sprintf_s(out, size, "%s %lu", version, packed);
+    uint32_t hash = 2166136261u;    // FNV-1a
+
+    for (DWORD i = 0; i < packed; ++i)
+        hash = (hash ^ data[i]) * 16777619u;
+
+    sprintf_s(out, size, "%s %lu %08X", version, packed, hash);
 }
 
 static bool StampMatches(const char* folder, const char* stamp)
@@ -71,7 +77,7 @@ bool DataPackUnpack(HMODULE module, const char* folder)
         return false;
 
     char stamp[128];
-    Stamp(stamp, sizeof(stamp), version, size);
+    Stamp(stamp, sizeof(stamp), version, data, size);
 
     if (StampMatches(folder, stamp))
         return true;

@@ -64,7 +64,10 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.3'
+VERSION = '9.1.4'
+# Body scales that replace the source's: its goblin woman (0.50) was about half
+# a goblin man's height; 0.88 as for the goblin man.
+BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
 # Female Armor Fit's part table, from its released package (see private_eyes.py).
 ARMOR_FIT_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'armor_fit_released',
                                'character', 'bin__', 'partprefabtable.pappt')
@@ -560,6 +563,12 @@ def main():
              '# marker <slot> <kliff option count>: Damiane has one more option, Oongka two',
              f'marker {MARKER_SLOT} {len(per_slot.get(MARKER_SLOT, []))}']
 
+    # Heads need a prefab: a few in the game's lists only have a model and
+    # show no face (cd_phm_00_head_00_4003, ...). Not offered.
+    import game_files
+    head_prefabs = {e['path'].rsplit('/', 1)[1][:-len('.prefab')]
+                    for e in game_files.entries(r'^character/bin__/prefab/.*\.prefab$')}
+
     for slot in sorted(per_slot):
         for i, ms in enumerate(per_slot[slot]):
             icon = '-'
@@ -575,7 +584,7 @@ def main():
             name = ms['names'][0] if ms['names'] else '-'
             # The game's own lists have an eyebrow part among the heads, hair
             # and beards (cd_phw_00_eyebrow_00_0001): not offered.
-            if '_eyebrow_' in name or (slot in (1, 5) and '_head' not in name):
+            if '_eyebrow_' in name or (slot in (1, 5) and ('_head' not in name or name not in head_prefabs)):
                 shown = 0
             lines.append(f'mesh {slot} {i} {race_code(ms) or "-"} {shown} {icon} {name} '
                          f'{orders[1][slot][id(ms)]} {orders[2][slot][id(ms)]}')
@@ -597,6 +606,7 @@ def main():
             continue
         race, gender = folder.split()
         values = [v if v else '-' for v in read_base_character(path)]
+        values[2] = BASE_SCALE_FIXES.get(folder, values[2])
         lines.append(f'base {GENDERS.index(gender)} {RACES.index(race)} ' + ' '.join(values))
 
     # The part of each head that holds its eyes (see tools/head_eyes.txt): the

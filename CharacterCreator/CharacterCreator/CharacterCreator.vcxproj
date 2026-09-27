@@ -154,6 +154,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
     <ClInclude Include="characters.h" />
     <ClInclude Include="chartable.h" />
     <ClInclude Include="commands.h" />
@@ -183,6 +184,7 @@
     <ClCompile Include="..\..\external\minhook\src\hde\hde64.c" />
     <ClCompile Include="..\..\external\minhook\src\hook.c" />
     <ClCompile Include="..\..\external\minhook\src\trampoline.c" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="chartable.cpp" />
     <ClCompile Include="commands.cpp" />
     <ClCompile Include="data_pack.cpp" />

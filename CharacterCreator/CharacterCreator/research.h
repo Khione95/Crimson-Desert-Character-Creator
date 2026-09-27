@@ -30,6 +30,23 @@ void ResearchFindOwner(uintptr_t object);
 // in writable memory (up to 300 places, with the memory around each).
 void ResearchFindFloats(float value, int run);
 
+// findnear <a> <b> <c> <span hex> <f|i|b>: logs where the three values lie
+// within span bytes of each other, as floats, 32-bit integers or bytes.
+void ResearchFindNear(double a, double b, double c, size_t span, char type);
+
+// track <value>: remembers every place in writable memory holding the value
+// as a 32/16-bit integer, or a float or double of the value (or of value /
+// 100, / 50, / 10).
+// narrow <value>: keeps the places that now hold the new value (same kind);
+// with 40 or fewer left, logs them with the memory around each.
+void ResearchTrack(double value);
+
+// trackrange <lo> <hi>: remembers every float in [lo, hi] with its value;
+// up / down: keeps those that grew / shrank since (each keeps the new value).
+void ResearchTrackRange(float lo, float hi);
+void ResearchMoved(bool up);
+void ResearchNarrow(double value);
+
 // setfloat <address hex> <value> [count]: writes count floats.
 void ResearchSetFloats(uintptr_t address, float value, int count);
 

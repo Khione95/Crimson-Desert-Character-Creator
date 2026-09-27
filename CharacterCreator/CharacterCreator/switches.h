@@ -15,6 +15,7 @@
 //   height      the live height preview
 //   values      creating appearance values for a character who has none
 //               (left to the game's first barber visit)
+//   camera      the preview camera while the editor is open
 //   lipsync     lip sync from the character's own folder when played as
 //               another gender
 

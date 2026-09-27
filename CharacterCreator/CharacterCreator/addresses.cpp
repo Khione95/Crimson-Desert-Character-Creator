@@ -29,11 +29,13 @@ static const uintptr_t KNOWN_RVAS[ADDR_COUNT] = {
     0x559DD98,      // CharacterCustomizationController vtable
     0x58FE780,      // CharacterInfoManager vtable
     0x2E8C460,      // BuildLipSyncPath(out, model folder, line)
+    0x6D20E78,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
 };
 
 static const char* const NAMES[ADDR_COUNT] = {
     "SetDecoration", "QueueMeshChange", "Rebuild", "GrowBytes", "LoadXml", "ParseAppearance",
     "ManagerPointer", "ScaleComponentVtable", "ScaleObjectVtable", "ControllerVtable", "ManagerVtable", "LipSyncPath",
+    "CameraSettings",
 };
 
 // Classes found by their RTTI name on other builds.

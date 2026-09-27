@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vector>
+
 static char g_path[MAX_PATH] = { 0 };
 
 void ResearchInit(const char* folder)
@@ -374,6 +376,295 @@ void ResearchFindFloats(float value, int run)
     fprintf(f, "\n==== %d hits in %zu MB ====\n", found, scanned >> 20);
     fclose(f);
     Log("research: findfloat %f x%d: %d hits in %zu MB (research.txt)", value, run, found, scanned >> 20);
+}
+
+// One value of the given kind at p (f float, i int32, b byte) equals v.
+static bool ValueAt(const BYTE* p, char type, double v)
+{
+    if (type == 'f')
+        return Near(*(const float*)p, (float)v);
+
+    if (type == 'i')
+        return *(const int32_t*)p == (int32_t)v;
+
+    return *p == (BYTE)v;
+}
+
+static bool InWindow(const BYTE* base, size_t size, size_t at, size_t span, size_t step, char type, double v)
+{
+    size_t from = at > span ? at - span : 0;
+    size_t to = at + span + step <= size ? at + span : size - step;
+
+    for (size_t i = from; i <= to; i += step)
+        if (i != at && ValueAt(base + i, type, v))
+            return true;
+
+    return false;
+}
+
+static int ScanNear(FILE* f, uintptr_t start, size_t size, const double v[3], size_t span, char type, int found)
+{
+    size_t step = type == 'b' ? 1 : 4;
+
+    __try
+    {
+        const BYTE* base = (const BYTE*)start;
+
+        for (size_t i = 0; i + step <= size && found < FLOAT_HITS_MAX; i += step)
+        {
+            if (!ValueAt(base + i, type, v[0]) || !InWindow(base, size, i, span, step, type, v[1]) ||
+                !InWindow(base, size, i, span, step, type, v[2]))
+                continue;
+
+            uintptr_t at = start + i;
+            fprintf(f, "\n---- hit %d at %016llX ----\n", found, (unsigned long long)at);
+            DumpBlock(f, (at - span) & ~(uintptr_t)7, span * 2 + 8);
+            ++found;
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+
+    return found;
+}
+
+void ResearchFindNear(double a, double b, double c, size_t span, char type)
+{
+    FILE* f = OpenOutput();
+
+    if (!f)
+        return;
+
+    const double v[3] = { a, b, c };
+    fprintf(f, "\n==== findnear %g %g %g within 0x%zX (%c) ====\n", a, b, c, span, type);
+
+    int found = 0;
+    MEMORY_BASIC_INFORMATION mbi;
+    uintptr_t address = 0x10000;
+
+    while (found < FLOAT_HITS_MAX && VirtualQuery((LPCVOID)address, &mbi, sizeof(mbi)))
+    {
+        uintptr_t next = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+
+        if (mbi.State == MEM_COMMIT && (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_EXECUTE_READWRITE) &&
+            !(mbi.Protect & PAGE_GUARD))
+            found = ScanNear(f, (uintptr_t)mbi.BaseAddress, mbi.RegionSize, v, span, type, found);
+
+        if (next <= address)
+            break;
+
+        address = next;
+    }
+
+    fprintf(f, "\n==== %d hits ====\n", found);
+    fclose(f);
+    Log("research: findnear %g %g %g (%c): %d hits (research.txt)", a, b, c, type, found);
+}
+
+// ---------------------------------------------------------------------------
+// Track / narrow (a value that changes when a setting changes)
+// ---------------------------------------------------------------------------
+
+struct TrackedPlace { uintptr_t address; char kind; };    // i int, f float, p float / 100
+static std::vector<TrackedPlace> g_tracked;
+
+// How a setting's value may be kept: as a 32-bit or 16-bit integer, or as a
+// float or double of the value times a scale.
+struct Encoding { char kind; int bytes; bool real; double scale; };
+static const Encoding ENCODINGS[] = {
+    { 'i', 4, false, 1 }, { 's', 2, false, 1 },
+    { 'f', 4, true, 1 }, { 'p', 4, true, 0.01 }, { 'h', 4, true, 0.02 }, { 't', 4, true, 0.1 },
+    { 'd', 8, true, 1 }, { 'e', 8, true, 0.01 },
+};
+
+static const Encoding& EncodingOf(char kind)
+{
+    for (const Encoding& e : ENCODINGS)
+        if (e.kind == kind)
+            return e;
+
+    return ENCODINGS[0];
+}
+
+static bool Matches(const BYTE* p, const Encoding& e, double value)
+{
+    if (!e.real)
+        return e.bytes == 4 ? *(const int32_t*)p == (int32_t)value : *(const int16_t*)p == (int16_t)value;
+
+    double target = value * e.scale;
+    double v = e.bytes == 4 ? (double)*(const float*)p : *(const double*)p;
+    double d = v - target;
+    return d < 0.0001 && d > -0.0001;
+}
+
+static bool Holds(uintptr_t address, char kind, double value)
+{
+    __try
+    {
+        return Matches((const BYTE*)address, EncodingOf(kind), value);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        return false;
+    }
+}
+
+static void TrackRegion(uintptr_t start, size_t size, double value)
+{
+    __try
+    {
+        const BYTE* base = (const BYTE*)start;
+
+        for (size_t i = 0; i + 8 <= size; i += 2)
+            for (const Encoding& e : ENCODINGS)
+                if (i % e.bytes == 0 && Matches(base + i, e, value))
+                {
+                    g_tracked.push_back({ start + i, e.kind });
+                    break;
+                }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+}
+
+void ResearchTrack(double value)
+{
+    g_tracked.clear();
+    MEMORY_BASIC_INFORMATION mbi;
+    uintptr_t address = 0x10000;
+
+    while (VirtualQuery((LPCVOID)address, &mbi, sizeof(mbi)))
+    {
+        uintptr_t next = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+
+        // This thread's own stack holds the value just read from command.txt.
+        bool ownStack = (uintptr_t)mbi.BaseAddress <= (uintptr_t)&mbi && (uintptr_t)&mbi < next;
+
+        if (mbi.State == MEM_COMMIT && (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_EXECUTE_READWRITE) &&
+            !(mbi.Protect & PAGE_GUARD) && !ownStack)
+            TrackRegion((uintptr_t)mbi.BaseAddress, mbi.RegionSize, value);
+
+        if (next <= address)
+            break;
+
+        address = next;
+    }
+
+    Log("research: track %g: %zu places", value, g_tracked.size());
+}
+
+void ResearchNarrow(double value)
+{
+    std::vector<TrackedPlace> kept;
+
+    for (const TrackedPlace& t : g_tracked)
+        if (Holds(t.address, t.kind, value))
+            kept.push_back(t);
+
+    g_tracked.swap(kept);
+    Log("research: narrow %g: %zu places left", value, g_tracked.size());
+
+    if (g_tracked.size() > 40)
+        return;
+
+    FILE* f = OpenOutput();
+
+    if (!f)
+        return;
+
+    fprintf(f, "\n==== narrow %g: %zu places ====\n", value, g_tracked.size());
+
+    for (const TrackedPlace& t : g_tracked)
+    {
+        fprintf(f, "\n---- %016llX (%c) ----\n", (unsigned long long)t.address, t.kind);
+        DumpBlock(f, (t.address - 0x80) & ~(uintptr_t)7, 0x100);
+    }
+
+    fclose(f);
+}
+
+// Floats between two values, for a setting kept as something else (a real
+// distance): followed by whether they grow or shrink.
+struct FloatPlace { uintptr_t address; float value; };
+static std::vector<FloatPlace> g_floats;
+static const size_t FLOATS_MAX = 40000000;
+
+static void RangeRegion(uintptr_t start, size_t size, float lo, float hi)
+{
+    __try
+    {
+        const float* p = (const float*)start;
+
+        for (size_t i = 0; i < size / 4 && g_floats.size() < FLOATS_MAX; ++i)
+            if (p[i] >= lo && p[i] <= hi)
+                g_floats.push_back({ (uintptr_t)(p + i), p[i] });
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+}
+
+void ResearchTrackRange(float lo, float hi)
+{
+    g_floats.clear();
+    MEMORY_BASIC_INFORMATION mbi;
+    uintptr_t address = 0x10000;
+
+    while (VirtualQuery((LPCVOID)address, &mbi, sizeof(mbi)) && g_floats.size() < FLOATS_MAX)
+    {
+        uintptr_t next = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+
+        if (mbi.State == MEM_COMMIT && (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_EXECUTE_READWRITE) &&
+            !(mbi.Protect & PAGE_GUARD))
+            RangeRegion((uintptr_t)mbi.BaseAddress, mbi.RegionSize, lo, hi);
+
+        if (next <= address)
+            break;
+
+        address = next;
+    }
+
+    Log("research: trackrange %g-%g: %zu floats%s", lo, hi, g_floats.size(),
+        g_floats.size() >= FLOATS_MAX ? " (limit reached)" : "");
+}
+
+void ResearchMoved(bool up)
+{
+    std::vector<FloatPlace> kept;
+
+    for (const FloatPlace& f : g_floats)
+    {
+        float now;
+
+        if (!Read(f.address, &now, sizeof(now)))
+            continue;
+
+        if (up ? now > f.value + 0.0001f : now < f.value - 0.0001f)
+            kept.push_back({ f.address, now });
+    }
+
+    g_floats.swap(kept);
+    Log("research: %s: %zu floats left", up ? "up" : "down", g_floats.size());
+
+    if (g_floats.size() > 40)
+        return;
+
+    FILE* f = OpenOutput();
+
+    if (!f)
+        return;
+
+    fprintf(f, "\n==== %s: %zu floats ====\n", up ? "up" : "down", g_floats.size());
+
+    for (const FloatPlace& p : g_floats)
+    {
+        fprintf(f, "\n---- %016llX = %g ----\n", (unsigned long long)p.address, p.value);
+        DumpBlock(f, (p.address - 0x80) & ~(uintptr_t)7, 0x100);
+    }
+
+    fclose(f);
 }
 
 void ResearchSetFloats(uintptr_t address, float value, int count)

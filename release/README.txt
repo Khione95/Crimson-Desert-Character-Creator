@@ -1,4 +1,4 @@
-Character Creator 9.1.3 - Crimson Desert
+Character Creator 9.1.4 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -46,6 +46,8 @@ CONTROLS
   Q / E or [ / ]   previous / next page of an area
   Arrows or WASD    choose; on sliders Up/Down picks a value, Left/Right changes it
   Shift             steps of 10 on sliders
+  R                 camera: whole body / face (the character stands left of
+                    the panel; the mouse turns the camera)
   Space / Enter     keep the changes and close
   Esc               cancel everything changed since the editor was opened
 
