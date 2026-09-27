@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <initializer_list>
+
 #include "MinHook.h"
 
 // Iris textures shipped with the game. The player eye files use the
@@ -40,11 +42,9 @@ const EyeColour EYE_COLOURS[] =
 const int EYE_COLOUR_COUNT = sizeof(EYE_COLOURS) / sizeof(EYE_COLOURS[0]);
 
 // The iris paths found in the player eye files (normal maps end in _n.dds).
-static const char IRIS_PREFIX[] = "character/texture/cd_phm_00_eye_iris_";
 
 static char g_path[CHARACTER_COUNT][MAX_PATH];
 static volatile LONG g_chosen[CHARACTER_COUNT] = {};
-static volatile LONG g_target = CHAR_KLIFF;     // whose colour the eye files get
 
 // ---------------------------------------------------------------------------
 // Chosen colour
@@ -98,12 +98,6 @@ int EyesChosen(int ch)
     return ValidCharacter(ch) ? g_chosen[ch] : 0;
 }
 
-void EyesSetTarget(int ch)
-{
-    if (ValidCharacter(ch))
-        InterlockedExchange(&g_target, ch);
-}
-
 // ---------------------------------------------------------------------------
 // XML file loader: iris texture swapped in the loaded tree
 // ---------------------------------------------------------------------------
@@ -124,19 +118,39 @@ static uintptr_t Ptr(uintptr_t node, size_t offset)
     return *(uintptr_t*)(node + offset);
 }
 
-static bool IsIrisPath(const char* value)
-{
-    if (strncmp(value, IRIS_PREFIX, sizeof(IRIS_PREFIX) - 1) != 0)
-        return false;
+// The player characters' own eye files (tools/private_eyes.py) name their
+// iris textures with the character's prefix in place of "cd":
+// character/texture/zk_phm_00_eye_iris_... (Kliff), zd_ (Damiane), zo_
+// (Oongka). Only those are changed: NPC eyes read the game's own files.
+static const char MARK_START[] = "character/texture/z";
+static const char MARK_REST[] = "_phm_00_eye_iris_";
 
-    const char* dot = strrchr(value, '.');
-    return !(dot && dot - value >= 2 && dot[-2] == '_' && dot[-1] == 'n');
+static int MarkedOwner(const char* value)
+{
+    if (strncmp(value, MARK_START, sizeof(MARK_START) - 1) != 0 ||
+        strncmp(value + sizeof(MARK_START), MARK_REST, sizeof(MARK_REST) - 1) != 0)
+        return -1;
+
+    switch (value[sizeof(MARK_START) - 1])
+    {
+    case 'k': return CHAR_KLIFF;
+    case 'd': return CHAR_DAMIANE;
+    case 'o': return CHAR_OONGKA;
+    default: return -1;
+    }
 }
 
-// Points every iris texture path of the tree at the chosen texture. The
-// game reads attribute values up to their terminating zero, so a static
-// string of any length can stand in.
-static int SwapIris(uintptr_t root, const char* texture)
+static bool IsNormalMap(const char* value)
+{
+    const char* dot = strrchr(value, '.');
+    return dot && dot - value >= 2 && dot[-2] == '_' && dot[-1] == 'n';
+}
+
+// Points every marked iris path of the tree at its character's colour, or
+// back at the game's texture (the mark written over with "cd"). The game
+// reads attribute values up to their terminating zero, so a static string of
+// any length can stand in.
+static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
 {
     static const int MAX_DEPTH = 64;
     static const int MAX_NODES = 200000;
@@ -154,13 +168,21 @@ static int SwapIris(uintptr_t root, const char* texture)
             for (uintptr_t a = Ptr(e, 0x48); a; a = Ptr(a, 0x38))
             {
                 const char* name = (const char*)Ptr(a, 0x00);
-                const char* value = (const char*)Ptr(a, 0x08);
+                char* value = (char*)Ptr(a, 0x08);
+                int owner = name && value && strcmp(name, "_path") == 0 ? MarkedOwner(value) : -1;
 
-                if (name && value && strcmp(name, "_path") == 0 && IsIrisPath(value))
-                {
-                    *(const char**)(a + 0x08) = texture;
-                    ++swapped;
-                }
+                if (owner < 0)
+                    continue;
+
+                int colour = g_chosen[owner];
+
+                if (colour > 0 && !IsNormalMap(value))
+                    *(const char**)(a + 0x08) = EYE_COLOURS[colour].texture;
+                else
+                    memcpy(value + sizeof(MARK_START) - 2, "cd", 2);
+
+                ++counts[owner];
+                ++swapped;
             }
 
             uintptr_t child = Ptr(e, 0x38);
@@ -173,52 +195,28 @@ static int SwapIris(uintptr_t root, const char* texture)
     return swapped;
 }
 
-static int TrySwap(void* rootOut, int colour)
+// Only model property files (the eye files are ones) are looked through.
+static int TrySwap(void* rootOut, int counts[CHARACTER_COUNT])
 {
     __try
     {
         uintptr_t root = rootOut ? *(uintptr_t*)rootOut : 0;
-        return root ? SwapIris(root, EYE_COLOURS[colour].texture) : 0;
+        bool property = false;
+
+        // The file's top elements (the root, its children and their
+        // siblings): a model property file starts with SkinnedMeshProperty...
+        for (uintptr_t top : { root, root ? Ptr(root, 0x38) : 0 })
+            for (uintptr_t e = top; e && !property; e = Ptr(e, 0x60))
+            {
+                const char* name = (const char*)Ptr(e, 0x00);
+                property = name && strncmp(name, "SkinnedMeshProperty", 19) == 0;
+            }
+
+        return property ? SwapIris(root, counts) : 0;
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         return -1;
-    }
-}
-
-// The loader's file argument, for the log: a path, or a pointer to one.
-static void DescribeFile(void* file, char* out, size_t size)
-{
-    out[0] = 0;
-
-    __try
-    {
-        const char* candidates[2] = { (const char*)file, file ? *(const char**)file : NULL };
-
-        for (const char* s : candidates)
-        {
-            if (!s)
-                continue;
-
-            size_t n = 0;
-
-            while (n < size - 1 && s[n] >= 32 && s[n] < 127)
-                ++n;
-
-            if (n >= 8 && s[n] == 0)
-            {
-                memcpy(out, s, n);
-                out[n] = 0;
-                return;
-            }
-        }
-
-        const BYTE* b = (const BYTE*)file;
-        sprintf_s(out, size, "? %02X %02X %02X %02X %02X %02X %02X %02X", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        strcpy_s(out, size, "?");
     }
 }
 
@@ -308,24 +306,19 @@ static uintptr_t __fastcall HookedLoad(void* a, void* rootOut, void* file, uintp
         if (changed > 0)
             Log("two-handed sword: right hand for a woman Kliff with his own animations (%d sockets)", changed);
     }
-    int colour = g_chosen[g_target];
+    int counts[CHARACTER_COUNT] = {};
+    int swapped = TrySwap(rootOut, counts);
 
-    if (colour > 0)
-    {
-        int swapped = TrySwap(rootOut, colour);
+    for (int ch = 0; swapped > 0 && ch < CHARACTER_COUNT; ++ch)
+        if (counts[ch])
+        {
+            int colour = g_chosen[ch];
+            Log("eyes: %S's eyes read with %s (%d places)", CHARACTER_NAMES[ch],
+                colour > 0 ? EYE_COLOURS[colour].texture : "the game's iris", counts[ch]);
+        }
 
-        if (swapped > 0)
-        {
-            char name[160];
-            DescribeFile(file, name, sizeof(name));
-            Log("eyes: iris texture set to %s (%d places, %S's colour) in %s",
-                EYE_COLOURS[colour].texture, swapped, CHARACTER_NAMES[g_target], name);
-        }
-        else if (swapped < 0)
-        {
-            Log("eyes: could not read a loaded file");
-        }
-    }
+    if (swapped < 0)
+        Log("eyes: could not read a loaded file");
 
     return result;
 }

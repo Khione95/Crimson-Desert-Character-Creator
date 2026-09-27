@@ -61,6 +61,8 @@ def encode(path, data):
     packed = lz4.block.compress(data, store_size=False)
     if path.startswith('character/descriptors/') and name.endswith('.xml'):
         return game_files.chacha(packed, path), 0x32
+    if name.endswith(('.prefabdata_xml', '.app_xml')):
+        return game_files.chacha(data, path), 0x30
     if len(packed) < len(data):
         return packed, 0x02
     return data, 0x00

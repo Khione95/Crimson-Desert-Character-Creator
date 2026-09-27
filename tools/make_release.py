@@ -41,9 +41,10 @@ def main():
     if os.path.getmtime(PLUGIN) < os.path.getmtime(DATA):
         raise SystemExit('the plugin is older than build/CharacterCreator.data - rebuild the plugin (Rebuild, so the data is embedded again)')
 
+    # Only this release's own files: dist also holds the other mods' zips.
     stage = os.path.join(OUT, 'stage')
-    if os.path.exists(OUT):
-        shutil.rmtree(OUT)
+    if os.path.exists(stage):
+        shutil.rmtree(stage)
 
     package = os.path.join(stage, 'Character Creator')
     shutil.copytree(PACKAGE, os.path.join(package, 'CC Files'), ignore=shutil.ignore_patterns('mod.json'))

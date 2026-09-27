@@ -188,6 +188,28 @@ class Model:
         for k in range(len(pos)):
             struct.pack_into('<3H', self.data, submesh['voffset'] + k * STRIDE, *q[k])
 
+    def raw_skin(self, submesh):
+        """The stored bone slots (6 x 10 bits in two u32s, top bits apart)
+        and weight bytes of a submesh's vertices."""
+        n = len(submesh['pos'])
+        raw = np.frombuffer(bytes(self.data[submesh['voffset']:submesh['voffset'] + n * STRIDE]),
+                            dtype=np.uint8).reshape(n, STRIDE)
+        return raw[:, 20:28].copy().view('<u4'), raw[:, 28:34].astype(np.int64)
+
+    def set_skin(self, submesh, bones, weights):
+        """Writes bone slots (n x 6 palette indices) and weight bytes (n x 6),
+        keeping the top two bits of both packed words."""
+        packed, _ = self.raw_skin(submesh)
+        for w in range(2):
+            word = packed[:, w] & 0xC0000000
+            for k in range(3):
+                word = word | (bones[:, 3 * w + k].astype(np.uint32) & 0x3FF) << (10 * k)
+            packed[:, w] = word
+        for k in range(len(bones)):
+            at = submesh['voffset'] + k * STRIDE
+            struct.pack_into('<2I', self.data, at + 20, int(packed[k, 0]), int(packed[k, 1]))
+            struct.pack_into('<6B', self.data, at + 28, *(int(x) for x in weights[k]))
+
     def set_normals(self, submesh, normals):
         """Writes new normals (10:10:10, the top two bits kept)."""
         q = np.clip(np.round((normals + 1.0) * 511.5), 0, 1023).astype(np.uint32)

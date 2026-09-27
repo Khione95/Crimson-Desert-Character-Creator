@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <set>
+#include <string>
+
 #include "MinHook.h"
 
 // ---------------------------------------------------------------------------
@@ -397,6 +400,49 @@ static void LogParsed(uintptr_t root)
         text(customization, "MeshParamFile"), text(child(child(root, "Nude"), "Prefab"), "Name"), hair);
 }
 
+// The heads the package has private copies of (tools/private_eyes.py): each
+// character wears their own copy (zk_..., zd_..., zo_... instead of cd_...),
+// whose eye files only they read - their eye colour does not reach NPCs.
+static std::set<std::string> g_privateHeads;
+static const char* const PRIVATE_PREFIX[CHARACTER_COUNT] = { "zk_", "zd_", "zo_" };
+
+static void LoadPrivateHeads(const char* folder)
+{
+    char path[MAX_PATH];
+    sprintf_s(path, "%s\\private_heads.txt", folder);
+    FILE* f = NULL;
+
+    if (fopen_s(&f, path, "r") != 0 || !f)
+        return;
+
+    char line[128];
+
+    while (fgets(line, sizeof(line), f))
+    {
+        line[strcspn(line, "\r\n")] = 0;
+
+        if (line[0])
+            g_privateHeads.insert(line);
+    }
+
+    fclose(f);
+    Log("private heads: %zu", g_privateHeads.size());
+}
+
+static void UsePrivateHead(uintptr_t root, int ch)
+{
+    uintptr_t name = Attribute(Child(Child(root, "Head"), "Prefab"), "Name");
+    const char* text = name ? (const char*)Ptr(name, 0x08) : NULL;
+
+    if (!text || !g_privateHeads.count(text))
+        return;
+
+    std::string copy = std::string(PRIVATE_PREFIX[ch]) + (text + 3);
+
+    if (SetValue(name, copy, ch, 3, "head"))
+        Log("base character: %S wears their own copy of the head (%s)", CHARACTER_NAMES[ch], copy.c_str());
+}
+
 static void TrySwap(void* rootHolder)
 {
     __try
@@ -406,7 +452,10 @@ static void TrySwap(void* rootHolder)
         int ch = root ? CharacterOfFile(root) : -1;
 
         if (ch >= 0)
+        {
             SwapBaseCharacter(root, ch);
+            UsePrivateHead(root, ch);
+        }
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
@@ -765,6 +814,7 @@ void IdentityPoll()
 void IdentityInit(const char* folder, const MenuData* data)
 {
     g_data = data;
+    LoadPrivateHeads(folder);
 
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
     {

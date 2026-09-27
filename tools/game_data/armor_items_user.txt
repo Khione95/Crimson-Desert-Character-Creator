@@ -1,0 +1,119 @@
+# Item name and male chest part, from Khione's Female Armor Module notes
+# (2026-09); armor_types.py uses them where the item data finds nothing.
+Matana Leather Armor - cd_m0001_00_so_phm_ub_31090
+Ynitium Leather Armor - cd_phm_00_ub_0054_15
+Lightning Bolt Plate Armor - cd_phm_m0001_00_titan_ub_0002
+Scorchflame Plate Armor - cd_m0001_00_so_phm_ub_25001
+Hernandian Attire - cd_phm_00_ub_0054_01
+Ashclaw Leather Armor - cd_m0001_00_so_phm_ub_22068
+Jackals' Leather Armor - cd_m0001_00_no_phm_ub_22003
+Blinding Arrows' Leather Armor - cd_m0001_00_so_phm_ub_22031
+Scholastone Uniform - cd_phm_00_ub_0054_17
+St. Halssius Priest Attire - cd_phm_00_ub_0054_16
+Purple Scout Armor - cd_m0001_00_so_phm_ub_44010
+Blue Scout Armor - cd_m0001_00_so_phm_ub_44010_index01
+Demeniss Honor Armor - cd_m0001_00_so_phm_ub_31067
+Delesyian Cloth Attire - cd_m0001_02_so_phm_ub_21011
+Leddic Cloth Armor - cd_m0001_00_de_phm_ub_31011
+Weasel Leather Armor - cd_phm_00_ub_00_0161
+Ziggurat Leather Armor - cd_m0001_00_de_phm_ub_32002
+Unyielding Warrior's Plate Armor - cd_m0001_00_so_phm_ub_23003
+Canta Plate Armor - cd_m0001_00_so_phm_ub_22170
+Sungrove Standard Plate Armor - cd_m0001_00_so_phm_ub_33037
+Windmere Standard Plate Armor - cd_m0001_00_so_phm_ub_33042
+Flame Knights Chain Mail - cd_m0001_00_so_phm_ub_22029
+Scarlet Blades Cloth Armor - cd_m0001_00_so_phm_ub_22079
+Yrkabel Leather Armor - cd_m0001_00_so_phm_ub_21293
+Dancing Catfish Cloth Armor - cd_m0001_00_so_phm_ub_22239
+Wolf Tracker Cloth Armor - cd_m0001_00_so_pgm_ub_42008
+Wyvernflames Cloth Armor - cd_m0001_00_de_phm_ub_21016
+Bandit Cloth Armor - cd_m0001_00_no_phm_ub_12002
+Kairos Plate Armor - cd_phm_00_ub_00_0435
+Greymane Light Armor - cd_m0001_00_no_phm_ub_21044
+Pailunese Attire - cd_phm_00_ub_0054_13
+Mortain Chain Mail - cd_m0001_00_so_phm_ub_32073
+Pororin Cloth Attire - cd_phm_00_ub_00_0351
+Lauques Cloth Armor - cd_m0001_00_so_phm_ub_22172
+The Masked Liberator's Cloth Armor - cd_m0001_00_de_phm_ub_23002
+Gael Cloth Armor - cd_m0001_00_so_phm_ub_31048
+Schtump Cloth Armor - cd_m0001_00_so_phm_ub_21018
+Tiorant Cloth Armor - cd_m0001_00_no_phm_ub_22004
+Rabbit Leather Coat - cd_phm_00_ub_00_0204
+Sunset Reed Leather Armor - cd_m0001_00_bush_devil_ub_0001
+Ironwilled Guardian's Leather Armor - cd_phm_00_ub_00_0187
+Grey Wolf Leather Armor - cd_phm_00_ub_00_0054
+Jester Leather Coat - cd_phm_00_ub_00_0208
+Ruschar Leather Armor - cd_m0001_00_so_phm_ub_21229
+Ashen Wolf's Leather Armor - cd_phm_00_ub_00_0056
+Odeck's Protector Plate Armor - cd_phm_m0001_00_orcumer_ub_0002
+Ashad Plate Armor - cd_phm_00_ub_00_0369
+Solas Plate Armor - cd_phm_00_ub_00_0342
+Belkandor Plate Armor - cd_phm_00_ub_00_0440
+Beekeeping Suit - cd_phm_00_ub_00_0039
+Riding Attire - cd_phm_00_ub_00_0401
+Golden Free Company's Plate Armor - cd_m0001_00_de_phm_ub_22005
+Camouflage Outfit - cd_phm_00_ub_00_0340
+Mistcloaked Owl Leather Armor - cd_m0001_00_de_pom_ub_22016
+Dewhaven Standard Leather Armor - cd_m0001_00_so_phm_ub_22255
+The Faceless's Cloth Armor - cd_m0001_00_de_phm_ub_22012
+Musket Border Guard Standard Armor - cd_m0001_00_de_phm_ub_24010
+Ator's Will Cloth Armor - cd_m0001_00_so_phm_ub_32021
+Bolton Plate Armor - cd_m0001_00_so_phm_ub_33013
+Hernandian Honor Guard Armor - cd_phm_00_ub_00_0374
+Chelcia Plate Armor - cd_phm_00_ub_0054_09
+Demeniss Ceremonial Plate Armor - cd_m0001_00_so_phm_ub_33012
+Dragon Flame Armor - cd_phm_00_ub_01_0332
+Sahazhad Plate Armor - cd_phm_00_ub_0054_06
+Dark Ringleader's Cloth Armor - cd_m0001_00_so_phm_ub_24004
+Tariv Cloth Attire - cd_phm_00_ub_00_0376
+Leather Armor of the Fallen Kingdom - cd_phm_m0001_00_saigod_ub_0002
+Duskfang Leather Armor - cd_m0001_00_so_phm_ub_24001
+Blackwing Leather Armor - cd_m0001_00_crowman_ub_0001
+Carta Plate Armor - cd_m0001_00_de_phm_ub_24004
+Icewing Plate Armor - cd_phm_00_ub_00_0008_03
+Plate Armor of Cursed Soul - cd_phm_m0001_00_bliss_redknight_ub_0001
+Bedure Chain Mail - cd_m0001_00_so_phm_ub_24002
+Crimson Chaser Mail - cd_phm_00_ub_00_0350
+Ferman Plate Armor - cd_m0001_00_so_phm_ub_22039
+Plate Armor of the Shadows - cd_m0001_00_death_knight_ub_0001
+Baltheon Plate Armor - cd_nhm_so_ub_51227
+Valortread Plate Armor - cd_phm_00_ub_00_0439
+Skyblazer Cloth Armor - cd_m0001_00_de_phm_ub_23001
+Hungering Fang Leather Armor - cd_phm_00_ub_00_0375
+Frozen Heart Plate Armor - cd_m0001_00_so_phm_ub_43014
+Dark Marksman's Plate Armor - cd_m0001_00_samuel_ub_0001
+Golden Greed Plate Armor - cd_phm_m0001_00_so_phm_ub_43013
+Kuku Flame-Resistant Armor - cd_m0001_00_so_phm_ub_25001_index01
+Kuku Ice-Resistant Armor - cd_m0001_00_skullknight_ub_0003_index01
+Frostcursed Plate Armor - cd_m0001_00_skullknight_ub_0003
+Armor of Loyal Friendship - cd_m0001_00_so_phm_ub_23004
+Nibrak Cloth Armor - cd_nhm_so_ub_10601
+Grotevant Plate Armor - cd_m0001_00_wellsknight_ub_0001
+Greymane Cloth Armor - cd_m0001_00_no_phm_ub_43012
+Helfryn Leather Armor - cd_phm_00_ub_00_0052_index01
+Northern Fighter's Chain Mail - cd_phm_m0001_00_no_phm_ub_43005
+Condemner's Plate Armor - cd_m0001_00_so_phm_ub_31237
+Desert Marauder's Plate Armor - cd_phm_07_ub_00_0319
+Shadowleaf Outfit - cd_phm_00_ub_00_0393
+Kuku Lightning-Resistant Armor - cd_phm_m0001_00_titan_ub_0002_index01
+Doventry Leather Armor - cd_m0001_00_so_phm_ub_21093
+Bounty Hunter's Leather Armor - cd_m0001_00_no_pom_ub_22015
+Grave Robber's Leather Armor - cd_m0001_00_no_pgm_ub_21011
+Martial Artist's Cloth Garb - cd_m0001_00_so_phm_ub_23139
+Vildyne Leather Armor - cd_m0001_00_so_phm_ub_26002
+Buellen Leather Armor - cd_m0001_00_so_phm_ub_22049
+Huskall Leather Armor - cd_m0001_00_so_phm_ub_21244
+Red Rider's Plate Armor - cd_phm_00_ub_20_0349
+Devan's Cloth Armor - cd_nhm_so_ub_51028
+Valnos Leather Armor - cd_m0001_00_so_phm_ub_22004
+Mardain Leather Armor - cd_nhm_so_ub_10634
+Besnet Cloth Armor - cd_m0001_00_so_phm_ub_23008
+Lonely Bomb Leather Armor - cd_m0001_00_de_phm_ub_23005
+Oak Barrel Leather Armor - cd_m0001_00_so_phm_ub_43008
+Blacksmith's Leather Armor - cd_m0001_00_so_phm_ub_26063
+Stein Leather Armor - cd_phm_00_ub_00_0188
+Knight of Carnage Plate Armor - cd_m0001_00_crimsonduke_ub_0001
+Demenissian Grand General Plate Armor - cd_m0001_00_so_phm_ub_35006
+Unyielding Hero's Plate Armor - cd_phm_00_ub_00_0377
+Martial Monk's Cloth Robe - cd_phm_m0001_00_orcumer_ub_0003
+The Ashen's Plate Armor - cd_m0001_00_tarandus_warrior_ub_0002

@@ -248,7 +248,6 @@ struct Tracked
     LONG appliedVersion;
     DWORD meshChangedAt;
     int recolorStep;        // next entry of RECOLOR_DELAYS_MS, or -1 when done
-    bool eyesChecked;
     bool valuesTried;       // CreateValues attempted
     bool noValuesNoted;     // "waiting for appearance values" logged
     DWORD valuesCreatedAt;  // nothing else is changed for a while after
@@ -550,14 +549,24 @@ static volatile LONG g_applying = 0;
 
 // A new mesh (hair, body, head...) loads a moment after the swap and comes
 // up with default colours. Chosen values are pushed again at these delays.
-static const DWORD RECOLOR_DELAYS_MS[] = { 800, 2000, 4000 };
+// Values alone do not reach a body swapped in while the game loads: its skin
+// tone and tattoos come with a rebuild (as after any change), and the one
+// after the swap ran before the body was there. From REBUILD_STEP on, the
+// character is rebuilt again.
+static const DWORD RECOLOR_DELAYS_MS[] = { 800, 2000, 4000, 8000, 15000 };
+static const int REBUILD_STEP = 3;
 static const int RECOLOR_STEPS = sizeof(RECOLOR_DELAYS_MS) / sizeof(RECOLOR_DELAYS_MS[0]);
 
 // Calls the setter for every chosen value, even ones that already match, so
-// freshly loaded meshes pick up their colours.
-static void ReapplyChosenValues(uintptr_t controller, int ch)
+// freshly loaded meshes pick up their colours. Values set in the game's own
+// screens (skin tone, tattoos) are pushed again too: they are not among the
+// chosen ones, and a swapped body came up without them until the tattoo
+// screen was visited.
+static void ReapplyChosenValues(uintptr_t controller, int ch, bool rebuild)
 {
-    if (!HasDecorations(controller))
+    Appearance current;
+
+    if (!HasDecorations(controller) || !ReadLook(controller, &current))
         return;
 
     Appearance desired;
@@ -568,15 +577,24 @@ static void ReapplyChosenValues(uintptr_t controller, int ch)
 
     for (int i = 0; i < DECORATION_COUNT; ++i)
     {
+        uint8_t value;
+
         if (mask.decoration[i])
-        {
-            g_setDecoration(controller, (uint32_t)i, desired.decoration[i]);
-            ++count;
-        }
+            value = desired.decoration[i];
+        else if (current.decoration[i])
+            value = current.decoration[i];
+        else
+            continue;
+
+        g_setDecoration(controller, (uint32_t)i, value);
+        ++count;
     }
 
+    if (rebuild)
+        g_rebuild(controller);
+
     if (count)
-        Log("re-applied %d values to %S after a mesh change", count, CHARACTER_NAMES[ch]);
+        Log("re-applied %d values to %S after a mesh change%s", count, CHARACTER_NAMES[ch], rebuild ? " (rebuilt)" : "");
 }
 
 // A preview copy builds itself from a default look for a moment after it
@@ -761,9 +779,6 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 //    reuses the old head;
 //  - the head comes back without its skin colour, and re-sending the same
 //    value does not fix it: the value is moved one step and back.
-//
-// All characters read the same eye files, so while a character's head is
-// rebuilt the eye files get that character's colour (EyesSetTarget).
 
 enum HeadPhase { HEAD_IDLE, HEAD_AWAY, HEAD_BACK, HEAD_NUDGED };
 
@@ -771,9 +786,6 @@ static const int SKIN_COLOR = 22;
 static const DWORD SKIN_NUDGE_AFTER_MS = 1200;
 static const DWORD SKIN_RESTORE_AFTER_MS = 100;
 
-// After a load, characters whose eye colour differs from Kliff's (the colour
-// the eye files were read with) get their head rebuilt once.
-static const DWORD EYES_CHECK_AFTER_MS = 4000;
 
 static volatile LONG g_headRequested[CHARACTER_COUNT] = {};
 static volatile LONG g_headAwayMs[CHARACTER_COUNT] = { HEAD_AWAY_MS, HEAD_AWAY_MS, HEAD_AWAY_MS };
@@ -847,7 +859,6 @@ static bool StartHeadReload(uintptr_t controller, int ch, DWORD now)
     if (away < 0 || away == head || (uint32_t)away >= options)
         away = head + 1 < (int)options ? head + 1 : head - 1;
 
-    EyesSetTarget(ch);
     SwitchHead(controller, head, (uint8_t)away);
     g_headCharacter = ch;
     g_headReturn = head;
@@ -898,7 +909,6 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
         {
             g_headPhase = HEAD_IDLE;
             g_headCharacter = -1;
-            EyesSetTarget(CHAR_KLIFF);
             Log("head rebuild (%S): done", CHARACTER_NAMES[ch]);
             return false;
         }
@@ -917,25 +927,12 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
         g_rebuild(controller);
         g_headPhase = HEAD_IDLE;
         g_headCharacter = -1;
-        EyesSetTarget(CHAR_KLIFF);
         Log("head rebuild (%S): done (skin colour %d restored)", CHARACTER_NAMES[ch], g_skin);
         return false;
 
     default:
         return false;
     }
-}
-
-// Once after a character appears: its eyes were read with Kliff's colour.
-static void CheckEyes(Tracked* t, DWORD now)
-{
-    if (t->eyesChecked || now - t->firstSeen < EYES_CHECK_AFTER_MS)
-        return;
-
-    t->eyesChecked = true;
-
-    if (t->character != CHAR_KLIFF && EyesChosen(t->character) != EyesChosen(CHAR_KLIFF))
-        GameReloadHead(t->character);
 }
 
 // ---------------------------------------------------------------------------
@@ -1090,10 +1087,7 @@ static void OnControllerUpdate(uintptr_t controller)
         t = NULL;
     }
 
-    // The eye colour's head rebuild is for the character's own controller.
-    if (t && !preview)
-        CheckEyes(t, now);
-
+    // A head rebuild is for the character's own controller.
     if (t && !preview && StepHeadReload(controller, t, now))
         t = NULL;
 
@@ -1117,7 +1111,7 @@ static void OnControllerUpdate(uintptr_t controller)
         else if (t->recolorStep >= 0 && now - t->meshChangedAt >= RECOLOR_DELAYS_MS[t->recolorStep])
         {
             RequeueBeard(controller, t);
-            ReapplyChosenValues(controller, t->character);
+            ReapplyChosenValues(controller, t->character, t->recolorStep >= REBUILD_STEP);
 
             if (++t->recolorStep >= RECOLOR_STEPS)
                 t->recolorStep = -1;

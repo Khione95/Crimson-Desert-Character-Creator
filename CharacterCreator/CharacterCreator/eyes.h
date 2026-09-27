@@ -13,9 +13,11 @@
 // write to material parameters those files do not declare, so they do
 // nothing.
 //
-// The mod swaps the iris texture name while the game reads those files, so a
-// new choice applies the next time the game loads the eyes: at once when the
-// head is rebuilt (see GameReloadHead).
+// The mod swaps the iris texture name while the game reads those files. The
+// shared eye files are left alone (NPCs read them too): the player
+// characters wear copies of their heads with their own eye files, whose iris
+// paths are marked (tools/private_eyes.py). The game keeps eye files loaded
+// for the session, so a new colour is read when the game next starts.
 
 struct EyeColour
 {
@@ -34,6 +36,3 @@ void EyesInit(const char* folder);
 void EyesChoose(int ch, int colour);
 int EyesChosen(int ch);
 
-// All characters read the same eye files; they get this character's colour
-// (Kliff's unless another character's head is being rebuilt).
-void EyesSetTarget(int ch);

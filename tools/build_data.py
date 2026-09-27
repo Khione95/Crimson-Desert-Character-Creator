@@ -65,6 +65,9 @@ FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
 VERSION = '9.1.1'
+# Female Armor Fit's part table, from its released package (see private_eyes.py).
+ARMOR_FIT_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'armor_fit_released',
+                               'character', 'bin__', 'partprefabtable.pappt')
 DESCRIPTION = ('In-game appearance editor for Kliff, Damiane and Oongka (F6 / F7 / F8): gender, race, body, '
                'head, hair, beard, eyebrows, eye colour, tattoos, scars and paint. Needs CharacterCreator.asi.')
 
@@ -641,6 +644,17 @@ def main():
         f.write('\n'.join(lines) + '\n')
 
     print(f'  {len(converted)} icons converted')
+
+    # The player characters' own heads and eyes (tools/private_eyes.py), loose
+    # in the package's 0009: the head lists name them and the plugin gets the
+    # list of copied heads. Their part table is Female Armor Fit's (the game's
+    # with the armor copies) plus the heads, so both packages ship the same
+    # table.
+    import private_eyes
+    print('private eyes:')
+    private_eyes.build(os.path.join(game_out, '0009'), os.path.join(game_out, META),
+                       os.path.join(runtime_out, 'private_heads.txt'), menu=os.path.join(runtime_out, 'menu.txt'),
+                       table_path=ARMOR_FIT_TABLE if os.path.exists(ARMOR_FIT_TABLE) else None)
     pack_runtime_data(runtime_out, os.path.join(output, 'CharacterCreator.data'))
     print('done:', output)
 

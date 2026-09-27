@@ -9,3 +9,8 @@ __pycache__/
 armor_fit/
 armor_fit_stage/
 armor_fit_logs/
+body_shape_stage/
+armor_fit_v2/
+armor_fit_v2_logs/
+armor_fit_v1/
+armor_fit_released/

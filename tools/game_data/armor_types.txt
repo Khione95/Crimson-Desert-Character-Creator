@@ -1,0 +1,738 @@
+cd_m0001_00_ancientpeople_ub_0003 cloth Priscus's Cloth Armor
+cd_m0001_00_ancientpeople_ub_0004 cloth Praevus's Cloth Armor
+cd_m0001_00_blackbears_middleboss_ub_0001 leather Black Bear Leather Armor
+cd_m0001_00_bush_devil_ub_0001 leather Sunset Reed Leather Armor
+cd_m0001_00_crimsonduke_ub_0001 plate Knight of Carnage Plate Armor
+cd_m0001_00_crowman_ub_0001 leather Blackwing Leather Armor
+cd_m0001_00_de_pdm_ub_21007 plate Iguana Rider's Plate Armor
+cd_m0001_00_de_pdm_ub_21008 plate Iguana Rider's Plate Armor
+cd_m0001_00_de_pdm_ub_21009 plate Iguana Rider's Plate Armor
+cd_m0001_00_de_pgm_ub_11002 cloth Praevus's Cloth Armor
+cd_m0001_00_de_pgm_ub_11003 cloth Entuka Cloth Armor
+cd_m0001_00_de_pgm_ub_11004 cloth Entuka Cloth Armor
+cd_m0001_00_de_pgm_ub_21009 leather Mistcloaked Owl Leather Armor
+cd_m0001_00_de_pgm_ub_21010 leather Cherlay Leather Armor
+cd_m0001_00_de_pgm_ub_21014 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_de_pgm_ub_21015 leather Bounty Hunter's Leather Armor
+cd_m0001_00_de_pgm_ub_21027 plate Desert Marauder's Plate Armor
+cd_m0001_00_de_phm_ub_13001_q leather Cradbahn Leather Armor
+cd_m0001_00_de_phm_ub_13002 leather Jackals' Leather Armor
+cd_m0001_00_de_phm_ub_21016 cloth Wyvernflames Cloth Armor
+cd_m0001_00_de_phm_ub_21018_q cloth Deshret Cloth Armor
+cd_m0001_00_de_phm_ub_21025 cloth The Wyvernflames Vice Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_21030 cloth The Faceless Vice Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_21032 cloth The Faceless Vice Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_21042 cloth Tanturi Cloth Armor
+cd_m0001_00_de_phm_ub_21044 cloth Bantree Cloth Armor
+cd_m0001_00_de_phm_ub_21047_q plate Digren Plate Helm
+cd_m0001_00_de_phm_ub_21048 cloth Sirenta Cloth Armor
+cd_m0001_00_de_phm_ub_21049 cloth Darren Cloth Armor
+cd_m0001_00_de_phm_ub_22004 plate Twilight Messengers' Plate Armor
+cd_m0001_00_de_phm_ub_22005 plate Golden Free Company's Plate Armor
+cd_m0001_00_de_phm_ub_22012 cloth The Faceless's Cloth Armor
+cd_m0001_00_de_phm_ub_22015 leather Mistcloaked Owl Leather Armor
+cd_m0001_00_de_phm_ub_22017 cloth Gardeiff Cloth Armor
+cd_m0001_00_de_phm_ub_22019 plate Dutian Chain Mail
+cd_m0001_00_de_phm_ub_22031 leather Bounty Hunter's Leather Armor
+cd_m0001_00_de_phm_ub_22032 plate Bounty Hunter's Plate Armor
+cd_m0001_00_de_phm_ub_23001 cloth Skyblazer Cloth Armor
+cd_m0001_00_de_phm_ub_23002 cloth The Masked Liberator's Cloth Armor
+cd_m0001_00_de_phm_ub_23003 plate Half Moon Reaper Plate Armor
+cd_m0001_00_de_phm_ub_23005 leather Lonely Bomb Leather Armor
+cd_m0001_00_de_phm_ub_23006_q plate Garten Plate Armor
+cd_m0001_00_de_phm_ub_23008 plate New Moon Reaper Plate Armor
+cd_m0001_00_de_phm_ub_23009 plate Full Moon Reaper Plate Armor
+cd_m0001_00_de_phm_ub_24003 plate Darren Chain Mail
+cd_m0001_00_de_phm_ub_24004 plate Carta Plate Armor
+cd_m0001_00_de_phm_ub_24005 leather Blinding Arrow's Female Leather Cloak
+cd_m0001_00_de_phm_ub_24006 leather Blinding Arrow's Female Leather Cloak
+cd_m0001_00_de_phm_ub_24007 leather Blinding Arrow's Female Leather Cloak
+cd_m0001_00_de_phm_ub_24011 plate Dusksongs Plate Armor
+cd_m0001_00_de_phm_ub_24012 leather Dusksongs Leather Armor
+cd_m0001_00_de_phm_ub_31011 cloth Leddic Cloth Armor
+cd_m0001_00_de_phm_ub_31012 cloth Lacas Cloth Armor
+cd_m0001_00_de_phm_ub_31013 cloth Marindo Cloth Armor
+cd_m0001_00_de_phm_ub_31014 cloth Rikkas Cloth Armor
+cd_m0001_00_de_phm_ub_31015 cloth Lauta Cloth Armor
+cd_m0001_00_de_phm_ub_31016 cloth Killua Cloth Armor
+cd_m0001_00_de_phm_ub_31017 cloth Larcotti Cloth Armor
+cd_m0001_00_de_phm_ub_31018 cloth Liorna Cloth Armor
+cd_m0001_00_de_phm_ub_31019 cloth Mauryth Cloth Armor
+cd_m0001_00_de_phm_ub_31020 cloth The Faceless Vice Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_32001 leather Hubus Leather Armor
+cd_m0001_00_de_phm_ub_32002 leather Ziggurat Leather Armor
+cd_m0001_00_de_phm_ub_32005 leather Hubus Leather Armor
+cd_m0001_00_de_phm_ub_32009 plate Kantana Plate Armor
+cd_m0001_00_de_phm_ub_32010 plate Ketlan Chain Mail
+cd_m0001_00_de_phm_ub_32011 plate Antuka Chain Mail
+cd_m0001_00_de_phm_ub_32012 plate Amantia Chain Mail
+cd_m0001_00_de_phm_ub_32013 plate Amanas Chain Mail
+cd_m0001_00_de_phm_ub_32014 plate Amanta Plate Armor
+cd_m0001_00_de_phm_ub_32015 plate Kakuta Plate Armor
+cd_m0001_00_de_phm_ub_32016 plate Arcalu Plate Armor
+cd_m0001_00_de_phm_ub_32017 cloth Ushreen Cloth Armor
+cd_m0001_00_de_phm_ub_32018 cloth Trilly Cloth Armor
+cd_m0001_00_de_phm_ub_32019 cloth Tutan Cloth Armor
+cd_m0001_00_de_phm_ub_32020 cloth Quandan Cloth Armor
+cd_m0001_00_de_phm_ub_32021 cloth Qunanta Cloth Armor
+cd_m0001_00_de_phm_ub_32022 cloth Qutin Cloth Armor
+cd_m0001_00_de_phm_ub_33003_q plate Baratan Chain Mail
+cd_m0001_00_de_phm_ub_33008 cloth Varnia Cloth Armor
+cd_m0001_00_de_phm_ub_33012 cloth Varnian Guard Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_43011 cloth Gladiator's Cloth Armor
+cd_m0001_00_de_phm_ub_43012 cloth Gladiator's Cloth Armor
+cd_m0001_00_de_phm_ub_43013 cloth Gladiator's Cloth Armor
+cd_m0001_00_de_phm_ub_43014 cloth Gladiator's Cloth Armor
+cd_m0001_00_de_phm_ub_43021 cloth The Wyvernflames Vice Captain's Cloth Armor
+cd_m0001_00_de_phm_ub_43022 plate Twilight Messenger Vice Captain's Plate Armor
+cd_m0001_00_de_phm_ub_43023 cloth The Faceless Vice Captain's Cloth Armor
+cd_m0001_00_de_phw_ub_21002 cloth Rovenia Cloth Armor
+cd_m0001_00_de_phw_ub_22004 cloth Sirenta Cloth Armor
+cd_m0001_00_de_phw_ub_22007 leather Mistcloaked Owl Leather Armor
+cd_m0001_00_de_phw_ub_22009 leather Helpaia Leather Armor
+cd_m0001_00_de_phw_ub_23005 cloth Lauques Cloth Armor
+cd_m0001_00_de_pom_ub_21004 cloth Gaph Cloth Armor
+cd_m0001_00_de_pom_ub_21005 cloth Melina Cloth Armor
+cd_m0001_00_de_pom_ub_21006 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_de_pom_ub_21007 leather Bounty Hunter's Leather Armor
+cd_m0001_00_de_pom_ub_22001 leather Mistcloaked Owl Leather Armor
+cd_m0001_00_de_pom_ub_22002 plate Moshane Chain Mail
+cd_m0001_00_de_pom_ub_22003 plate Darren Chain Mail
+cd_m0001_00_de_pom_ub_22016 leather Mistcloaked Owl Leather Armor
+cd_m0001_00_de_ptm_ub_21001 cloth Kriella Cloth Armor
+cd_m0001_00_de_ptm_ub_21002 plate Danda Chain Mail
+cd_m0001_00_de_ptm_ub_21003 leather Rapid Leather Armor
+cd_m0001_00_de_ptm_ub_21009 plate Dusksongs Plate Armor
+cd_m0001_00_de_ptm_ub_21010 leather Dusksongs Leather Armor
+cd_m0001_00_de_ptm_ub_43002 leather Gladiator Leather Armor
+cd_m0001_00_de_ptm_ub_43003 plate Caliburn's Vice Captain Plate Armor
+cd_m0001_00_de_ptm_ub_43004 plate The Dusksong Vice Captain's Plate Armor
+cd_m0001_00_death_knight_ub_0001 plate Plate Armor of the Shadows
+cd_m0001_00_forest_fairy_ub_0001_u leather One-Armed Jackal's Leather Armor
+cd_m0001_00_gears_ub_0001_u leather Giath's Leather Armor
+cd_m0001_00_geumgangbulgwe_ub_0001 cloth Gilded Goblin's Cloth Armor
+cd_m0001_00_greenorc_ub_0001 leather Helms Leather Armor
+cd_m0001_00_greenorc_ub_0003 leather Cherlay Leather Armor
+cd_m0001_00_judge_ub_0001 plate Larc Plate Armor
+cd_m0001_00_mud_skull_man_ub_0001_u cloth Tikatan Cloth Armor
+cd_m0001_00_no_pdm_ub_22002 plate Cantina Chain Mail
+cd_m0001_00_no_pgm_ub_21006 leather Bounty Hunter's Leather Armor
+cd_m0001_00_no_pgm_ub_21007 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_no_pgm_ub_21008 leather Grave Robber's Leather Armor
+cd_m0001_00_no_pgm_ub_21009 leather Grave Robber's Leather Armor
+cd_m0001_00_no_pgm_ub_21010 leather Grave Robber's Leather Armor
+cd_m0001_00_no_pgm_ub_21011 leather Grave Robber's Leather Armor
+cd_m0001_00_no_phm_ub_11001 cloth Praevus's Cloth Armor
+cd_m0001_00_no_phm_ub_11002 cloth Praevus's Cloth Armor
+cd_m0001_00_no_phm_ub_12002 cloth Bandit Cloth Armor
+cd_m0001_00_no_phm_ub_13001 leather Cradbahn Leather Armor
+cd_m0001_00_no_phm_ub_21005 plate Trier Chain Mail
+cd_m0001_00_no_phm_ub_21008 leather Favan Leather Armor
+cd_m0001_00_no_phm_ub_21010 leather Balgraun Leather Armor
+cd_m0001_00_no_phm_ub_21011 leather Balgraun Leather Armor
+cd_m0001_00_no_phm_ub_21017 leather Jackals' Leather Armor
+cd_m0001_00_no_phm_ub_21018 leather Jackals' Leather Armor
+cd_m0001_00_no_phm_ub_21039 cloth Turncoat Light Cloth Armor
+cd_m0001_00_no_phm_ub_21040 cloth Turncoat Light Cloth Armor
+cd_m0001_00_no_phm_ub_21041 leather Helms Leather Armor
+cd_m0001_00_no_phm_ub_21044 cloth Greymane Cloth Armor
+cd_m0001_00_no_phm_ub_21071 leather Jackals' Leather Armor
+cd_m0001_00_no_phm_ub_22001 cloth Duskmoon Cloth Cloak
+cd_m0001_00_no_phm_ub_22003 leather Jackals' Leather Armor
+cd_m0001_00_no_phm_ub_22004 cloth Tiorant Cloth Armor
+cd_m0001_00_no_phm_ub_22016 cloth Goldleaves' Cloth Cloak
+cd_m0001_00_no_phm_ub_22017 cloth Varnia Cloth Armor
+cd_m0001_00_no_phm_ub_22018 cloth Ravirun Cloth Cap
+cd_m0001_00_no_phm_ub_22020 cloth Dvalin Cloth Armor
+cd_m0001_00_no_phm_ub_22021 leather Bounty Hunter's Leather Armor
+cd_m0001_00_no_phm_ub_22022 plate Bounty Hunter's Plate Armor
+cd_m0001_00_no_phm_ub_22023 leather Shadowleaf Leather Armor
+cd_m0001_00_no_phm_ub_23004 plate Baratan Chain Mail
+cd_m0001_00_no_phm_ub_24001 plate Rakkli Plate Armor
+cd_m0001_00_no_phm_ub_24006 leather Greymanes' Leather Armor
+cd_m0001_00_no_phm_ub_24007 leather Greymanes' Leather Armor
+cd_m0001_00_no_phm_ub_24008 leather Greymanes' Leather Armor
+cd_m0001_00_no_phm_ub_24009 leather Greymanes' Leather Armor
+cd_m0001_00_no_phm_ub_42003 leather One-Armed Jackal's Leather Armor
+cd_m0001_00_no_phm_ub_42004 cloth Marni's Cloth Armor
+cd_m0001_00_no_phm_ub_43001 leather Hubus Leather Armor
+cd_m0001_00_no_phm_ub_43002 cloth Magta Cloth Armor
+cd_m0001_00_no_phm_ub_43005 plate Northern Fighter's Chain Mail
+cd_m0001_00_no_phm_ub_43010 leather Lonely Jackals' Leather Armor
+cd_m0001_00_no_phm_ub_43011 leather Greymanes' Leather Armor
+cd_m0001_00_no_phm_ub_43012 cloth Greymane Cloth Armor
+cd_m0001_00_no_phw_ub_22003 cloth Goldleaves' Cloth Cloak
+cd_m0001_00_no_phw_ub_42008 cloth Turncoat Light Cloth Armor
+cd_m0001_00_no_phw_ub_43001 cloth Magta Cloth Armor
+cd_m0001_00_no_pom_ub_12001 cloth Praevus's Cloth Armor
+cd_m0001_00_no_pom_ub_12004 leather Jackals' Leather Armor
+cd_m0001_00_no_pom_ub_12005 leather Baorica Leather Armor
+cd_m0001_00_no_pom_ub_21010 cloth Eryn Cloth Cap
+cd_m0001_00_no_pom_ub_22008 cloth Varnia Cloth Armor
+cd_m0001_00_no_pom_ub_22014 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_no_pom_ub_22015 leather Bounty Hunter's Leather Armor
+cd_m0001_00_no_pow_ub_21003 cloth Bleed Alchemist's Cloth Armor
+cd_m0001_00_no_pow_ub_22003 cloth Goldleaves' Cloth Cloak
+cd_m0001_00_orcumer_ub_0002 plate Odeck's Protector Plate Armor
+cd_m0001_00_orcumer_ub_0003 cloth Martial Monk's Cloth Robe
+cd_m0001_00_possesion_myurdin_ub_0001 leather Umbra's Hierophany Leather Armor
+cd_m0001_00_redorc_ub_0004 leather Cradbahn Leather Armor
+cd_m0001_00_samuel_ub_0001 plate Dark Marksman's Plate Armor
+cd_m0001_00_skullknight_ub_0003 plate Frostcursed Plate Armor
+cd_m0001_00_so_pgm_ub_21003 leather Blinding Arrow Scout's Leather Armor
+cd_m0001_00_so_pgm_ub_21004 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_pgm_ub_21006 leather Delfreid Leather Armor
+cd_m0001_00_so_pgm_ub_21007 leather Carphalen Leather Armor
+cd_m0001_00_so_pgm_ub_21008 leather Einz Leather Armor
+cd_m0001_00_so_pgm_ub_21009 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_so_pgm_ub_21010 leather Bounty Hunter's Leather Armor
+cd_m0001_00_so_pgm_ub_21011 leather Staglord Acolyte's Leather Armor
+cd_m0001_00_so_pgm_ub_21017_d cloth Gilded Goblin's Cloth Armor
+cd_m0001_00_so_pgm_ub_22002 leather Dellovian Leather Armor
+cd_m0001_00_so_pgm_ub_22003 plate Ticon Plate Armor
+cd_m0001_00_so_pgm_ub_22004 plate Marc Plate Armor
+cd_m0001_00_so_pgm_ub_22005 plate Takhan Plate Armor
+cd_m0001_00_so_pgm_ub_22006 plate Kark Chain Mail
+cd_m0001_00_so_pgm_ub_22041_d cloth Fundamentalist Goblin Cloth Armor
+cd_m0001_00_so_pgm_ub_38001 plate Danda Chain Mail
+cd_m0001_00_so_pgm_ub_38002 cloth Kailok's Cloth Armor
+cd_m0001_00_so_pgm_ub_42008 cloth Wolf Tracker Cloth Armor
+cd_m0001_00_so_pgm_ub_42010 leather Wolf Tracker Leather Armor
+cd_m0001_00_so_pgm_ub_42011 leather Wolf Tracker Vice Captain's Leather Armor
+cd_m0001_00_so_phm_ub_11001 leather Cherlay Leather Armor
+cd_m0001_00_so_phm_ub_11002_q cloth Eryn Cloth Cap
+cd_m0001_00_so_phm_ub_11003 leather Baorica Leather Armor
+cd_m0001_00_so_phm_ub_11004 cloth Entuka Cloth Armor
+cd_m0001_00_so_phm_ub_11010 cloth Eryn Cloth Cap
+cd_m0001_00_so_phm_ub_11011 cloth Entuka Cloth Armor
+cd_m0001_00_so_phm_ub_11012 cloth Tikatan Cloth Armor
+cd_m0001_00_so_phm_ub_11016 leather Slaughterer's Leather Armor
+cd_m0001_00_so_phm_ub_13002 leather Helpaia Leather Armor
+cd_m0001_00_so_phm_ub_13003 cloth Tikatan Cloth Armor
+cd_m0001_00_so_phm_ub_21018 cloth Schtump Cloth Armor
+cd_m0001_00_so_phm_ub_21021 plate Kauria Chain Mail
+cd_m0001_00_so_phm_ub_21023 cloth Sirenta Cloth Armor
+cd_m0001_00_so_phm_ub_21024 leather Favan Leather Armor
+cd_m0001_00_so_phm_ub_21054 cloth The Wyvernflames Vice Captain's Cloth Armor
+cd_m0001_00_so_phm_ub_21055 cloth The Wyvernflames Vice Captain's Cloth Armor
+cd_m0001_00_so_phm_ub_21061 cloth The Faceless Vice Captain's Cloth Armor
+cd_m0001_00_so_phm_ub_21093 leather Doventry Leather Armor
+cd_m0001_00_so_phm_ub_21097 plate Kauria Chain Mail
+cd_m0001_00_so_phm_ub_21098 plate Trier Chain Mail
+cd_m0001_00_so_phm_ub_21099 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_phm_ub_21106 plate Baratan Chain Mail
+cd_m0001_00_so_phm_ub_21107 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_21110 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_21113 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_21114 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_21115 cloth Turncoat Light Cloth Armor
+cd_m0001_00_so_phm_ub_21116 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_21117 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_21121 leather Cradbahn Leather Armor
+cd_m0001_00_so_phm_ub_21122 leather Darbaran Leather Armor
+cd_m0001_00_so_phm_ub_21123 leather Berenzard Leather Armor
+cd_m0001_00_so_phm_ub_21124 leather Croden Leather Armor
+cd_m0001_00_so_phm_ub_21125 cloth Ravirun Cloth Cap
+cd_m0001_00_so_phm_ub_21126 cloth Metron Cloth Armor
+cd_m0001_00_so_phm_ub_21127 cloth Decanteau Cloth Armor
+cd_m0001_00_so_phm_ub_21128 cloth Kaetra Cloth Armor
+cd_m0001_00_so_phm_ub_21129 cloth Makran Cloth Armor
+cd_m0001_00_so_phm_ub_21130 cloth Tantuta Cloth Armor
+cd_m0001_00_so_phm_ub_21131 cloth Antutan Cloth Armor
+cd_m0001_00_so_phm_ub_21132 cloth Marknin Cloth Armor
+cd_m0001_00_so_phm_ub_21133 leather Tyrannus Leather Armor
+cd_m0001_00_so_phm_ub_21134 leather Formosa Leather Armor
+cd_m0001_00_so_phm_ub_21135 leather Grolla Leather Armor
+cd_m0001_00_so_phm_ub_21136 leather Glaville Leather Armor
+cd_m0001_00_so_phm_ub_21137 leather Teblecc Leather Armor
+cd_m0001_00_so_phm_ub_21138 leather Goldur Leather Armor
+cd_m0001_00_so_phm_ub_21139 leather Deimon Leather Armor
+cd_m0001_00_so_phm_ub_21140 leather Bolzers Leather Armor
+cd_m0001_00_so_phm_ub_21141 leather Gronerd Leather Armor
+cd_m0001_00_so_phm_ub_21142 leather Deboros Leather Armor
+cd_m0001_00_so_phm_ub_21143 leather Nordbeid Leather Armor
+cd_m0001_00_so_phm_ub_21154 cloth Kithan Cloth Armor
+cd_m0001_00_so_phm_ub_21155 cloth Kasunan Cloth Armor
+cd_m0001_00_so_phm_ub_21156 cloth Kattinan Cloth Armor
+cd_m0001_00_so_phm_ub_21157 cloth Acria Cloth Armor
+cd_m0001_00_so_phm_ub_21158 cloth Kabotun Cloth Armor
+cd_m0001_00_so_phm_ub_21159 cloth Kavokin Cloth Armor
+cd_m0001_00_so_phm_ub_21160 cloth Teknin Cloth Armor
+cd_m0001_00_so_phm_ub_21161 cloth Maknan Cloth Armor
+cd_m0001_00_so_phm_ub_21162 leather Blinding Arrow Scout's Leather Armor
+cd_m0001_00_so_phm_ub_21163 cloth Blinding Arrow Rider's Cloth Armor
+cd_m0001_00_so_phm_ub_21164 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_phm_ub_21179 plate Blandry Chain Mail
+cd_m0001_00_so_phm_ub_21180 plate Trier Chain Mail
+cd_m0001_00_so_phm_ub_21183 plate Trier Chain Mail
+cd_m0001_00_so_phm_ub_21198 plate Rakkli Plate Armor
+cd_m0001_00_so_phm_ub_21202 cloth Talbern Cloth Armor
+cd_m0001_00_so_phm_ub_21203 cloth Vex Cloth Armor
+cd_m0001_00_so_phm_ub_21204 cloth Turncoat Cloth Armor
+cd_m0001_00_so_phm_ub_21205 cloth Juden Cloth Armor
+cd_m0001_00_so_phm_ub_21207 cloth Louis Cloth Armor
+cd_m0001_00_so_phm_ub_21208 cloth Turncoat Cloth Armor
+cd_m0001_00_so_phm_ub_21209 cloth Alphen Cloth Armor
+cd_m0001_00_so_phm_ub_21211 leather Turncoat Leather Armor
+cd_m0001_00_so_phm_ub_21212 cloth Warblick Cloth Armor
+cd_m0001_00_so_phm_ub_21213 cloth Rellone Cloth Armor
+cd_m0001_00_so_phm_ub_21214 leather Turncoat Leather Armor
+cd_m0001_00_so_phm_ub_21216 cloth Baldrin Cloth Armor
+cd_m0001_00_so_phm_ub_21217 leather Bendurs Leather Armor
+cd_m0001_00_so_phm_ub_21218 leather Kerburn Leather Armor
+cd_m0001_00_so_phm_ub_21219 leather Bennault Leather Armor
+cd_m0001_00_so_phm_ub_21220 cloth Orton Cloth Armor
+cd_m0001_00_so_phm_ub_21221 leather Gallabay Leather Armor
+cd_m0001_00_so_phm_ub_21222 cloth Ort Cloth Armor
+cd_m0001_00_so_phm_ub_21223 leather Brometi Leather Armor
+cd_m0001_00_so_phm_ub_21224 cloth Lokra Cloth Armor
+cd_m0001_00_so_phm_ub_21225 cloth Reltian Cloth Armor
+cd_m0001_00_so_phm_ub_21226 cloth Reltan Cloth Armor
+cd_m0001_00_so_phm_ub_21227 cloth Reltinan Cloth Armor
+cd_m0001_00_so_phm_ub_21228 cloth Ketian Cloth Armor
+cd_m0001_00_so_phm_ub_21229 leather Ruschar Leather Armor
+cd_m0001_00_so_phm_ub_21232 cloth Bleed Alchemist's Cloth Armor
+cd_m0001_00_so_phm_ub_21233 cloth Bleed Alchemist's Cloth Armor
+cd_m0001_00_so_phm_ub_21235 leather Hellhound Leather Helm
+cd_m0001_00_so_phm_ub_21236 leather Helpaia Leather Armor
+cd_m0001_00_so_phm_ub_21237 leather Helpaia Leather Armor
+cd_m0001_00_so_phm_ub_21244 leather Huskall Leather Armor
+cd_m0001_00_so_phm_ub_21248 leather Helms Leather Armor
+cd_m0001_00_so_phm_ub_21251 cloth Bleed Alchemist's Cloth Armor
+cd_m0001_00_so_phm_ub_21292 leather Staglord Acolyte's Leather Armor
+cd_m0001_00_so_phm_ub_21293 leather Yrkabel Leather Armor
+cd_m0001_00_so_phm_ub_21302 leather Staglord Acolyte's Leather Armor
+cd_m0001_00_so_phm_ub_21303 leather Staglord Acolyte's Leather Armor
+cd_m0001_00_so_phm_ub_22004 leather Valnos Leather Armor
+cd_m0001_00_so_phm_ub_22010 cloth Sirenta Cloth Armor
+cd_m0001_00_so_phm_ub_22011 cloth Sirion Cloth Armor
+cd_m0001_00_so_phm_ub_22012 leather Solworth Leather Armor
+cd_m0001_00_so_phm_ub_22013 leather Dowsampton Leather Armor
+cd_m0001_00_so_phm_ub_22014 leather Turncoat Leather Armor
+cd_m0001_00_so_phm_ub_22016 plate Gladiator's Rake Plate Helm
+cd_m0001_00_so_phm_ub_22018 plate Kauria Chain Mail
+cd_m0001_00_so_phm_ub_22021 cloth Bleed Alchemist's Cloth Armor
+cd_m0001_00_so_phm_ub_22027 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_22028 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_22029 plate Flame Knights Chain Mail
+cd_m0001_00_so_phm_ub_22031 leather Blinding Arrows' Leather Armor
+cd_m0001_00_so_phm_ub_22032 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_phm_ub_22033 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_22034 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_22035 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_22038 leather Balgraun Leather Armor
+cd_m0001_00_so_phm_ub_22039 plate Ferman Plate Armor
+cd_m0001_00_so_phm_ub_22040 leather Riclia Leather Armor
+cd_m0001_00_so_phm_ub_22041_q plate Luca Plate Armor
+cd_m0001_00_so_phm_ub_22042 leather Lutzen Leather Armor
+cd_m0001_00_so_phm_ub_22043 cloth Atnan Cloth Armor
+cd_m0001_00_so_phm_ub_22044 leather Pomerin Leather Armor
+cd_m0001_00_so_phm_ub_22045 leather Deltin Leather Armor
+cd_m0001_00_so_phm_ub_22046 cloth Dilanka Cloth Armor
+cd_m0001_00_so_phm_ub_22047 leather Palen Leather Armor
+cd_m0001_00_so_phm_ub_22048 cloth Patika Cloth Armor
+cd_m0001_00_so_phm_ub_22049 leather Buellen Leather Armor
+cd_m0001_00_so_phm_ub_22050 cloth Tenkan Cloth Armor
+cd_m0001_00_so_phm_ub_22065 leather Galustin Leather Armor
+cd_m0001_00_so_phm_ub_22066 leather Baltimier Leather Armor
+cd_m0001_00_so_phm_ub_22067 leather Hellad Leather Armor
+cd_m0001_00_so_phm_ub_22068 leather Ashclaw Leather Armor
+cd_m0001_00_so_phm_ub_22069 leather Arteyan Leather Armor
+cd_m0001_00_so_phm_ub_22070 cloth Attrean Cloth Armor
+cd_m0001_00_so_phm_ub_22071 leather Dartus Leather Armor
+cd_m0001_00_so_phm_ub_22072 cloth Maquealon Cloth Armor
+cd_m0001_00_so_phm_ub_22073 leather Calto Leather Armor
+cd_m0001_00_so_phm_ub_22074 leather Gersens Leather Armor
+cd_m0001_00_so_phm_ub_22075 cloth Akran Cloth Armor
+cd_m0001_00_so_phm_ub_22076 leather Fontine Leather Armor
+cd_m0001_00_so_phm_ub_22077 leather Flordanus Leather Armor
+cd_m0001_00_so_phm_ub_22078 leather Breitzle Leather Armor
+cd_m0001_00_so_phm_ub_22079 cloth Scarlet Blades Cloth Armor
+cd_m0001_00_so_phm_ub_22089 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22090 leather Balgraun Leather Armor
+cd_m0001_00_so_phm_ub_22093 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22101 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_phm_ub_22102 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_phm_ub_22103 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_phm_ub_22127 plate Guilan Plate Armor
+cd_m0001_00_so_phm_ub_22133 plate Aslan Chain Mail
+cd_m0001_00_so_phm_ub_22140 plate Strell Plate Armor
+cd_m0001_00_so_phm_ub_22141 plate Leuksah Chain Mail
+cd_m0001_00_so_phm_ub_22142 plate Riverdine Chain Mail
+cd_m0001_00_so_phm_ub_22143 plate Triali Plate Armor
+cd_m0001_00_so_phm_ub_22144 plate Princeps Plate Armor
+cd_m0001_00_so_phm_ub_22146 cloth Hewlette Cloth Armor
+cd_m0001_00_so_phm_ub_22147 cloth Pioneer Cloth Armor
+cd_m0001_00_so_phm_ub_22150 cloth Rarkah Cloth Armor
+cd_m0001_00_so_phm_ub_22151 cloth Rikkutan Cloth Armor
+cd_m0001_00_so_phm_ub_22152 leather Dursus Leather Armor
+cd_m0001_00_so_phm_ub_22153 leather Acrodus Leather Armor
+cd_m0001_00_so_phm_ub_22154 cloth Volkirk Cloth Armor
+cd_m0001_00_so_phm_ub_22156 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_phm_ub_22157 cloth Blinding Arrow Scout's Cloth Armor
+cd_m0001_00_so_phm_ub_22158 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22159 plate Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22160 plate Oltmann Chain Mail
+cd_m0001_00_so_phm_ub_22161 plate Tarman Chain Mail
+cd_m0001_00_so_phm_ub_22165 cloth Acklass Cloth Armor
+cd_m0001_00_so_phm_ub_22170 plate Canta Plate Armor
+cd_m0001_00_so_phm_ub_22171 plate Trier Chain Mail
+cd_m0001_00_so_phm_ub_22172 cloth Lauques Cloth Armor
+cd_m0001_00_so_phm_ub_22173 plate Larc Plate Armor
+cd_m0001_00_so_phm_ub_22175 leather Wandering Freesword's Leather Armor
+cd_m0001_00_so_phm_ub_22217_u leather Giath's Leather Armor
+cd_m0001_00_so_phm_ub_22218 leather Giath's Leather Armor
+cd_m0001_00_so_phm_ub_22219 leather Giath's Leather Armor
+cd_m0001_00_so_phm_ub_22237 cloth Pirate Cloth Armor
+cd_m0001_00_so_phm_ub_22238 cloth Pirate Cloth Armor
+cd_m0001_00_so_phm_ub_22239 cloth Dancing Catfish Cloth Armor
+cd_m0001_00_so_phm_ub_22240 cloth Pirate Cloth Armor
+cd_m0001_00_so_phm_ub_22241 cloth Pirate Cloth Armor
+cd_m0001_00_so_phm_ub_22248 cloth Bleed Officer's Cloth Armor
+cd_m0001_00_so_phm_ub_22249 leather Bleed Officer's Leather Armor
+cd_m0001_00_so_phm_ub_22254 plate Elite Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22254_index01 plate Elite Turncoat Plate Armor
+cd_m0001_00_so_phm_ub_22255 leather Dewhaven Standard Leather Armor
+cd_m0001_00_so_phm_ub_22256 plate Troccars Plate Armor
+cd_m0001_00_so_phm_ub_22503 leather Black Bear Officer's Leather Armor
+cd_m0001_00_so_phm_ub_23002 cloth Ankrian Cloth Armor
+cd_m0001_00_so_phm_ub_23003 plate Unyielding Warrior's Plate Armor
+cd_m0001_00_so_phm_ub_23004 plate Mortain Chain Mail
+cd_m0001_00_so_phm_ub_23005 cloth Eli's Attire
+cd_m0001_00_so_phm_ub_23008 cloth Besnet Cloth Armor
+cd_m0001_00_so_phm_ub_23012 plate Turncoat Chain Mail
+cd_m0001_00_so_phm_ub_23013 plate Gladiator's Rake Plate Helm
+cd_m0001_00_so_phm_ub_23139 cloth Martial Artist's Cloth Garb
+cd_m0001_00_so_phm_ub_24001 leather Duskfang Leather Armor
+cd_m0001_00_so_phm_ub_24002 plate Bedure Chain Mail
+cd_m0001_00_so_phm_ub_24003 leather Myurdin's Leather Armor
+cd_m0001_00_so_phm_ub_24004 cloth Dark Ringleader's Cloth Armor
+cd_m0001_00_so_phm_ub_24005 plate Lukatz Plate Armor
+cd_m0001_00_so_phm_ub_25001 plate Scorchflame Plate Armor
+cd_m0001_00_so_phm_ub_26001 leather Kerburn Leather Armor
+cd_m0001_00_so_phm_ub_26002 leather Vildyne Leather Armor
+cd_m0001_00_so_phm_ub_26003 leather Kerburn Leather Armor
+cd_m0001_00_so_phm_ub_26004 leather Kerburn Leather Armor
+cd_m0001_00_so_phm_ub_26018 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_so_phm_ub_26019 leather Bounty Hunter's Leather Armor
+cd_m0001_00_so_phm_ub_26020 plate Bounty Hunter's Plate Armor
+cd_m0001_00_so_phm_ub_26063 leather Blacksmith's Leather Armor
+cd_m0001_00_so_phm_ub_26064 plate Turncoat Rider Plate Armor
+cd_m0001_00_so_phm_ub_31048 cloth Gael Cloth Armor
+cd_m0001_00_so_phm_ub_31067 plate Demeniss Ceremonial Plate Armor
+cd_m0001_00_so_phm_ub_31068 leather Favan Leather Armor
+cd_m0001_00_so_phm_ub_31069 leather Favan Leather Armor
+cd_m0001_00_so_phm_ub_31084 cloth Goldleaves' Cloth Cloak
+cd_m0001_00_so_phm_ub_31090 leather Matana Leather Armor
+cd_m0001_00_so_phm_ub_31200 plate Cantina Chain Mail
+cd_m0001_00_so_phm_ub_31205 plate Luca Plate Armor
+cd_m0001_00_so_phm_ub_31207 plate Antoni Plate Armor
+cd_m0001_00_so_phm_ub_31211 plate Gladiator's Rake Plate Helm
+cd_m0001_00_so_phm_ub_31213 plate Troccars Plate Armor
+cd_m0001_00_so_phm_ub_31214 plate Troccars Plate Armor
+cd_m0001_00_so_phm_ub_31227 plate Coogan Plate Armor
+cd_m0001_00_so_phm_ub_31236 plate Kunan Plate Armor
+cd_m0001_00_so_phm_ub_31237 plate Condemner's Plate Armor
+cd_m0001_00_so_phm_ub_31238 cloth Caliburn's Combat Engineer Cloth Armor
+cd_m0001_00_so_phm_ub_31239 cloth Caliburn's Combat Engineer Cloth Armor
+cd_m0001_00_so_phm_ub_31240 cloth Caliburn's Combat Engineer Cloth Armor
+cd_m0001_00_so_phm_ub_31241 cloth Caliburn's Combat Engineer Cloth Armor
+cd_m0001_00_so_phm_ub_31242 cloth Caliburn's Combat Engineer Cloth Armor
+cd_m0001_00_so_phm_ub_31252 plate Righteous Inquisitors Guard's Plate Armor
+cd_m0001_00_so_phm_ub_31253 plate Righteous Inquisitors Guard's Plate Armor
+cd_m0001_00_so_phm_ub_31254 plate Righteous Inquisitors Guard's Plate Armor
+cd_m0001_00_so_phm_ub_32019 plate Danda Chain Mail
+cd_m0001_00_so_phm_ub_32021 cloth Ator's Will Cloth Armor
+cd_m0001_00_so_phm_ub_32023 plate Full Moon Reaper Plate Armor
+cd_m0001_00_so_phm_ub_32024_q plate Digren Plate Helm
+cd_m0001_00_so_phm_ub_32027 leather Giath's Leather Armor
+cd_m0001_00_so_phm_ub_32031 leather Balgraun Leather Armor
+cd_m0001_00_so_phm_ub_32037 plate Troccars Plate Armor
+cd_m0001_00_so_phm_ub_32038 plate Troccars Plate Armor
+cd_m0001_00_so_phm_ub_32039 plate Luca Plate Armor
+cd_m0001_00_so_phm_ub_32070 plate Dutinan Chain Mail
+cd_m0001_00_so_phm_ub_32073 plate Mortain Chain Mail
+cd_m0001_00_so_phm_ub_32074 plate Rakkli Plate Armor
+cd_m0001_00_so_phm_ub_32075 plate Ricla Plate Armor
+cd_m0001_00_so_phm_ub_32076 plate Kunan Plate Armor
+cd_m0001_00_so_phm_ub_32077 plate Gurrinan Plate Armor
+cd_m0001_00_so_phm_ub_32078 plate Coogan Plate Armor
+cd_m0001_00_so_phm_ub_32103 cloth Antumbra Bismuth Protection Suit
+cd_m0001_00_so_phm_ub_33011 plate Danda Chain Mail
+cd_m0001_00_so_phm_ub_33012 plate Demeniss Ceremonial Plate Armor
+cd_m0001_00_so_phm_ub_33013 plate Bolton Plate Armor
+cd_m0001_00_so_phm_ub_33014 cloth Magta Cloth Armor
+cd_m0001_00_so_phm_ub_33018 plate Luca Plate Armor
+cd_m0001_00_so_phm_ub_33020 plate Antoni Plate Armor
+cd_m0001_00_so_phm_ub_33024 plate Guard Captain's Plate Armor
+cd_m0001_00_so_phm_ub_33030 plate Azerian Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33031 plate Azerian Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33032 plate Azerian Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33033 plate Elemore Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33034 plate Elemore Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33035 plate Elemore Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33037 plate Sungrove Standard Plate Armor
+cd_m0001_00_so_phm_ub_33038 plate Marshell Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33039 plate Marshell Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33041 plate Byron's Soldier Plate Armor
+cd_m0001_00_so_phm_ub_33042 plate Windmere Standard Plate Armor
+cd_m0001_00_so_phm_ub_33043 plate Byron's Soldier Plate Armor
+cd_m0001_00_so_phm_ub_33044 plate Byron's Soldier Plate Armor
+cd_m0001_00_so_phm_ub_33045 plate Demeniss Guard's Plate Armor
+cd_m0001_00_so_phm_ub_33046 plate Demeniss Guard's Plate Armor
+cd_m0001_00_so_phm_ub_33047 plate Demeniss Guard's Plate Armor
+cd_m0001_00_so_phm_ub_33060 plate Private Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_33061 plate Private Soldier's Plate Armor
+cd_m0001_00_so_phm_ub_34007 cloth Magta Cloth Armor
+cd_m0001_00_so_phm_ub_35006 plate Demenissian Grand General Plate Armor
+cd_m0001_00_so_phm_ub_41002 leather Baorica Leather Armor
+cd_m0001_00_so_phm_ub_41003 leather Baorica Leather Armor
+cd_m0001_00_so_phm_ub_42001 leather Hubus Leather Armor
+cd_m0001_00_so_phm_ub_42002 leather Cradbahn Leather Armor
+cd_m0001_00_so_phm_ub_42005 plate Kauria Chain Mail
+cd_m0001_00_so_phm_ub_43008 leather Oak Barrel Leather Armor
+cd_m0001_00_so_phm_ub_43009 cloth Marni's Cloth Armor
+cd_m0001_00_so_phm_ub_43013 plate Dark Marksman's Plate Armor
+cd_m0001_00_so_phm_ub_43014 plate Frozen Heart Plate Armor
+cd_m0001_00_so_phm_ub_44008 cloth Williem Middler Cloth Armor
+cd_m0001_00_so_phm_ub_44013 cloth Morgren Cloth Armor
+cd_m0001_00_so_phm_ub_44014 cloth Spiken Cloth Armor
+cd_m0001_00_so_phm_ub_45025 plate Flame Knight Vice Captain's Chain Mail
+cd_m0001_00_so_phw_ub_21006 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_phw_ub_21009 leather Rolfe Leather Armor
+cd_m0001_00_so_phw_ub_21010 leather Dux Leather Armor
+cd_m0001_00_so_phw_ub_21011 cloth Beighen Cloth Cloak
+cd_m0001_00_so_phw_ub_21012 leather Paltz Leather Armor
+cd_m0001_00_so_phw_ub_22001 leather Blinding Arrow's Light Leather Armor
+cd_m0001_00_so_phw_ub_22002 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_phw_ub_22003 plate Mant Plate Armor
+cd_m0001_00_so_phw_ub_22004 plate Larkri Plate Armor
+cd_m0001_00_so_phw_ub_22005 plate Lacusane Plate Armor
+cd_m0001_00_so_pom_ub_12004 leather Cherlay Leather Armor
+cd_m0001_00_so_pom_ub_12005 leather Cherlay Leather Armor
+cd_m0001_00_so_pom_ub_21003 plate Malacs Plate Armor
+cd_m0001_00_so_pom_ub_21004 leather Roverfelt Leather Armor
+cd_m0001_00_so_pom_ub_21005 leather Blinding Arrow's Leather Armor
+cd_m0001_00_so_pom_ub_21006 leather Erday Leather Armor
+cd_m0001_00_so_pom_ub_22004 leather Leopard Print Leather Armor
+cd_m0001_00_so_pom_ub_22005 leather Horizon Leather Armor
+cd_m0001_00_so_pom_ub_22006 cloth Eryn Cloth Cap
+cd_m0001_00_so_pom_ub_22007 leather Pirin Leather Armor
+cd_m0001_00_so_pom_ub_22009 cloth Bounty Hunter's Cloth Armor
+cd_m0001_00_so_pom_ub_22010 leather Bounty Hunter's Leather Armor
+cd_m0001_00_so_pom_ub_22011 plate Bounty Hunter's Plate Armor
+cd_m0001_00_so_pow_ub_21001 plate Seddry Plate Armor
+cd_m0001_00_so_pow_ub_21002 leather Hubus Leather Armor
+cd_m0001_00_so_ptm_ub_21002 cloth Dyran Cloth Armor
+cd_m0001_00_so_ptm_ub_21004 cloth Direnya Cloth Armor
+cd_m0001_00_so_ptm_ub_21005 cloth Tytuan Cloth Armor
+cd_m0001_00_so_ptm_ub_21006 cloth Tegatel Cloth Armor
+cd_m0001_00_so_ptm_ub_21011 leather Baorica Leather Armor
+cd_m0001_00_so_ptm_ub_21012 leather Variska Leather Armor
+cd_m0001_00_so_ptm_ub_21015 leather Varsoka Leather Armor
+cd_m0001_00_so_ptm_ub_22001 cloth Tikatan Cloth Armor
+cd_m0001_00_so_ptm_ub_22002 cloth Qaturan Cloth Armor
+cd_m0001_00_so_ptm_ub_22003 cloth Nantuka Cloth Armor
+cd_m0001_00_so_ptm_ub_22004 cloth Entuka Cloth Armor
+cd_m0001_00_so_ptm_ub_22007 cloth Marni's Cloth Armor
+cd_m0001_00_so_ptm_ub_22008 cloth Marni's Cloth Armor
+cd_m0001_00_so_ptm_ub_22009 cloth Varnia Cloth Armor
+cd_m0001_00_so_ptm_ub_22011 cloth Marni's Cloth Armor
+cd_m0001_00_so_ptm_ub_24001 cloth Magta Cloth Armor
+cd_m0001_00_so_ptm_ub_25001 plate Seddry Plate Armor
+cd_m0001_00_so_ptm_ub_31058 plate Rakkli Plate Armor
+cd_m0001_00_so_ptm_ub_31059 plate Rakkli Plate Armor
+cd_m0001_00_so_ptm_ub_32046 plate Full Moon Reaper Plate Armor
+cd_m0001_00_so_ptm_ub_32047 plate Full Moon Reaper Plate Armor
+cd_m0001_00_so_ptm_ub_32048_q plate Digren Plate Helm
+cd_m0001_00_so_ptm_ub_43002 leather Shadowleaf Leather Armor
+cd_m0001_00_so_ptm_ub_43003 plate Guardian Plate Armor
+cd_m0001_00_so_ptm_ub_44002 plate Danda Chain Mail
+cd_m0001_00_so_ptm_ub_44004 cloth Antumbra Cloth Armor
+cd_m0001_00_so_ptm_ub_44008 cloth The Blinding Arrow Vice Captain's Cloth Armor
+cd_m0001_00_tarandus_warrior_ub_0002 plate The Ashen's Plate Armor
+cd_m0001_00_wellsknight_ub_0001 plate Grotevant Plate Armor
+cd_m0001_02_so_phm_ub_21011 cloth Delesyian Cloth Attire
+cd_m0001_14_so_phm_ub_24001 cloth Magta Cloth Armor
+cd_m0002_00_bulldog_ub_10_0005 cloth Rescue Puppy Outfit
+cd_m0002_00_bulldog_ub_10_0008 plate Puppy Plate Armor
+cd_m0002_00_cat_ub_00_0002 cloth Uniform Cat Outfit
+cd_m0002_00_cat_ub_00_0003 cloth Peddler Cat Outfit
+cd_m0002_00_cat_ub_00_0008 plate Cat Plate Armor
+cd_m0002_00_cat_ub_10_0002 cloth Uniform Cat Outfit
+cd_m0002_00_cat_ub_10_0003 cloth Peddler Cat Outfit
+cd_m0002_00_cat_ub_10_0008 plate Cat Plate Armor
+cd_m0002_00_greatdane_ub_00_0005 cloth Rescue Puppy Outfit
+cd_m0002_00_greatdane_ub_00_0008 plate Puppy Plate Armor
+cd_m0002_00_husky_ub_00_0008 plate Puppy Plate Armor
+cd_ndm_so_ub_00003 cloth Brennan's Cloth Armor
+cd_ngm_so_ub_22040_d cloth Fundamentalist Goblin Cloth Armor
+cd_ngm_so_ub_22041_d cloth Fundamentalist Goblin Cloth Armor
+cd_ngm_so_ub_22042_d cloth Fundamentalist Goblin Cloth Armor
+cd_nhm_de_ub_10077 cloth Deshret Cloth Armor
+cd_nhm_so_ub_0003 cloth Captive's Cloth Armor
+cd_nhm_so_ub_00093 cloth Ravirun Cloth Cap
+cd_nhm_so_ub_00111 cloth Captive's Cloth Armor
+cd_nhm_so_ub_00144 cloth Captive's Cloth Armor
+cd_nhm_so_ub_00206 cloth Fred's Cloth Armor
+cd_nhm_so_ub_00210 leather Joseph's Leather Armor
+cd_nhm_so_ub_00213 cloth Balder's Cloth Armor
+cd_nhm_so_ub_00214 leather Max's Leather Armor
+cd_nhm_so_ub_00215 leather Silvan's Leather Armor
+cd_nhm_so_ub_00216 cloth Terry's Cloth Armor
+cd_nhm_so_ub_00217 cloth Lars's Cloth Armor
+cd_nhm_so_ub_00218 leather Pierce's Leather Armor
+cd_nhm_so_ub_00219 cloth Colton's Cloth Armor
+cd_nhm_so_ub_00221 cloth Falstaff's Cloth Armor
+cd_nhm_so_ub_00222 leather Andrew's Leather Armor
+cd_nhm_so_ub_00224 cloth Arnold's Cloth Armor
+cd_nhm_so_ub_00225 cloth Lucius's Cloth Armor
+cd_nhm_so_ub_00227 leather Kenneth's Leather Armor
+cd_nhm_so_ub_00228 cloth Duncan's Cloth Armor
+cd_nhm_so_ub_00229 cloth Anders's Cloth Armor
+cd_nhm_so_ub_00230 cloth Wybert's Cloth Armor
+cd_nhm_so_ub_00232 cloth Niall's Cloth Armor
+cd_nhm_so_ub_00233 leather Aldric's Leather Armor
+cd_nhm_so_ub_00234 cloth Luke's Cloth Armor
+cd_nhm_so_ub_00235 leather Gerald's Leather Armor
+cd_nhm_so_ub_00236 cloth Vernon's Cloth Armor
+cd_nhm_so_ub_00237 cloth Xavier's Cloth Armor
+cd_nhm_so_ub_00238 cloth Ronald's Cloth Armor
+cd_nhm_so_ub_00239 cloth Fritz's Cloth Armor
+cd_nhm_so_ub_00240 cloth Otto's Cloth Armor
+cd_nhm_so_ub_00241 leather Gilbert's Leather Armor
+cd_nhm_so_ub_00245 cloth Marius's Cloth Armor
+cd_nhm_so_ub_00267 cloth Luther's Cloth Armor
+cd_nhm_so_ub_00268 leather Greymane's Leather Armor
+cd_nhm_so_ub_0060 cloth Captive's Cloth Armor
+cd_nhm_so_ub_10071 cloth Captive's Cloth Armor
+cd_nhm_so_ub_10109 cloth Greymane Cloth Armor
+cd_nhm_so_ub_10506 cloth Demenissian Rebel Cloth Armor
+cd_nhm_so_ub_10507 cloth Demenissian Rebel Cloth Armor
+cd_nhm_so_ub_10508 cloth Demenissian Rebel Cloth Armor
+cd_nhm_so_ub_10509 cloth Demenissian Rebel Cloth Armor
+cd_nhm_so_ub_10600 cloth Goldleaves' Cloth Armor
+cd_nhm_so_ub_10601 cloth Nibrak Cloth Armor
+cd_nhm_so_ub_10602 cloth Goldleaves' Cloth Armor
+cd_nhm_so_ub_10603 cloth Goldleaves' Cloth Armor
+cd_nhm_so_ub_10615 leather Morrow's Leather Armor
+cd_nhm_so_ub_10634 leather Mardain Leather Armor
+cd_nhm_so_ub_20129 cloth Captive's Cloth Armor
+cd_nhm_so_ub_20130 cloth Captive's Cloth Armor
+cd_nhm_so_ub_50548 cloth Captive's Cloth Armor
+cd_nhm_so_ub_51012 cloth Captive's Cloth Armor
+cd_nhm_so_ub_51027 leather Brant's Leather Armor
+cd_nhm_so_ub_51028 cloth Devan's Cloth Armor
+cd_nhm_so_ub_51040 cloth Ryan's Cloth Armor
+cd_nhm_so_ub_51227 plate Baltheon Plate Armor
+cd_nhw_so_ub_00200 cloth Matilda's Cloth Armor
+cd_nhw_so_ub_00201 leather Joan's Leather Armor
+cd_nhw_so_ub_00202 leather Evelyn's Leather Armor
+cd_pdm_00_ub_00_0319 plate Desert Marauder's Plate Armor
+cd_pdm_00_ub_00_0321 plate Desert Marauder's Plate Armor
+cd_pdm_00_ub_00_0322 leather Helms Leather Armor
+cd_pgm_00_ub_00_0001 leather Shadowleaf Leather Armor
+cd_pgm_00_ub_00_0002 cloth Eli's Attire
+cd_pgm_00_ub_00_0003 cloth Eli's Attire
+cd_pgm_00_ub_00_0006_d cloth Fundamentalist's Cloth Armor
+cd_pgm_00_ub_00_0006_v cloth Fundamentalist's Cloth Armor
+cd_pgm_00_ub_00_0007_d cloth Gilded Goblin's Cloth Armor
+cd_pgm_00_ub_00_0007_v cloth Fundamentalist's Cloth Armor
+cd_pgm_00_ub_00_0008 cloth Fundamentalist's Cloth Armor
+cd_phm_00_ub_0054_01 cloth Hernandian Attire
+cd_phm_00_ub_0054_06 plate Sahazhad Plate Armor
+cd_phm_00_ub_0054_09 plate Chelcia Plate Armor
+cd_phm_00_ub_0054_13 cloth Pailunese Attire
+cd_phm_00_ub_0054_15 leather Ynitium Leather Armor
+cd_phm_00_ub_0054_16 cloth St. Halssius Priest Attire
+cd_phm_00_ub_0054_17 cloth Scholastone Uniform
+cd_phm_00_ub_0059 leather Duane's Leather Armor
+cd_phm_00_ub_00_0008_03 plate Icewing Plate Armor
+cd_phm_00_ub_00_0039 cloth Beekeeping Suit
+cd_phm_00_ub_00_0052_index01 leather Helfryn Leather Armor
+cd_phm_00_ub_00_0054 leather Grey Wolf Leather Armor
+cd_phm_00_ub_00_0055 leather Silverwolf Leather Armor
+cd_phm_00_ub_00_0056 leather Ashen Wolf's Leather Armor
+cd_phm_00_ub_00_0079 leather Shane's Leather Armor
+cd_phm_00_ub_00_0080_01 cloth Jian's Cloth Armor
+cd_phm_00_ub_00_0161 leather Weasel Leather Armor
+cd_phm_00_ub_00_0165 leather Laurent's Leather Armor
+cd_phm_00_ub_00_0187 leather Ironwilled Guardian's Leather Armor
+cd_phm_00_ub_00_0188 leather Stein Leather Armor
+cd_phm_00_ub_00_0204 leather Rabbit Leather Coat
+cd_phm_00_ub_00_0208 leather Jester Leather Coat
+cd_phm_00_ub_00_0340 cloth Camouflage Outfit
+cd_phm_00_ub_00_0342 plate Solas Plate Armor
+cd_phm_00_ub_00_0350 plate Crimson Chaser Mail
+cd_phm_00_ub_00_0351 cloth Pororin Cloth Attire
+cd_phm_00_ub_00_0369 plate Ashad Plate Armor
+cd_phm_00_ub_00_0375 leather Hungering Fang Leather Armor
+cd_phm_00_ub_00_0375_dm01 leather One-Armed Jackal's Leather Armor
+cd_phm_00_ub_00_0376 cloth Tariv Cloth Attire
+cd_phm_00_ub_00_0377 plate Unyielding Hero's Plate Armor
+cd_phm_00_ub_00_0379 leather Blinding Arrow's Female Leather Cloak
+cd_phm_00_ub_00_0393 cloth Shadowleaf Outfit
+cd_phm_00_ub_00_0398 leather Awakened Jackal's Leather Armor
+cd_phm_00_ub_00_0401 cloth Riding Attire
+cd_phm_00_ub_00_0409 plate Goyen's Plate Armor
+cd_phm_00_ub_00_0435 plate Kairos Plate Armor
+cd_phm_00_ub_00_0439 plate Valortread Plate Armor
+cd_phm_00_ub_00_0440 plate Belkandor Plate Armor
+cd_phm_00_ub_01_0334 plate Kauria Chain Mail
+cd_phm_00_ub_20_0349 plate Red Rider's Plate Armor
+cd_phm_07_ub_00_0319 plate Desert Marauder's Plate Armor
+cd_phm_07_ub_00_0321 plate Desert Marauder's Plate Armor
+cd_phm_07_ub_00_0322 leather Helms Leather Armor
+cd_phm_m0001_00_bliss_redknight_ub_0001 plate Plate Armor of Cursed Soul
+cd_phm_m0001_00_gears_ub_0001_u leather Giath's Leather Armor
+cd_phm_m0001_00_no_phm_ub_43005 plate Northern Fighter's Chain Mail
+cd_phm_m0001_00_orcumer_ub_0002 plate Odeck's Protector Plate Armor
+cd_phm_m0001_00_orcumer_ub_0003 cloth Martial Monk's Cloth Robe
+cd_phm_m0001_00_saigod_ub_0002 leather Leather Armor of the Fallen Kingdom
+cd_phm_m0001_00_so_pgm_ub_38001 plate Danda Chain Mail
+cd_phm_m0001_00_so_phm_ub_43013 plate Golden Greed Plate Armor
+cd_phm_m0001_00_titan_ub_0002 plate Lightning Bolt Plate Armor
+cd_phw_00_ub_00_0042 cloth Eli's Attire
+cd_phw_00_ub_00_0137 cloth Naira's Basic Attire
+cd_phw_00_ub_00_0141 plate Frenoa Plate Armor
+cd_phw_00_ub_00_0145 leather Dark Executioner Leather Armor
+cd_phw_00_ub_00_0151_u plate Belkandor Plate Helm
+cd_phw_00_ub_00_0161 leather Autumn Banquet Leather Armor
+cd_phw_00_ub_00_0162 plate Official Knight's Plate Armor
+cd_phw_00_ub_00_0163 leather Leather Armor of Earth's Honor
+cd_phw_00_ub_00_0163_index01 leather Demenissian Elite Uniform Leather Armor
+cd_phw_00_ub_00_0163_index02 leather Demenissian Uniform Leather Armor
+cd_phw_00_ub_00_0166 leather Wanderer of Faith Leather Armor
+cd_phw_00_ub_00_0170_u leather Elegant Carmine Leather Armor
+cd_phw_00_ub_00_0180_u cloth Rivenheim Cloth Armor
+cd_phw_00_ub_00_0184_u cloth Sermena Cloth Armor
+cd_phw_00_ub_00_0198 plate Odeck's Protector Plate Armor
+cd_phw_01_ub_00_0380 cloth Duskmoon Cloth Armor
+cd_phw_m0001_00_samuel_ub_00_0001 plate Dark Marksman's Plate Armor
+cd_phw_m0001_00_skullknight_ub_0003 plate Lightning Bolt Plate Armor
+cd_phw_m0001_00_so_phm_ub_25001 plate Lightning Bolt Plate Armor
+cd_phw_m0001_00_titan_ub_0002 plate Lightning Bolt Plate Armor
+cd_pom_m0001_00_greenorc_ub_0001 leather Helms Leather Armor
+cd_pom_m0001_00_greenorc_ub_0003 leather Cherlay Leather Armor
+cd_ptm_07_ub_00_0319 plate Desert Marauder's Plate Armor
+cd_ptm_07_ub_00_0321 plate Desert Marauder's Plate Armor
+cd_r0002_00_horse_ub_0019_index01_n cloth Demenissian Soldier's Cloth Barding
+cd_r0002_00_horse_ub_0019_index02_n cloth Delesyian Soldier's Cloth Barding
+cd_r0002_00_horse_ub_0019_n cloth Hernandian Soldier's Cloth Barding
+cd_r0002_00_horse_ub_0033_n cloth Grenbar Cloth Barding
+cd_r0002_01_horse_ub_0019_index01_n cloth Demenissian Soldier's Cloth Barding
+cd_r0002_01_horse_ub_0019_index02_n cloth Delesyian Soldier's Cloth Barding
+cd_r0002_01_horse_ub_0019_n cloth Hernandian Soldier's Cloth Barding
+cd_r0002_01_horse_ub_0033_n cloth Grenbar Cloth Barding
+cd_r0002_02_horse_ub_0019_index01_n cloth Demenissian Soldier's Cloth Barding
+cd_r0002_02_horse_ub_0019_index02_n cloth Delesyian Soldier's Cloth Barding
+cd_r0002_02_horse_ub_0019_n cloth Hernandian Soldier's Cloth Barding
+cd_r0002_02_horse_ub_0033_n cloth Grenbar Cloth Barding
+cd_r0002_05_horse_ub_0019_index01_n cloth Demenissian Soldier's Cloth Barding
+cd_r0002_05_horse_ub_0019_index02_n cloth Delesyian Soldier's Cloth Barding
+cd_r0002_05_horse_ub_0019_n cloth Hernandian Soldier's Cloth Barding
+cd_r0002_05_horse_ub_0033_n cloth Grenbar Cloth Barding
+cd_r0002_11_horse_ub_0019_index01_n cloth Demenissian Soldier's Cloth Barding
+cd_r0002_11_horse_ub_0019_index02_n cloth Delesyian Soldier's Cloth Barding
+cd_r0002_11_horse_ub_0019_n cloth Hernandian Soldier's Cloth Barding
+cd_r0002_11_horse_ub_0033_n cloth Grenbar Cloth Barding

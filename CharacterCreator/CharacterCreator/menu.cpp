@@ -86,6 +86,9 @@ static const Tab TABS[] =
         { L"Tattoo placement", PAGE_SLIDERS, 0, NULL, { 115, 116, 117, 118, 119 },
             { L"Left / right", L"Up / down", L"Rotation", L"Width", L"Height" }, 5 } }, 4 },
     { L"Eye Colour", { { L"Eye colour", PAGE_EYES } }, 1 },
+    // Eyelash length (85) does nothing on the player's eyelashes. The dye
+    // shows mostly on the lighter tips; dark colours barely change them.
+    { L"Eyelashes", { { L"Eyelash colour", PAGE_COLOR, 86 } }, 1 },
     { L"Scars", {
         { L"Face scar", PAGE_TYPE, 13, L"Scar" },
         { L"Face scar colour", PAGE_COLOR, 21 },
@@ -512,8 +515,9 @@ static void Choose(const Page& page, const Item& item)
         break;
 
     case PAGE_EYES:
+        // The game keeps eye files loaded for the session: a new colour is
+        // read when the game next starts.
         EyesChoose(g_char, item.value);
-        ReloadHead();
         break;
 
     case PAGE_SLIDERS:
@@ -602,7 +606,7 @@ static std::wstring RestartNeeded(int ch)
         what += std::wstring(what.empty() ? L"" : L", ") + L"height";
 
     // Heads using the game's shared eye files only take a new colour at start.
-    if (EyesChosen(ch) != g_openEyes && SharedEyes(EyesOf(ch, g_view.mesh[MESH_HEAD])))
+    if (EyesChosen(ch) != g_openEyes)
         what += std::wstring(what.empty() ? L"" : L", ") + L"eye colour";
 
     return what;
@@ -662,12 +666,10 @@ static void Cancel()
     for (int i = MAKEUP_FIRST; i <= MAKEUP_LAST; ++i)
         makeupTouched = makeupTouched || g_touched.decoration[i];
 
-    bool eyesChanged = EyesChosen(g_char) != g_openEyes;
-
-    if (eyesChanged)
+    if (EyesChosen(g_char) != g_openEyes)
         EyesChoose(g_char, g_openEyes);
 
-    if (eyesChanged || makeupTouched)
+    if (makeupTouched)
         ReloadHead();
 
     OverlaySetVisible(false);
@@ -1408,9 +1410,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
 
     if (page.kind == PAGE_EYES)
     {
-        note = SharedEyes(EyesOf(g_char, g_view.mesh[MESH_HEAD]))
-            ? L"This head's eye colour applies after a restart."
-            : L"Changing the eye colour briefly rebuilds the head so the eyes reload.";
+        note = L"Eye colour applies after restarting the game (only your character's eyes change, not NPCs').";
     }
 
     wchar_t absent[160];
