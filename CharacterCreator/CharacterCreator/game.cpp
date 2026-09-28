@@ -672,16 +672,21 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 
     bool preview = t->preview;
 
-    // The character's file names no head (identity.cpp), so the game builds
-    // them with the head list's first head, but without its face shape
-    // (skeleton variation): that comes with a real head swap. Setting the
-    // same head again is no swap, so the head is rebuilt through another one
-    // - unless another head is chosen, whose swap brings its shape.
-    bool otherHead = mask.mesh[MESH_HEAD] && desired.mesh[MESH_HEAD] != 0 && desired.mesh[MESH_HEAD] != MESH_NONE;
+    // The head the game puts on while loading (the save's head slot, or the
+    // list's first head when the slot is empty) comes without its face shape
+    // (skeleton variation): that comes with a real head swap during play.
+    // When this pass swaps the head (another head than shown is chosen), it
+    // brings the shape; otherwise the head is rebuilt through another one
+    // once per load.
+    uint8_t shownHead = current.mesh[MESH_HEAD] == MESH_NONE ? 0 : current.mesh[MESH_HEAD];
+    bool otherHead = mask.mesh[MESH_HEAD] && desired.mesh[MESH_HEAD] != MESH_NONE && desired.mesh[MESH_HEAD] != shownHead;
+
+    if (!preview && otherHead)
+        t->shapeDone = true;
 
     // Not while the game is still loading and the look is being applied: a
     // head swap right after the other mesh changes froze the loading screen.
-    if (!preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && !t->shapeDone)
+    if (!preview && !otherHead && !t->shapeDone)
         t->shapePending = true;
 
     if (t->shapePending && t->recolorStep < 0 && now - t->meshChangedAt >= SHAPE_AFTER_MS &&
@@ -689,16 +694,22 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     {
         t->shapePending = false;
         t->shapeDone = true;
-        Log("%S: first head without its face shape - rebuilding it", CHARACTER_NAMES[ch]);
+        Log("%S: head from the load, without its face shape - rebuilding it", CHARACTER_NAMES[ch]);
         GameReloadHead(ch);
     }
 
     // A preview copy (barber, shop) has no head rebuild: both swaps are
     // queued at once, to the next head and back.
-    if (preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && ReadMeshOptionCount(controller, MESH_HEAD) > 1)
+    uint32_t headOptions = preview ? ReadMeshOptionCount(controller, MESH_HEAD) : 0;
+
+    // Only for an empty slot: queued the same way from a head the copy already
+    // showed, the swap back did not take and the copy kept the next head.
+    if (preview && current.mesh[MESH_HEAD] == MESH_NONE && !otherHead && !t->shapeDone && headOptions > 1)
     {
-        uint8_t away[3] = { (uint8_t)MESH_HEAD, 0, 1 };
-        uint8_t back[3] = { (uint8_t)MESH_HEAD, 1, 0 };
+        t->shapeDone = true;
+        uint8_t other = (uint8_t)((uint32_t)shownHead + 1 < headOptions ? shownHead + 1 : shownHead - 1);
+        uint8_t away[3] = { (uint8_t)MESH_HEAD, shownHead, other };
+        uint8_t back[3] = { (uint8_t)MESH_HEAD, other, shownHead };
         g_queueMeshChange(controller + 0xF8, away);
         g_queueMeshChange(controller + 0xF8, back);
 
@@ -706,10 +717,15 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         uint32_t count;
 
         if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_HEAD < count)
-            *(uint8_t*)(mesh + MESH_HEAD) = 0;
+            *(uint8_t*)(mesh + MESH_HEAD) = shownHead;
 
         g_rebuild(controller);
-        Log("preview: %S's first head swapped away and back for its face shape", CHARACTER_NAMES[ch]);
+
+        // The head comes back without its skin colour: pushed again as after
+        // any mesh change.
+        t->meshChangedAt = now;
+        t->recolorStep = 0;
+        Log("preview: %S's head swapped away and back for its face shape", CHARACTER_NAMES[ch]);
         return;
     }
 
@@ -725,8 +741,12 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         ++decorationChanges;
     }
 
-    for (int slot = 0; slot < MESH_SLOT_COUNT; ++slot)
+    // The body last: swapped before the head in the same pass, its shape did
+    // not fit the new head's neck (a gap until the body was changed again).
+    for (int step = 0; step < MESH_SLOT_COUNT; ++step)
     {
+        int slot = (step + 1) % MESH_SLOT_COUNT;
+
         if (!mask.mesh[slot] || current.mesh[slot] == desired.mesh[slot])
             continue;
 

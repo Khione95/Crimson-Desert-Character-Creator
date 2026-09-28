@@ -175,6 +175,7 @@
     <ClInclude Include="menu.h" />
     <ClInclude Include="menu_data.h" />
     <ClInclude Include="overlay.h" />
+    <ClInclude Include="parttable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="profile.h" />
     <ClInclude Include="research.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="data_pack.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="eyes.cpp" />
+    <ClCompile Include="parttable.cpp" />
     <ClCompile Include="hotkeys.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="addresses.cpp" />

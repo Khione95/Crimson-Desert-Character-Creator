@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.5'
+VERSION = '9.1.6'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
@@ -669,6 +669,11 @@ def main():
     private_eyes.build(os.path.join(game_out, '0009'), os.path.join(game_out, META),
                        os.path.join(runtime_out, 'private_heads.txt'), menu=os.path.join(runtime_out, 'menu.txt'),
                        table_path=ARMOR_FIT_TABLE if os.path.exists(ARMOR_FIT_TABLE) else None)
+    # The table's size, for the plugin to tell whether the game loads this
+    # table or another mod's (parttable.cpp).
+    table = os.path.join(game_out, '0009', 'character', 'bin__', 'partprefabtable.pappt')
+    with open(os.path.join(runtime_out, 'parttable.txt'), 'w') as f:
+        f.write(f'{os.path.getsize(table)}'+chr(10))
     pack_runtime_data(runtime_out, os.path.join(output, 'CharacterCreator.data'))
     print('done:', output)
 

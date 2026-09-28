@@ -3,6 +3,7 @@
 #include "addresses.h"
 #include "identity.h"
 #include "log.h"
+#include "parttable.h"
 #include "switches.h"
 
 #include <stdio.h>
@@ -202,6 +203,72 @@ static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
 }
 
 // Only model property files (the eye files are ones) are looked through.
+// When the game loads another mod's part table, it does not know the
+// characters' own head copies: the head lists (meshparam_example_*.xml) are
+// set back to the game's heads while they load (zk_..., zd_..., zo_... ->
+// cd_..., same length). Eye colour is then off.
+static bool g_ownHeadsOff = false;
+
+static int GameHeads(uintptr_t root)
+{
+    // Every element's children wait on the stack while its siblings are
+    // walked: a head list has hundreds of entries side by side (16 took only
+    // the first few dozen).
+    static const int MAX_DEPTH = 4096;
+    static const int MAX_NODES = 50000;
+
+    uintptr_t stack[MAX_DEPTH];
+    int depth = 0, nodes = 0, changed = 0;
+    stack[depth++] = root;
+
+    while (depth > 0 && nodes < MAX_NODES)
+    {
+        uintptr_t e = stack[--depth];
+
+        for (; e && nodes < MAX_NODES; e = Ptr(e, 0x60), ++nodes)
+        {
+            for (uintptr_t a = Ptr(e, 0x48); a; a = Ptr(a, 0x38))
+            {
+                const char* name = (const char*)Ptr(a, 0x00);
+                char* value = (char*)Ptr(a, 0x08);
+
+                if (name && value && strcmp(name, "MeshFileName") == 0 && value[0] == 'z' &&
+                    (value[1] == 'k' || value[1] == 'd' || value[1] == 'o') && value[2] == '_')
+                {
+                    value[0] = 'c';
+                    value[1] = 'd';
+                    ++changed;
+                }
+            }
+
+            uintptr_t child = Ptr(e, 0x38);
+
+            if (child && depth < MAX_DEPTH)
+                stack[depth++] = child;
+        }
+    }
+
+    return changed;
+}
+
+static int TryGameHeads(void* rootOut)
+{
+    __try
+    {
+        uintptr_t root = rootOut ? *(uintptr_t*)rootOut : 0;
+        return root ? GameHeads(root) : 0;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        return 0;
+    }
+}
+
+bool EyesOwnHeadsOff()
+{
+    return g_ownHeadsOff;
+}
+
 static int TrySwap(void* rootOut, int counts[CHARACTER_COUNT])
 {
     __try
@@ -312,6 +379,14 @@ static uintptr_t __fastcall HookedLoad(void* a, void* rootOut, void* file, uintp
         if (changed > 0)
             Log("two-handed sword: right hand for a woman Kliff with his own animations (%d sockets)", changed);
     }
+    if (g_ownHeadsOff)
+    {
+        int heads = TryGameHeads(rootOut);
+
+        if (heads > 0)
+            Log("part table: a head list set back to the game's heads (%d)", heads);
+    }
+
     int counts[CHARACTER_COUNT] = {};
     int swapped = TrySwap(rootOut, counts);
 
@@ -337,6 +412,28 @@ void EyesInit(const char* folder)
         CharacterFile(g_path[ch], MAX_PATH, folder, "eyes", ch);
         Load(ch);
     }
+
+    // <game>\bin64\CharacterCreator: the game's folder is two up.
+    char game[MAX_PATH], sizePath[MAX_PATH];
+    strcpy_s(game, folder);
+
+    for (int up = 0; up < 2; ++up)
+        if (char* slash = strrchr(game, '\\'))
+            *slash = 0;
+
+    unsigned expected = 0;
+    sprintf_s(sizePath, "%s\\parttable.txt", folder);
+    FILE* f = NULL;
+
+    if (fopen_s(&f, sizePath, "r") == 0 && f)
+    {
+        if (fscanf_s(f, "%u", &expected) != 1)
+            expected = 0;
+
+        fclose(f);
+    }
+
+    g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, expected);
 
     int gender, race;
     IdentityChosen(CHAR_KLIFF, &gender, &race);

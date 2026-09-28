@@ -70,6 +70,7 @@ struct RenderState
     // Composite path for screens Direct2D cannot draw on (HDR formats): the
     // menu is drawn into an 8-bit image, then painted onto the screen.
     bool compositeFailed;
+    int deviceChecked;              // the back buffers' device: 0 not checked yet, 1 the game's, -1 another
     UINT imageWidth, imageHeight;
     ID3D11Texture2D* image;
     ID3D11ShaderResourceView* imageView;
@@ -273,6 +274,8 @@ static ID3D12CommandQueue* PresentQueue(IDXGISwapChain* swapChain)
     return queue;
 }
 
+static IUnknown* Identity(IUnknown* object);
+
 static bool Setup(IDXGISwapChain* swapChain)
 {
     ID3D12CommandQueue* queue = PresentQueue(swapChain);
@@ -317,9 +320,9 @@ static bool Setup(IDXGISwapChain* swapChain)
     }
 
     g_rs.queue = queue;
-    IUnknown* identity = NULL;
+    IUnknown* identity = Identity(device);
 
-    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&identity))))
+    if (identity)
     {
         g_rs.device12 = identity;
         identity->Release();
@@ -369,6 +372,62 @@ static bool Setup(IDXGISwapChain* swapChain)
 
 static bool SameDevice(ID3D12Resource* buffer);
 
+// Checked once per swap chain (its buffers do not change device): asked every
+// frame, the question went through ReShade's wrapper, which could wait on a
+// lock another thread held, and the game froze as the menu opened.
+static bool BufferIsOurs(ID3D12Resource* buffer)
+{
+    if (!g_rs.deviceChecked)
+        g_rs.deviceChecked = SameDevice(buffer) ? 1 : -1;
+
+    return g_rs.deviceChecked > 0;
+}
+
+// Research: the drawing steps of the first frames after the editor opens are
+// logged, so a freeze while drawing shows the step it stopped in.
+static volatile LONG g_traceFrames = 0;
+static bool TraceStep(const char* what)
+{
+    if (g_traceFrames > 0)
+        Log("overlay trace: %s", what);
+
+    return true;
+}
+
+#define TRACE_STEP(what) TraceStep(what)
+
+// ReShade's objects hand out the object they wrap for this interface
+// (IID_UnwrappedObject, source/com_utils.hpp), with a reference.
+static const GUID IID_ReShadeUnwrapped = { 0x7f2c9a11, 0x3b4e, 0x4d6a, { 0x81, 0x2f, 0x5e, 0x9c, 0xd3, 0x7a, 0x1b, 0x42 } };
+
+// The identity of a COM object below any ReShade wrappers: its IUnknown (with
+// a reference), or NULL. A wrapped device and the device it wraps compared
+// as different, and the menu was not drawn with ReShade and frame generation.
+static IUnknown* Identity(IUnknown* object)
+{
+    IUnknown* current = object;
+    current->AddRef();
+
+    for (int depth = 0; depth < 4; ++depth)
+    {
+        IUnknown* inner = NULL;
+
+        if (FAILED(current->QueryInterface(IID_ReShadeUnwrapped, (void**)&inner)) || !inner || inner == current)
+        {
+            SafeRelease(inner);
+            break;
+        }
+
+        current->Release();
+        current = inner;
+    }
+
+    IUnknown* identity = NULL;
+    current->QueryInterface(IID_PPV_ARGS(&identity));
+    current->Release();
+    return identity;
+}
+
 // Draws straight onto the back buffer (8-bit screens). Returns false if
 // Direct2D cannot draw on this format.
 static bool RenderDirect(IDXGISwapChain* self)
@@ -379,11 +438,15 @@ static bool RenderDirect(IDXGISwapChain* self)
     IDXGISurface* surface = NULL;
     ID2D1Bitmap1* target = NULL;
 
+    TRACE_STEP("swap chain");
     HRESULT hr = self->QueryInterface(IID_PPV_ARGS(&swapChain));
     const char* step = "swap chain";
 
+    if (SUCCEEDED(hr))
+        TRACE_STEP("back buffer");
+
     if (SUCCEEDED(hr) && (step = "back buffer", SUCCEEDED(hr = swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer)))) &&
-        SameDevice(buffer))
+        (TRACE_STEP("device check"), BufferIsOurs(buffer)))
     {
         ReadSize(swapChain);
 
@@ -392,26 +455,34 @@ static bool RenderDirect(IDXGISwapChain* self)
             D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
             D2D1::PixelFormat(g_rs.format, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
+        TRACE_STEP("wrap");
+
         if ((step = "wrap", SUCCEEDED(hr = g_rs.on12->CreateWrappedResource(buffer, &flags, D3D12_RESOURCE_STATE_PRESENT,
                 D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(&wrapped)))) &&
             (step = "surface", SUCCEEDED(hr = wrapped->QueryInterface(IID_PPV_ARGS(&surface)))) &&
             (step = "bitmap", SUCCEEDED(hr = g_rs.dc->CreateBitmapFromDxgiSurface(surface, &props, &target))))
         {
+            TRACE_STEP("acquire");
             g_rs.on12->AcquireWrappedResources(&wrapped, 1);
             g_rs.dc->SetTarget(target);
             g_rs.dc->BeginDraw();
 
+            TRACE_STEP("menu");
             OverlayDrawContext ctx = { g_rs.dc, g_rs.write, g_rs.width, g_rs.height, (unsigned)g_generation };
             g_draw(ctx);
 
+            TRACE_STEP("end draw");
             step = "draw";
             hr = g_rs.dc->EndDraw();
             g_rs.dc->SetTarget(NULL);
+            TRACE_STEP("release");
             g_rs.on12->ReleaseWrappedResources(&wrapped, 1);
 
             // Hands the drawing to the game's queue before the back buffer
             // is let go.
+            TRACE_STEP("flush");
             g_rs.d11Context->Flush();
+            TRACE_STEP("drawn");
         }
     }
 
@@ -605,10 +676,17 @@ static bool PrepareImage(UINT width, UINT height)
 // is drawn on them.
 static bool SameDevice(ID3D12Resource* buffer)
 {
-    // Compared as IUnknown, the identity of a COM object (wrappers such as
-    // ReShade hand out other interface pointers of the same device).
     IUnknown* device = NULL;
-    bool same = !g_rs.device12 || (SUCCEEDED(buffer->GetDevice(IID_PPV_ARGS(&device))) && device == g_rs.device12);
+    IUnknown* identity = NULL;
+
+    if (SUCCEEDED(buffer->GetDevice(IID_PPV_ARGS(&device))))
+    {
+        TRACE_STEP("device identity");
+        identity = Identity(device);
+    }
+
+    bool same = !g_rs.device12 || (identity && identity == g_rs.device12);
+    SafeRelease(identity);
     SafeRelease(device);
 
     static bool logged = false;
@@ -635,7 +713,7 @@ static bool RenderComposite(IDXGISwapChain* self)
 
     if (SUCCEEDED(self->QueryInterface(IID_PPV_ARGS(&swapChain))) &&
         SUCCEEDED(swapChain->GetBuffer(swapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&buffer))) &&
-        SameDevice(buffer))
+        BufferIsOurs(buffer))
     {
         ReadSize(swapChain);
         UINT width = (UINT)g_rs.width, height = (UINT)g_rs.height;
@@ -726,8 +804,18 @@ static void Render(IDXGISwapChain* self)
         Log("overlay: screen format %d (colour space %ld) - drawing through the HDR path", g_rs.format, g_colorSpace);
     }
 
+    if (g_traceFrames > 0)
+        Log("overlay trace: frame (%s path)", direct ? "direct" : "HDR");
+
     if (direct && RenderDirect(self))
+    {
+        if (g_traceFrames > 0)
+            InterlockedDecrement(&g_traceFrames);
         return;
+    }
+
+    if (g_traceFrames > 0)
+        InterlockedDecrement(&g_traceFrames);
 
     if (!g_rs.compositeFailed && !RenderComposite(self))
     {
@@ -1557,6 +1645,9 @@ void OverlaySetCallbacks(OverlayDrawFn draw, OverlayKeyFn key)
 
 void OverlaySetVisible(bool visible)
 {
+    if (visible && !g_visible)
+        InterlockedExchange(&g_traceFrames, 3);
+
     InterlockedExchange(&g_visible, visible ? 1 : 0);
 }
 

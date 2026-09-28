@@ -41,3 +41,7 @@ int EyesChosen(int ch);
 // rebuild checks the eyes were read again on the way back).
 LONG EyesReadCount(int ch);
 
+// True when the game loads another mod's part table (parttable.h): the head
+// lists use the game's heads, and eye colour is off.
+bool EyesOwnHeadsOff();
+

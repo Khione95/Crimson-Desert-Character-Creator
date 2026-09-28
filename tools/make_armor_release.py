@@ -28,7 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, '..')
 # Its own version, apart from Character Creator's (1.0 shipped with CC 9.1.0;
 # 1.0.1 has the part table with CC's private heads, see private_eyes.py).
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 # Not under build/: build_data.py clears that folder.
 FITTED = os.path.join(ROOT, 'armor_fit')
