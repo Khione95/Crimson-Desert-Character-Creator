@@ -695,7 +695,9 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         t->shapePending = false;
         t->shapeDone = true;
         Log("%S: head from the load, without its face shape - rebuilding it", CHARACTER_NAMES[ch]);
-        GameReloadHead(ch);
+        // No second round: the head is mid-swap for as short a time as
+        // possible (opening the inventory during a second round froze the game).
+        GameReloadHead(ch, HEAD_AWAY_MS, -1, false);
     }
 
     // A preview copy (barber, shop) has no head rebuild: both swaps are
@@ -886,14 +888,14 @@ static DWORD g_headAt = 0;
 static LONG g_eyeReadsAtBack = 0;
 static volatile LONG g_headRetried[CHARACTER_COUNT] = {};
 
-void GameReloadHead(int ch, int awayMs, int awayOption)
+void GameReloadHead(int ch, int awayMs, int awayOption, bool retry)
 {
     if (!ValidCharacter(ch))
         return;
 
     InterlockedExchange(&g_headAwayMs[ch], awayMs);
     InterlockedExchange(&g_headAwayOption[ch], awayOption);
-    InterlockedExchange(&g_headRetried[ch], 0);
+    InterlockedExchange(&g_headRetried[ch], retry ? 0 : 1);
     InterlockedExchange(&g_headRequested[ch], 1);
 }
 

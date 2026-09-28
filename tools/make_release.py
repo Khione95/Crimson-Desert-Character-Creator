@@ -5,13 +5,13 @@
                                        bin64 (it carries its menu data and icons
                                        and unpacks them there)
     mod.json, README.txt, THIRD_PARTY.txt
-    Character Creator.field.json       a field edit that changes nothing (see
-                                       below)
-    CC Files/                          the game files (0009, 0012)
+    Equip All Armor.json               every character can wear each other's
+                                       armor (make_equip_all.py)
+    Character Creator Enhanced/        the game files (0009, 0012)
 
-DMM 3.x: a mod with an asi and no field file goes down DMM's plugin import,
-which fails with os error 32. With a field file beside the asi (as the old
-Female Animations.field.json was) it imports like 8.x did. Game folders
+DMM 3.x: a mod with an asi and no JSON beside it goes down DMM's plugin
+import, which fails with os error 32. With a JSON beside the asi (an empty
+field file before, now Equip All Armor.json) it imports like 8.x did. Game folders
 beside the asi are taken for plugin data, so they sit one level down.
 
 Run tools/build_data.py, then build the plugin (Release x64) - in that order:
@@ -47,11 +47,17 @@ def main():
         shutil.rmtree(stage)
 
     package = os.path.join(stage, 'Character Creator')
-    shutil.copytree(PACKAGE, os.path.join(package, 'CC Files'), ignore=shutil.ignore_patterns('mod.json'))
+    shutil.copytree(PACKAGE, os.path.join(package, 'Character Creator Enhanced'), ignore=shutil.ignore_patterns('mod.json'))
     shutil.copy2(os.path.join(PACKAGE, 'mod.json'), package)
     shutil.copy2(PLUGIN, os.path.join(package, 'CharacterCreator.asi'))
-    for doc in ('README.txt', 'THIRD_PARTY.txt', 'Character Creator.field.json'):
+    for doc in ('README.txt', 'THIRD_PARTY.txt'):
         shutil.copy2(os.path.join(DOCS, doc), package)
+
+    # Every character can wear each other's armor (make_equip_all.py). The
+    # JSON beside the asi also keeps DMM 3.x from taking the mod down its
+    # plugin import (see above), as the empty field file did before.
+    import make_equip_all
+    make_equip_all.write_json(os.path.join(package, 'Equip All Armor.json'))
 
     # Files only, without entries for the folders (as Windows' own zips are).
     archive = os.path.join(OUT, f'Character Creator {VERSION}.zip')

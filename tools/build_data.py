@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.6'
+VERSION = '9.1.7'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
@@ -519,7 +519,7 @@ def main():
     import json
     info_path = os.path.join(game_out, 'mod.json')
     info = json.load(open(info_path, encoding='utf-8')) if os.path.exists(info_path) else {'modinfo': {}}
-    info['modinfo'].update({'title': 'Character Creator', 'version': VERSION, 'author': 'Khione',
+    info['modinfo'].update({'title': 'Character Creator Enhanced', 'version': VERSION, 'author': 'Khione',
                             'description': DESCRIPTION, 'nexus_url': 'https://www.nexusmods.com/crimsondesert/mods/837'})
     with open(info_path, 'w', encoding='utf-8') as f:
         json.dump(info, f, indent=2)

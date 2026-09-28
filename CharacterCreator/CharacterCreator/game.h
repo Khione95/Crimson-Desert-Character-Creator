@@ -95,7 +95,9 @@ uint32_t GameMeshOptionCount(int ch, int slot);
 // back), which makes the game read the eye files again. awayOption is the
 // head shown in between (-1 = a neighbouring one).
 static const int HEAD_AWAY_MS = 1000;
-void GameReloadHead(int ch, int awayMs = HEAD_AWAY_MS, int awayOption = -1);
+// retry: done once more (away for longer) when the eyes were not read again
+// on the way back - wanted for a new eye colour, not for the face shape.
+void GameReloadHead(int ch, int awayMs = HEAD_AWAY_MS, int awayOption = -1, bool retry = true);
 
 // Picks the head shown during a rebuild when none was given (the menu knows
 // which heads have other eyes): chooser(character, current head) -> option.

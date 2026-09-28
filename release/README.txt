@@ -1,4 +1,4 @@
-Character Creator 9.1.6 - Crimson Desert
+Character Creator 9.1.7 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -15,16 +15,18 @@ First remove the previous version:
 
 With DMM (recommended)
   1. Import the downloaded zip in DMM as it is (don't unzip and re-zip it).
-  2. Make sure both parts are enabled: "Character Creator / CC Files" in the
-     mod list and "CharacterCreator" in the ASI plugins.
+  2. Make sure all parts are enabled: "Character Creator / Character Creator
+     Enhanced" and the Equip All Armor module in the mod list, and
+     "CharacterCreator" in the ASI plugins.
   3. Click Apply. DMM installs the game files, places CharacterCreator.asi in
      bin64 and sets up the ASI loader.
   4. Start the game, load a save and press F6.
 
 Manual install (another mod manager, or no .asi support)
-  1. Install the game files with your mod manager as usual: the "CC Files"
-     folder inside "Character Creator" holds the 0009 and 0012 folders
-     ("Character Creator.field.json" is only for DMM and changes nothing).
+  1. Install the game files with your mod manager as usual: the "Character
+     Creator Enhanced" folder inside "Character Creator" holds the 0009 and
+     0012 folders ("Equip All Armor.json" is a DMM mod: every character can
+     wear each other's armor).
   2. Install the Ultimate ASI Loader into <game>\bin64 if you do not have it
      yet (many mods use it, usually as winmm.dll).
   3. Copy "CharacterCreator.asi" from the "Character Creator" folder into
