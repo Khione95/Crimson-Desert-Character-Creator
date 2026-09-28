@@ -239,6 +239,11 @@ static int FindQueueInSwapChain(IDXGISwapChain* swapChain, ID3D12CommandQueue** 
     return -1;
 }
 
+// Set on the device the panel is drawn with. A wrapper of that device
+// (ReShade's) passes private data on to it, so the mark is found through the
+// wrapper too; another device (frame generation) does not have it.
+static const GUID DEVICE_MARK = { 0x916efa77, 0x03b5, 0x49db, { 0xaf, 0xb6, 0x92, 0x68, 0x14, 0x93, 0x41, 0xdf } };
+
 // The queue the game created its swap chain with (see OverlayEarlyInit).
 static ID3D12CommandQueue* volatile g_creationQueue = NULL;
 
@@ -323,6 +328,7 @@ static bool Setup(IDXGISwapChain* swapChain)
     {
         g_rs.device12 = identity;
         identity->Release();
+        device->SetPrivateData(DEVICE_MARK, sizeof(identity), &identity);
     }
     IUnknown* queues[] = { queue };
     HRESULT hr = D3D11On12CreateDevice(device, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0,
@@ -600,6 +606,18 @@ static bool PrepareImage(UINT width, UINT height)
     return ok;
 }
 
+// Whether a device is the drawing device behind a wrapper (DEVICE_MARK).
+static bool WrapsDrawingDevice(IUnknown* device)
+{
+    ID3D12Device* d3d = NULL;
+    IUnknown* marked = NULL;
+    UINT size = sizeof(marked);
+    bool wraps = device && SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&d3d))) &&
+        SUCCEEDED(d3d->GetPrivateData(DEVICE_MARK, &size, &marked)) && size == sizeof(marked) && marked == g_rs.device12;
+    SafeRelease(d3d);
+    return wraps;
+}
+
 // A frame generation tool (OptiScaler and others) can present buffers of its
 // own device: wrapping those for the game's device crashed the game. Nothing
 // is drawn on them.
@@ -609,6 +627,20 @@ static bool SameDevice(ID3D12Resource* buffer)
     // ReShade hand out other interface pointers of the same device).
     IUnknown* device = NULL;
     bool same = !g_rs.device12 || (SUCCEEDED(buffer->GetDevice(IID_PPV_ARGS(&device))) && device == g_rs.device12);
+
+    if (!same && WrapsDrawingDevice(device))
+    {
+        static bool wrapperLogged = false;
+
+        if (!wrapperLogged)
+        {
+            wrapperLogged = true;
+            Log("overlay: the screen's device wraps the one the menu is drawn with (ReShade?) - drawing");
+        }
+
+        same = true;
+    }
+
     SafeRelease(device);
 
     static bool logged = false;
