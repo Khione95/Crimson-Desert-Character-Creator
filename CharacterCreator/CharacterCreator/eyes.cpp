@@ -209,6 +209,15 @@ static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
 // cd_..., same length). Eye colour is then off.
 static bool g_ownHeadsOff = false;
 
+static bool g_offUnderWine = false;
+
+// Wine's (and Proton's) ntdll exports wine_get_version.
+static bool UnderWine()
+{
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    return ntdll && GetProcAddress(ntdll, "wine_get_version");
+}
+
 static int GameHeads(uintptr_t root)
 {
     // Every element's children wait on the stack while its siblings are
@@ -267,6 +276,11 @@ static int TryGameHeads(void* rootOut)
 bool EyesOwnHeadsOff()
 {
     return g_ownHeadsOff;
+}
+
+bool EyesOwnHeadsOffUnderWine()
+{
+    return g_offUnderWine;
 }
 
 static int TrySwap(void* rootOut, int counts[CHARACTER_COUNT])
@@ -434,6 +448,17 @@ void EyesInit(const char* folder)
     }
 
     g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, expected);
+
+    if (!g_ownHeadsOff && UnderWine())
+    {
+        if (PartDisabled("wineheads"))
+            Log("Wine: own heads kept (disable.txt)");
+        else
+        {
+            g_ownHeadsOff = g_offUnderWine = true;
+            Log("Wine: using the game's heads - eye colour is off");
+        }
+    }
 
     int gender, race;
     IdentityChosen(CHAR_KLIFF, &gender, &race);

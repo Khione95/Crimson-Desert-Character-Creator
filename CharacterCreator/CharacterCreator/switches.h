@@ -17,6 +17,7 @@
 //               (left to the game's first barber visit)
 //   camera      the preview camera while the editor is open
 //   parttable   the check of whose part table the game loads (parttable.h)
+//   wineheads   the game's heads under Wine (Proton)
 //   lipsync     lip sync from the character's own folder when played as
 //               another gender
 

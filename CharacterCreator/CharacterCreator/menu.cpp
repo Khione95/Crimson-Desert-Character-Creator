@@ -1452,7 +1452,9 @@ void MenuDraw(const OverlayDrawContext& ctx)
 
     if (page.kind == PAGE_EYES)
     {
-        note = EyesOwnHeadsOff()
+        note = EyesOwnHeadsOffUnderWine()
+            ? L"Eye colour is off under Proton / Wine."
+            : EyesOwnHeadsOff()
             ? L"Eye colour is off: another mod (Cloak Remover or similar) replaces the game's part table."
             : L"Only your character's eyes change, not NPCs'.";
     }
