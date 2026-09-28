@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.7'
+VERSION = '9.1.8'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
@@ -453,6 +453,37 @@ def pack_runtime_data(folder, out_path):
     print(f'  packed {len(files)} files for the plugin ({os.path.getsize(out_path) // 1024} KB)')
 
 
+# Damiane's shield (one-handed, right hand) is carried from the back to the
+# hand by an entry only the women's player description has; a male Damiane
+# (who takes the men's descriptions) kept it on her back. The men's player
+# descriptions get the same entry, and the dock override that hides it.
+MALE_DESCRIPTIONS = ['phm_description_player_001.xml', 'phm_description_player_kliff.xml']
+DESCRIPTION_FOLDER = r'0009\character\descriptors\characterdescription'
+SHIELD_R = ('<PartInOutSocket PartName="CD_MainWeapon_Shield_R" InSocketBone="Spine2_B_Shield_Socket" '
+            'OutSocketBone="RHand_Socket" InChildSocketBone="Spine2_B_Shield_ChildSocket" '
+            'OutChildSocketBone="Basic_ChildSocket" BagSocketBone="Bag_Shield_Socket"/>')
+SHIELD_R_OUT = '<PartInOutSocket PartName="CD_MainWeapon_Shield_R" Visible="Out"/>'
+
+
+def male_shield_descriptions(game_out):
+    import game_files
+    folder = os.path.join(game_out, DESCRIPTION_FOLDER)
+    os.makedirs(folder, exist_ok=True)
+    for name in MALE_DESCRIPTIONS:
+        entry = next(game_files.entries('characterdescription/' + re.escape(name) + '$'))
+        text = game_files.read(entry).decode('utf-8-sig')
+        lines = text.split(chr(13) + chr(10))
+        out = []
+        for line in lines:
+            out.append(line)
+            indent = line[:len(line) - len(line.lstrip())]
+            if 'PartName="CD_MainWeapon_Shield_L"' in line:
+                out.append(indent + (SHIELD_R if 'InSocketBone' in line else SHIELD_R_OUT))
+        with open(os.path.join(folder, name), 'w', encoding='utf-8-sig', newline='') as f:
+            f.write((chr(13) + chr(10)).join(out))
+        print('  male description with Damiane shield entry:', name)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Build the unified Character Creator package.')
@@ -658,6 +689,8 @@ def main():
         f.write('\n'.join(lines) + '\n')
 
     print(f'  {len(converted)} icons converted')
+
+    male_shield_descriptions(game_out)
 
     # The player characters' own heads and eyes (tools/private_eyes.py), loose
     # in the package's 0009: the head lists name them and the plugin gets the

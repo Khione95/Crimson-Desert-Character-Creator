@@ -6,6 +6,7 @@
 #include "addresses.h"
 #include "commands.h"
 #include "game.h"
+#include "glide.h"
 #include "height.h"
 #include "hotkeys.h"
 #include "identity.h"
@@ -111,6 +112,9 @@ static DWORD WINAPI MainThread(LPVOID)
     MenuInit(folder);
     ProfileLoad();
     LipSyncInit();
+
+    if (gameReady && !PartDisabled("glide"))
+        GlideInit();
 
     if (gameReady && !PartDisabled("height"))
         HeightInit();

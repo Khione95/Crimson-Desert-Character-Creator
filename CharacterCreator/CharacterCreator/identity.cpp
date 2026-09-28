@@ -465,6 +465,17 @@ static void NameChosenHead(uintptr_t root, int ch)
     if (head.empty() || !g_privateHeads.count(head))
         return;
 
+    // A head chosen before a gender change (a woman's head on a man) is not
+    // named: the file keeps the head it was built with. Heads of any race
+    // fit ("cd_phm_...", "cd_pgw_...": the letter after the race is m or w).
+    char genderLetter = g_gender[ch] == GENDER_FEMALE ? 'w' : 'm';
+
+    if (head.size() < 7 || head.compare(0, 4, "cd_p") != 0 || head[5] != genderLetter)
+    {
+        Log("base character: %S's chosen head %s is for the other gender - not named", CHARACTER_NAMES[ch], head.c_str());
+        return;
+    }
+
     uintptr_t prefab = Child(Child(root, "Head"), "Prefab");
     uintptr_t name = Attribute(prefab, "Name");
     const char* text = name ? (const char*)Ptr(name, 0x08) : NULL;
