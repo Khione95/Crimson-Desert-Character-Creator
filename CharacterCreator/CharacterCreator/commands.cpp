@@ -6,6 +6,7 @@
 #include "log.h"
 #include "menu.h"
 #include "research.h"
+#include "watch.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -197,6 +198,45 @@ static void Run(const char* line)
 
         if (sscanf_s(line, "%*s %llx %llx", &address, &span) >= 1)
             ResearchFindPointers((uintptr_t)address, (size_t)span);
+    }
+    else if (strcmp(kind, "watch") == 0)
+    {
+        unsigned long long w[4] = {};
+        int count = sscanf_s(line, "%*s %llx %llx %llx %llx", &w[0], &w[1], &w[2], &w[3]);
+        uintptr_t addresses[4] = { (uintptr_t)w[0], (uintptr_t)w[1], (uintptr_t)w[2], (uintptr_t)w[3] };
+
+        if (count >= 1)
+            WatchStart(addresses, count);
+    }
+    else if (strcmp(kind, "watchreset") == 0)
+        WatchReset();
+    else if (strcmp(kind, "watchlog") == 0)
+        WatchLog();
+    else if (strcmp(kind, "unwatch") == 0)
+        WatchStop();
+    else if (strcmp(kind, "forcestate") == 0)
+    {
+        uint32_t ids[16];
+        int count = 0;
+        char* context = NULL;
+        char copy[512];
+        strcpy_s(copy, line);
+        strtok_s(copy, " \t\r\n", &context);
+        const char* v = strtok_s(NULL, " \t\r\n", &context);
+        uint32_t value = v ? (uint32_t)strtoul(v, NULL, 16) : 0;
+
+        for (const char* t = strtok_s(NULL, " \t\r\n", &context); t && count < 16; t = strtok_s(NULL, " \t\r\n", &context))
+            ids[count++] = (uint32_t)strtoul(t, NULL, 16);
+
+        WatchForceStates(ids, count, value);
+    }
+    else if (strcmp(kind, "forcetype") == 0)
+    {
+        unsigned long long rva = 0;
+        char value[16] = "";
+
+        if (sscanf_s(line, "%*s %llx %15s", &rva, value, (unsigned)sizeof(value)) == 2)
+            WatchForce((uintptr_t)rva, _stricmp(value, "off") != 0, (uint32_t)strtoul(value, NULL, 16));
     }
     else if (strcmp(kind, "findowner") == 0)
         ResearchFindOwner(GameMainController());

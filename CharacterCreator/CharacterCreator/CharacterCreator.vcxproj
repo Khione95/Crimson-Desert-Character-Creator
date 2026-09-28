@@ -179,6 +179,8 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="profile.h" />
     <ClInclude Include="research.h" />
+    <ClInclude Include="watch.h" />
+    <ClInclude Include="glide.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\external\minhook\src\buffer.c" />
@@ -204,6 +206,8 @@
     <ClCompile Include="overlay.cpp" />
     <ClCompile Include="profile.cpp" />
     <ClCompile Include="research.cpp" />
+    <ClCompile Include="watch.cpp" />
+    <ClCompile Include="glide.cpp" />
     <ClCompile Include="switches.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
