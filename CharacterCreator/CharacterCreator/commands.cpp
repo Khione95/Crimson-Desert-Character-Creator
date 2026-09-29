@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "research.h"
 #include "watch.h"
+#include "glide.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -214,6 +215,22 @@ static void Run(const char* line)
         WatchLog();
     else if (strcmp(kind, "unwatch") == 0)
         WatchStop();
+    else if (strcmp(kind, "glidelog") == 0 && n >= 2)
+        GlideLogStates(a != 0);
+    else if (strcmp(kind, "glidestates") == 0)
+    {
+        uint32_t ids[32];
+        int count = 0;
+        char* context = NULL;
+        char copy[512];
+        strcpy_s(copy, line);
+        strtok_s(copy, " \t\r\n", &context);
+
+        for (const char* t = strtok_s(NULL, " \t\r\n", &context); t && count < 32; t = strtok_s(NULL, " \t\r\n", &context))
+            ids[count++] = (uint32_t)strtoul(t, NULL, 16);
+
+        GlideExtraStates(ids, count);
+    }
     else if (strcmp(kind, "forcestate") == 0)
     {
         uint32_t ids[16];

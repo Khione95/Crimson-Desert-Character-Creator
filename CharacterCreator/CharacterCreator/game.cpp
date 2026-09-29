@@ -427,6 +427,12 @@ uintptr_t GameController(int ch)
     return ValidCharacter(ch) ? MainFor(ch) : 0;
 }
 
+int GameCharacterOfController(uintptr_t controller)
+{
+    uint32_t count = 0;
+    return CharacterOf(controller, &count);
+}
+
 uintptr_t GameMainController()
 {
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)

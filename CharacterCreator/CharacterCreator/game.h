@@ -85,6 +85,9 @@ void GameLogCharacter(int ch);
 // A player character's appearance controller (Kliff's first), 0 if none yet.
 uintptr_t GameMainController();
 
+// Kliff, Damiane or Oongka for an appearance controller, -1 for anyone else.
+int GameCharacterOfController(uintptr_t controller);
+
 // The character's own appearance controller, 0 if they are not present.
 uintptr_t GameController(int ch);
 
