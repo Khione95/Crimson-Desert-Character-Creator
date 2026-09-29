@@ -34,13 +34,19 @@ static const uintptr_t KNOWN_RVA = 0x1EC373C;
 // The flight states (basic_upper_glide / basic_lower_glide), by the id at
 // +0x18 of the state ([r15+0x10] at the hook): starting, gliding, fast and
 // directional flight, the dash, slow glide, running out of stamina, starting
-// again after a cancel, and the start of the landing. The landing's last
+// again after a cancel (the start of the landing: LANDING_STATES). The landing's last
 // states (E4EF0545, and the lower body's A2F1D2E7) are left out: the chart
 // hands back to walking there, and a flight variant then crashed the game.
 static const uint32_t GLIDE_STATES[] = {
     0x9C0C7E5B, 0x15914F6D, 0xEB340761, 0x1445ED2D, 0xD28ABCEC, 0x766AA1E9, 0x164E8B07, 0x8ED159F1,
     0x4ABEBF9D, 0x1D49E726, 0x05615459, 0x01EBBDBD, 0xFE7C74E7, 0x2DCECD55, 0x815B8344, 0xB3BC3663,
-    0x3AC4A94E, 0x61B7853E, 0xE906B0EA, 0x36D65FB4 };
+    0x36D65FB4 };
+
+// The start of the landing (after the dash: 61B7853E, E906B0EA; after a
+// glide: 3AC4A94E). Oongka's rocket landing after a glide with another type
+// crashed the game: he keeps his gender's type there.
+static const uint32_t LANDING_STATES[] = { 0x61B7853E, 0xE906B0EA, 0x3AC4A94E };
+static const uint32_t OONGKA_KEEPS = 0x3AC4A94E;
 
 // Research (command.txt): "glidelog 1" logs the states the player's
 // characters enter; "glidestates <id> ..." adds states to the list above.
@@ -51,7 +57,7 @@ static volatile LONG g_logStates = 0;
 
 static const uint32_t OWN_TYPE[CHARACTER_COUNT] = { 0, 0x4CB714A1, 0xEDBDEF3D };
 
-static uintptr_t g_containerVtable = 0;
+static uintptr_t g_controllerVtable = 0;
 
 static uint32_t StateId(uintptr_t holder)
 {
@@ -67,39 +73,24 @@ static uint32_t StateId(uintptr_t holder)
 }
 
 // Which of the player's characters the component belongs to, -1 for anyone
-// else. The component's actor (+0x08) is a child of the player's actor
-// (+0xA0), whose child container component lists them (+0x18: actor,
-// flags pairs) as Kliff, Damiane, Oongka, then the others.
+// else: the component's scene (+0xB8) holds the character's appearance
+// controller (+0x20), which tells the characters apart as the editor does.
 static int CharacterOf(uintptr_t component)
 {
     __try
     {
-        uintptr_t actor = *(uintptr_t*)(component + 0x08);
-        uintptr_t user = actor ? *(uintptr_t*)(actor + 0xA0) : 0;
-        uintptr_t* components = user ? *(uintptr_t**)(user + 0x68) : NULL;
+        uintptr_t scene = *(uintptr_t*)(component + 0xB8);
+        uintptr_t controller = scene ? *(uintptr_t*)(scene + 0x20) : 0;
 
-        if (!components || !g_containerVtable)
+        if (!controller || !g_controllerVtable || *(uintptr_t*)controller != g_controllerVtable)
             return -1;
 
-        for (int i = 0; i < 16; ++i)
-        {
-            if (!components[i] || *(uintptr_t*)components[i] != g_containerVtable)
-                continue;
-
-            uintptr_t* children = *(uintptr_t**)(components[i] + 0x18);
-
-            for (int c = 0; children && c < CHARACTER_COUNT && children[c * 2]; ++c)
-                if (children[c * 2] == actor)
-                    return c;
-
-            return -1;
-        }
+        return GameCharacterOfController(controller);
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
+        return -1;
     }
-
-    return -1;
 }
 
 // Called from the jump: component (rbx before the read), the state holder
@@ -116,6 +107,11 @@ static uint32_t __cdecl ChooseType(uintptr_t component, uintptr_t holder)
     for (LONG i = 0; i < g_extraCount; ++i)
         glide = glide || g_extra[i] == id;
 
+    bool landing = false;
+
+    for (uint32_t l : LANDING_STATES)
+        landing = landing || l == id;
+
     if (g_logStates)
     {
         int ch = CharacterOf(component);
@@ -124,11 +120,15 @@ static uint32_t __cdecl ChooseType(uintptr_t component, uintptr_t holder)
             Log("glide log: %S enters state %08X%s", CHARACTER_NAMES[ch], id, glide ? " (glide)" : "");
     }
 
-    if (!glide)
+    if (!glide && !landing)
         return type;
 
     int ch = CharacterOf(component);
-    return ch >= 0 ? OWN_TYPE[ch] : type;
+
+    if (ch < 0 || (ch == CHAR_OONGKA && id == OONGKA_KEEPS))
+        return type;
+
+    return OWN_TYPE[ch];
 }
 
 static void* AllocateNear(uintptr_t target, size_t size)
@@ -185,7 +185,7 @@ static uintptr_t FindSite()
 
 void GlideInit()
 {
-    g_containerVtable = AddressOf(ADDR_CHILDCONTAINERVTABLE);
+    g_controllerVtable = AddressOf(ADDR_CONTROLLERVTABLE);
     uintptr_t site = FindSite();
 
     if (!site)

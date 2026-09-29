@@ -30,20 +30,18 @@ static const uintptr_t KNOWN_RVAS[ADDR_COUNT] = {
     0x58FE780,      // CharacterInfoManager vtable
     0x2E8C460,      // BuildLipSyncPath(out, model folder, line)
     0x6D20E78,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
-    0x55B5FB0,      // ClientChildContainerActorComponent vtable
 };
 
 static const char* const NAMES[ADDR_COUNT] = {
     "SetDecoration", "QueueMeshChange", "Rebuild", "GrowBytes", "LoadXml", "ParseAppearance",
     "ManagerPointer", "ScaleComponentVtable", "ScaleObjectVtable", "ControllerVtable", "ManagerVtable", "LipSyncPath",
-    "CameraSettings", "ChildContainerVtable",
+    "CameraSettings",
 };
 
 // Classes found by their RTTI name on other builds.
 static const struct { AddressId id; const char* name; } RTTI_CLASSES[] = {
     { ADDR_CONTROLLERVTABLE, ".?AVCharacterCustomizationController@pa@@" },
     { ADDR_MANAGERVTABLE, ".?AVCharacterInfoManager@pa@@" },
-    { ADDR_CHILDCONTAINERVTABLE, ".?AVClientChildContainerActorComponent@pa@@" },
 };
 
 struct Signature
@@ -326,7 +324,6 @@ static bool Plausible(AddressId id, uintptr_t address)
     case ADDR_SCALEOBJECTVTABLE:
     case ADDR_CONTROLLERVTABLE:
     case ADDR_MANAGERVTABLE:
-    case ADDR_CHILDCONTAINERVTABLE:
         return InRanges(g_data, address) && InRanges(g_code, *(const uintptr_t*)address);
 
     default:
