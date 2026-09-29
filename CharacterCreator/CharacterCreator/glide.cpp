@@ -31,9 +31,23 @@ static const unsigned char STATE_CHANGE_CODE[] = {
 static const size_t PATCH_SIZE = 7;
 static const uintptr_t KNOWN_RVA = 0x1EC373C;
 
-// States that start gliding (basic_upper_glide / basic_lower_glide), by the
-// id at +0x18 of the state ([r15+0x10] at the hook).
-static const uint32_t GLIDE_STATES[] = { 0x9C0C7E5B, 0x15914F6D };
+// The flight states (basic_upper_glide / basic_lower_glide), by the id at
+// +0x18 of the state ([r15+0x10] at the hook): starting, gliding, fast and
+// directional flight, the dash, slow glide, running out of stamina, starting
+// again after a cancel, and the start of the landing. The landing's last
+// states (E4EF0545, and the lower body's A2F1D2E7) are left out: the chart
+// hands back to walking there, and a flight variant then crashed the game.
+static const uint32_t GLIDE_STATES[] = {
+    0x9C0C7E5B, 0x15914F6D, 0xEB340761, 0x1445ED2D, 0xD28ABCEC, 0x766AA1E9, 0x164E8B07, 0x8ED159F1,
+    0x4ABEBF9D, 0x1D49E726, 0x05615459, 0x01EBBDBD, 0xFE7C74E7, 0x2DCECD55, 0x815B8344, 0xB3BC3663,
+    0x3AC4A94E, 0x61B7853E, 0xE906B0EA, 0x36D65FB4 };
+
+// Research (command.txt): "glidelog 1" logs the states the player's
+// characters enter; "glidestates <id> ..." adds states to the list above.
+static const int EXTRA_MAX = 32;
+static volatile LONG g_extraCount = 0;
+static uint32_t g_extra[EXTRA_MAX];
+static volatile LONG g_logStates = 0;
 
 static const uint32_t OWN_TYPE[CHARACTER_COUNT] = { 0, 0x4CB714A1, 0xEDBDEF3D };
 
@@ -98,6 +112,17 @@ static uint32_t __cdecl ChooseType(uintptr_t component, uintptr_t holder)
 
     for (uint32_t g : GLIDE_STATES)
         glide = glide || g == id;
+
+    for (LONG i = 0; i < g_extraCount; ++i)
+        glide = glide || g_extra[i] == id;
+
+    if (g_logStates)
+    {
+        int ch = CharacterOf(component);
+
+        if (ch >= 0)
+            Log("glide log: %S enters state %08X%s", CHARACTER_NAMES[ch], id, glide ? " (glide)" : "");
+    }
 
     if (!glide)
         return type;
@@ -218,4 +243,21 @@ void GlideInit()
 
     Log("glide: each character glides their own way (state change at +0x%llX)",
         (unsigned long long)(site - (uintptr_t)GetModuleHandleW(NULL)));
+}
+
+void GlideLogStates(bool on)
+{
+    InterlockedExchange(&g_logStates, on ? 1 : 0);
+    Log("glide: state log %s", on ? "on" : "off");
+}
+
+void GlideExtraStates(const uint32_t* ids, int count)
+{
+    InterlockedExchange(&g_extraCount, 0);
+
+    for (int i = 0; i < count && i < EXTRA_MAX; ++i)
+        g_extra[i] = ids[i];
+
+    InterlockedExchange(&g_extraCount, count < EXTRA_MAX ? count : EXTRA_MAX);
+    Log("glide: %d more glide states", (int)g_extraCount);
 }
