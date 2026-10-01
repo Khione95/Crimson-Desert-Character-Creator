@@ -146,6 +146,20 @@ static void* AllocateNear(uintptr_t target, size_t size)
             return p;
     }
 
+    // Nothing free below the code (other plugins and the game take that
+    // memory early): above it, past the end of the game's image.
+    uintptr_t module = (uintptr_t)GetModuleHandleW(NULL);
+    IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module + ((IMAGE_DOS_HEADER*)module)->e_lfanew);
+    uintptr_t end = (module + nt->OptionalHeader.SizeOfImage + step - 1) & ~(step - 1);
+
+    for (uintptr_t a = end; a < target + 0x70000000; a += step)
+    {
+        void* p = VirtualAlloc((void*)a, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+        if (p)
+            return p;
+    }
+
     return NULL;
 }
 
