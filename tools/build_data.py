@@ -8,7 +8,7 @@ Output: build/Character Creator/        game data for the mod manager
           0012/...  icons and UI
         build/bin64/CharacterCreator/   data read by the .asi at runtime
           menu.txt  every mesh option and palette colour, for the editor
-          icons/    the option icons as PNG
+          icons/    the option icons as JPEG
 
 Mesh options are merged so every race's bodies and heads are in one list.
 The order is fixed (by race, then the order in the source files), so an
@@ -64,7 +64,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.10'
+VERSION = '9.1.11'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
@@ -423,12 +423,21 @@ def color_name(rgb):
     return 'Crimson'
 
 
+# The menu's cell behind an icon (menu.cpp st.cell over the panel): icons are
+# flattened onto it and kept as JPEG - a fifth of the PNGs' size, so the data
+# built into CharacterCreator.asi stays small (a large blob in a plugin is
+# what antivirus programs take it for malware by).
+ICON_BACKGROUND = (24, 22, 20)     # = menu.cpp st.iconCell
+
+
 def convert_icon(src, dst):
     from PIL import Image
     with Image.open(src) as im:
         im = im.convert('RGBA')
         im.thumbnail((ICON_SIZE, ICON_SIZE))
-        im.save(dst, optimize=True)
+        flat = Image.new('RGBA', im.size, ICON_BACKGROUND + (255,))
+        flat.alpha_composite(im)
+        flat.convert('RGB').save(dst, 'JPEG', quality=85, optimize=True)
 
 
 def pack_runtime_data(folder, out_path):
@@ -608,7 +617,7 @@ def main():
             if src_name and os.path.exists(src):
                 icon = converted.get(src_name)
                 if not icon:
-                    icon = os.path.splitext(src_name)[0].lower() + '.png'
+                    icon = os.path.splitext(src_name)[0].lower() + '.jpg'
                     convert_icon(src, os.path.join(runtime_out, 'icons', icon))
                     converted[src_name] = icon
             shown = 0 if ms['attrs'].get('ShowInGame', 'True').lower() == 'false' else 1

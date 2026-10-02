@@ -114,7 +114,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;CHARACTERCREATOR_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;CC_RESEARCH=1;CHARACTERCREATOR_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -148,6 +148,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>d3d12.lib;dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>

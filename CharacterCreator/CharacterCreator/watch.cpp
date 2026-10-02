@@ -6,6 +6,8 @@
 
 #include <map>
 
+#if CC_RESEARCH
+
 // Research: hardware breakpoints (debug registers 0-3) on reads and writes of
 // up to four 4-byte places; a vectored handler counts the code that touched
 // them. Nothing is changed in the watched memory.
@@ -229,3 +231,5 @@ void WatchForceStates(const uint32_t* ids, int count, uint32_t value)
     ReleaseSRWLockExclusive(&g_lock);
     Log("watch: %d states get %08X", g_forceStateCount, value);
 }
+
+#endif // CC_RESEARCH

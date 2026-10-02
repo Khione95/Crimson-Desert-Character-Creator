@@ -1028,6 +1028,7 @@ struct Style
     ID2D1SolidColorBrush* tabOff;
     ID2D1SolidColorBrush* tabOn;
     ID2D1SolidColorBrush* cell;
+    ID2D1SolidColorBrush* iconCell;     // opaque, the icons' own background (build_data.py ICON_BACKGROUND)
     ID2D1SolidColorBrush* swatch;
     ID2D1SolidColorBrush* barBack;
     ID2D1LinearGradientBrush* panel;
@@ -1077,6 +1078,7 @@ static void MakeStyle(const OverlayDrawContext& ctx)
     dc->CreateSolidColorBrush(D2D1::ColorF(0.16f, 0.13f, 0.09f, 0.85f), &st.tabOff);
     dc->CreateSolidColorBrush(D2D1::ColorF(0.55f, 0.39f, 0.15f, 0.95f), &st.tabOn);
     dc->CreateSolidColorBrush(D2D1::ColorF(0.11f, 0.10f, 0.09f, 0.75f), &st.cell);
+    dc->CreateSolidColorBrush(D2D1::ColorF(24 / 255.0f, 22 / 255.0f, 20 / 255.0f, 1.0f), &st.iconCell);
     dc->CreateSolidColorBrush(D2D1::ColorF(0, 0, 0), &st.swatch);
     dc->CreateSolidColorBrush(D2D1::ColorF(0.25f, 0.22f, 0.18f, 0.9f), &st.barBack);
 
@@ -1096,7 +1098,7 @@ static void MakeStyle(const OverlayDrawContext& ctx)
     }
 
     st.ready = st.title && st.body && st.caption && st.tab && st.big && st.gold && st.text && st.dim &&
-        st.line && st.tabOff && st.tabOn && st.cell && st.swatch && st.barBack && st.panel;
+        st.line && st.tabOff && st.tabOn && st.cell && st.iconCell && st.swatch && st.barBack && st.panel;
 }
 
 static void Text(ID2D1DeviceContext* dc, const std::wstring& s, IDWriteTextFormat* f, D2D1_RECT_F r, ID2D1Brush* b)
@@ -1193,6 +1195,7 @@ static void ForgetDrawing()
     ReleaseDrawing(st.tabOff);
     ReleaseDrawing(st.tabOn);
     ReleaseDrawing(st.cell);
+    ReleaseDrawing(st.iconCell);
     ReleaseDrawing(st.swatch);
     ReleaseDrawing(st.barBack);
     ReleaseDrawing(st.panel);
@@ -1403,7 +1406,9 @@ void MenuDraw(const OverlayDrawContext& ctx)
                 }
                 else if (ID2D1Bitmap* icon = Icon(it.icon, &budget))
                 {
-                    dc->FillRectangle(box, st.cell);
+                    // The icons are JPEG on this colour: an opaque tile, so
+                    // no scene shows through beside them and not on them.
+                    dc->FillRectangle(box, st.iconCell);
                     D2D1_SIZE_F size = icon->GetSize();
                     float bw = box.right - box.left, bh = box.bottom - box.top;
                     float k = min(bw / size.width, bh / size.height);

@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#if CC_RESEARCH
+
 static char g_path[MAX_PATH] = { 0 };
 static char g_folder[MAX_PATH] = { 0 };
 
@@ -286,3 +288,10 @@ void CommandsPoll()
     fclose(f);
     DeleteFileA(g_path);
 }
+
+#else
+
+// A release reads no commands.
+void CommandsInit(const char*) {}
+void CommandsPoll() {}
+#endif

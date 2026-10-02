@@ -10,6 +10,8 @@
 
 #include <vector>
 
+#if CC_RESEARCH
+
 static char g_path[MAX_PATH] = { 0 };
 
 void ResearchInit(const char* folder)
@@ -775,3 +777,5 @@ void ResearchFindPointers(uintptr_t target, size_t span)
     fclose(f);
     Log("research: findptr %016llX (%s): %d pointers (research.txt)", (unsigned long long)target, name, found);
 }
+
+#endif // CC_RESEARCH

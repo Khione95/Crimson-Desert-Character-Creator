@@ -14,7 +14,7 @@ struct MeshOption
                             // list (each starts with the character's own options)
     std::string race;       // phm, phw, pom, pow, pdm, pdw, pgm, pgw, ptm or empty
     bool shown;             // ShowInGame
-    std::wstring icon;      // full path of the PNG, empty if none
+    std::wstring icon;      // full path of the icon (JPEG), empty if none
     std::string mesh;       // mesh file name
     std::string eyes;       // heads: the part holding the eyes (empty if unknown)
 };

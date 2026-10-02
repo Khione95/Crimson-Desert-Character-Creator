@@ -113,7 +113,7 @@ bool DataPackUnpack(HMODULE module, const char* folder)
         if (p + fileSize > end || strstr(name, ".."))
             break;
 
-        // "icons/x.png" -> <folder>\icons\x.png, creating the folder first.
+        // "icons/x.jpg" -> <folder>\icons\x.jpg, creating the folder first.
         char path[MAX_PATH];
         sprintf_s(path, "%s\\%s", folder, name);
 
