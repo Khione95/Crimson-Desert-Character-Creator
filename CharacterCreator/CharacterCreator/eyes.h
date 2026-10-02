@@ -45,3 +45,6 @@ LONG EyesReadCount(int ch);
 // lists use the game's heads, and eye colour is off.
 bool EyesOwnHeadsOff();
 
+// True when that is because the game runs under Wine (Proton).
+bool EyesOwnHeadsOffUnderWine();
+
