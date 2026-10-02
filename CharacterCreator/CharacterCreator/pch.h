@@ -10,4 +10,11 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 
+// The research tools (command.txt: memory dumps and searches, hardware
+// breakpoints) are in research builds only (Debug): a release has none of
+// them - they are what antivirus programs take a game mod for malware by.
+#ifndef CC_RESEARCH
+#define CC_RESEARCH 0
+#endif
+
 #endif //PCH_H

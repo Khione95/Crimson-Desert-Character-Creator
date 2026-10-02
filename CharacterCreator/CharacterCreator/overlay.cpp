@@ -8,7 +8,7 @@
 #include <d3dcompiler.h>
 #include <dxgi1_4.h>
 #include <wincodec.h>
-#include <tlhelp32.h>
+#include <psapi.h>
 
 #include "MinHook.h"
 
@@ -1256,30 +1256,33 @@ static void DescribeCreationEntries(const char* when)
 
 static void LogLoadedPlugins()
 {
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    HMODULE modules[512];
+    DWORD bytes = 0;
 
-    if (snap == INVALID_HANDLE_VALUE)
+    if (!K32EnumProcessModules(GetCurrentProcess(), modules, sizeof(modules), &bytes))
         return;
 
-    MODULEENTRY32 me = { sizeof(me) };
     char list[1024] = "";
 
-    for (BOOL ok = Module32First(snap, &me); ok; ok = Module32Next(snap, &me))
+    for (DWORD m = 0; m < bytes / sizeof(HMODULE) && m < _countof(modules); ++m)
     {
+        char folder[MAX_PATH];
+
+        if (!GetModuleFileNameA(modules[m], folder, MAX_PATH))
+            continue;
+
+        const char* slash = strrchr(folder, '\\');
         char name[MAX_PATH];
-        size_t converted = 0;
-        wcstombs_s(&converted, name, me.szModule, _TRUNCATE);
+        strcpy_s(name, slash ? slash + 1 : folder);
         const char* dot = strrchr(name, '.');
 
         // Plugins, and system libraries loaded from the game folder (proxies).
         bool plugin = dot && _stricmp(dot, ".asi") == 0;
-        char folder[MAX_PATH];
-        wcstombs_s(&converted, folder, me.szExePath, _TRUNCATE);
         _strlwr_s(folder);
         bool proxy = (_stricmp(name, "dxgi.dll") == 0 || _stricmp(name, "d3d12.dll") == 0 || _stricmp(name, "winmm.dll") == 0 ||
                       _stricmp(name, "version.dll") == 0 || _stricmp(name, "dinput8.dll") == 0) && !strstr(folder, "\\system32\\");
 
-        if ((plugin || proxy) && strlen(list) + strlen(name) + 3 < sizeof(list))
+        if ((plugin || proxy) && strlen(list) + strlen(name) + (proxy ? sizeof("(game folder)") : 0) + 3 < sizeof(list))
         {
             strcat_s(list, " ");
             strcat_s(list, name);
@@ -1288,7 +1291,6 @@ static void LogLoadedPlugins()
         }
     }
 
-    CloseHandle(snap);
     Log("overlay diag: plugins loaded:%s", list[0] ? list : " none");
 }
 
