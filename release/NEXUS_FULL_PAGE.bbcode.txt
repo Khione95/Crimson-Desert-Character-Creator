@@ -61,6 +61,7 @@ A few pieces with unusual models still keep their male shape.
 • [b]Height[/b] shows at once as a preview, but until you restart, arms and shoulders look off while moving. After the restart the character is built at that height and moves normally.
 • [b]Heads of other races[/b] were made for their own race's body, so some may not sit perfectly at the neck.
 • [b]Lip sync[/b]: a character played as the other gender keeps their own mouth movements in dialogue, matching what they say.
+• [b]Gliding[/b]: each character glides their own way whatever their gender - Kliff with the crow wings, Damiane with her glider, Oongka with his rocket. If another mod handles gliding, set [i]Glide = 0[/i] under [i][Fixes][/i] in [i]<game>\bin64\CharacterCreator.ini[/i] (DMM's ASI config can edit it) and restart the game.
 • [b]Eye colour[/b] changes at once for most heads - the head is swapped for about a second while the eyes reload. Some heads use the game's shared eye files (Kliff's and Oongka's own heads, Damiane's head and a few others): for these the editor tells you, and the new colour shows [b]after a restart[/b]. Characters and NPCs that share those eye files also share the colour.
 • [b]Characters without colours yet[/b] (Oongka early in the story, or anyone who never visited a barber) get them from the mod the first time you open the editor for them - colours and tattoos work a moment later. A barber visit does the same.
 • [b]The barber[/b] still works, but anything you set in the mod wins over it; things you never touched in the mod stay as the game has them.
