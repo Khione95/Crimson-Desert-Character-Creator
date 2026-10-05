@@ -1,4 +1,4 @@
-Character Creator 9.1.11 - Crimson Desert
+Character Creator 9.1.12 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -99,6 +99,11 @@ GOOD TO KNOW
   sit perfectly at the neck.
 - Lip sync: a character played as the other gender keeps their own mouth
   movements in dialogue, matching what they say.
+- Gliding: each character glides their own way whatever their gender (Kliff
+  with the crow wings, Damiane with her glider, Oongka with his rocket). If
+  another mod handles gliding, set Glide = 0 under [Fixes] in
+  <game>\bin64\CharacterCreator.ini (added there on the next start; DMM's ASI
+  config can edit it) and restart the game.
 - Eye colour changes at once: the head is swapped for about a second while
   the eyes reload. Each character has their own copy of the heads and eyes, so
   NPCs keep their own eye colour.
@@ -132,6 +137,9 @@ PROBLEMS
 Please include <game>\bin64\CharacterCreator\CharacterCreator.log with a bug
 report. To check whether the editor causes a crash, write "overlay" into a text
 file called disable.txt in that folder (this switches the editor panel off).
+If the game crashes a few seconds after a character appears (right after the
+log says "head from the load, without its face shape - rebuilding it"), write
+"faceshape" into disable.txt: the face shape fix (a quick head swap) is skipped.
 
 
 CREDITS

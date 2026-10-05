@@ -15,6 +15,10 @@
 
 void HotkeysLoad(const char* pluginFolder);
 
+// [Fixes] in the same ini: a fix that can be switched off (1 = on, the
+// default; 0 = off), e.g. Glide when another mod handles gliding.
+bool FixEnabled(const char* name);
+
 // True while the character's key (with its modifiers) is held down.
 bool HotkeyDown(int ch);
 

@@ -132,7 +132,29 @@ static const char DEFAULT_INI[] =
     "[Hotkeys]\r\n"
     "Kliff = F6\r\n"
     "Damiane = F7\r\n"
-    "Oongka = F8\r\n";
+    "Oongka = F8\r\n"
+    "\r\n"
+    "; Fixes: 1 = on, 0 = off.\r\n"
+    "; Glide - each character glides their own way whatever their gender (Kliff\r\n"
+    ";   with the crow wings, Damiane with her glider, Oongka with his rocket).\r\n"
+    ";   Set 0 when another mod handles gliding.\r\n"
+    "\r\n"
+    "[Fixes]\r\n"
+    "Glide = 1\r\n";
+
+// The [Fixes] part of the default ini, added to an ini made by an older
+// version that has no [Fixes] section yet.
+static const char FIXES_INI[] =
+    "\r\n"
+    "; Fixes: 1 = on, 0 = off.\r\n"
+    "; Glide - each character glides their own way whatever their gender (Kliff\r\n"
+    ";   with the crow wings, Damiane with her glider, Oongka with his rocket).\r\n"
+    ";   Set 0 when another mod handles gliding.\r\n"
+    "\r\n"
+    "[Fixes]\r\n"
+    "Glide = 1\r\n";
+
+static char g_iniPath[MAX_PATH] = "";
 
 // DMM installs only the plugin into bin64: the ini is written there on the
 // first start, where DMM's ASI config editor finds it.
@@ -158,6 +180,22 @@ void HotkeysLoad(const char* pluginFolder)
     char path[MAX_PATH];
     sprintf_s(path, "%s\\CharacterCreator.ini", pluginFolder);
     WriteDefault(path);
+    strcpy_s(g_iniPath, path);
+
+    char probe[8] = "";
+
+    if (!GetPrivateProfileStringA("Fixes", NULL, "", probe, sizeof(probe), path))
+    {
+        FILE* f = NULL;
+        fopen_s(&f, path, "ab");
+
+        if (f)
+        {
+            fwrite(FIXES_INI, 1, sizeof(FIXES_INI) - 1, f);
+            fclose(f);
+            Log("hotkeys: added the [Fixes] section to %s", path);
+        }
+    }
 
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
     {
@@ -182,6 +220,11 @@ void HotkeysLoad(const char* pluginFolder)
 static bool Held(int vk)
 {
     return (GetAsyncKeyState(vk) & 0x8000) != 0;
+}
+
+bool FixEnabled(const char* name)
+{
+    return !g_iniPath[0] || GetPrivateProfileIntA("Fixes", name, 1, g_iniPath) != 0;
 }
 
 bool HotkeyDown(int ch)

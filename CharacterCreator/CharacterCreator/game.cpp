@@ -690,6 +690,11 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     if (!preview && otherHead)
         t->shapeDone = true;
 
+    // disable.txt "faceshape": no head swap for the face shape at all (a
+    // player's game crashed in it for Damiane and Oongka).
+    if (PartDisabled("faceshape"))
+        t->shapeDone = true;
+
     // Not while the game is still loading and the look is being applied: a
     // head swap right after the other mesh changes froze the loading screen.
     if (!preview && !otherHead && !t->shapeDone)

@@ -113,8 +113,10 @@ static DWORD WINAPI MainThread(LPVOID)
     ProfileLoad();
     LipSyncInit();
 
-    if (gameReady && !PartDisabled("glide"))
+    if (gameReady && !PartDisabled("glide") && FixEnabled("Glide"))
         GlideInit();
+    else if (gameReady && !FixEnabled("Glide"))
+        Log("glide: off in CharacterCreator.ini ([Fixes] Glide = 0) - characters glide as their gender does");
 
     if (gameReady && !PartDisabled("height"))
         HeightInit();
