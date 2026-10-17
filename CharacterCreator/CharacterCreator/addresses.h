@@ -28,6 +28,9 @@ enum AddressId
     ADDR_MANAGERVTABLE,
     ADDR_LIPSYNCPATH,
     ADDR_CAMERASETTINGS,
+    ADDR_ATTACHPART,
+    ADDR_WORLDPOINTER,
+    ADDR_NAMESPOINTER,
     ADDR_COUNT
 };
 
@@ -44,3 +47,6 @@ bool AddressesKnownBuild();
 // must be the expected ones, unless another mod has put a jump there (then
 // the plugin hooks on top of it). Logs which case it was.
 bool FunctionHookable(const void* target, const unsigned char* prologue, size_t size, const char* what);
+
+// Executable memory within reach of a 32-bit jump from target (a hook's stub).
+void* AllocateNear(uintptr_t target, size_t size);

@@ -173,14 +173,14 @@ static long long TableSize(const std::string& pamtPath)
     return 0;
 }
 
-bool PartTableIsOurs(const char* gameFolder, uint32_t expectedSize)
+bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count)
 {
     std::string root = gameFolder;
     std::vector<uint8_t> papgt;
 
-    // Without the list or the expected size nothing can be told: the
+    // Without the list or the expected sizes nothing can be told: the
     // package's own heads are used (as before this check).
-    if (!expectedSize || !ReadFile(root + "\\meta\\0.papgt", &papgt))
+    if (count <= 0 || !ReadFile(root + "\\meta\\0.papgt", &papgt))
     {
         Log("part table: could not be checked - using the characters' own heads");
         return true;
@@ -193,9 +193,13 @@ bool PartTableIsOurs(const char* gameFolder, uint32_t expectedSize)
         if (size <= 0)
             continue;
 
-        bool ours = size == expectedSize;
+        bool ours = false;
+
+        for (int i = 0; i < count; ++i)
+            ours = ours || size == sizes[i];
+
         Log("part table: the game loads the one in %s (%lld bytes) - %s", group.c_str(), size,
-            ours ? "the package's" : "another mod's: the characters' own heads (and eye colour) are off");
+            ours ? "the package's (or Female Armor Fit's)" : "another mod's: the characters' own heads (and eye colour) are off");
         return ours;
     }
 

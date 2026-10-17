@@ -30,12 +30,15 @@ static const uintptr_t KNOWN_RVAS[ADDR_COUNT] = {
     0x58FE780,      // CharacterInfoManager vtable
     0x2E8C460,      // BuildLipSyncPath(out, model folder, line)
     0x6D20E78,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
+    0x2C7C300,      // AttachPart(part, part manager, socket record, child socket, ...)
+    0x6D69190,      // the world (the player: +0x30 +0x58 +0xD8 +0x68 +0x40)
+    0x6C8CCE8,      // the name table (+0x58: 16 bytes a name)
 };
 
 static const char* const NAMES[ADDR_COUNT] = {
     "SetDecoration", "QueueMeshChange", "Rebuild", "GrowBytes", "LoadXml", "ParseAppearance",
     "ManagerPointer", "ScaleComponentVtable", "ScaleObjectVtable", "ControllerVtable", "ManagerVtable", "LipSyncPath",
-    "CameraSettings",
+    "CameraSettings", "AttachPart", "WorldPointer", "NamesPointer",
 };
 
 // Classes found by their RTTI name on other builds.
@@ -428,4 +431,37 @@ void AddressesInit()
 
         Log("addresses: test - %d of %d found correctly", right, ADDR_COUNT);
     }
+}
+
+// Memory for a hook's code within reach of a jump from the game's code.
+void* AllocateNear(uintptr_t target, size_t size)
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    uintptr_t step = si.dwAllocationGranularity;
+    uintptr_t lo = target > 0x70000000 ? target - 0x70000000 : step;
+
+    for (uintptr_t a = (target & ~(step - 1)) - step; a > lo; a -= step)
+    {
+        void* p = VirtualAlloc((void*)a, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+        if (p)
+            return p;
+    }
+
+    // Nothing free below the code (other plugins and the game take that
+    // memory early): above it, past the end of the game's image.
+    uintptr_t module = (uintptr_t)GetModuleHandleW(NULL);
+    IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module + ((IMAGE_DOS_HEADER*)module)->e_lfanew);
+    uintptr_t end = (module + nt->OptionalHeader.SizeOfImage + step - 1) & ~(step - 1);
+
+    for (uintptr_t a = end; a < target + 0x70000000; a += step)
+    {
+        void* p = VirtualAlloc((void*)a, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+        if (p)
+            return p;
+    }
+
+    return NULL;
 }

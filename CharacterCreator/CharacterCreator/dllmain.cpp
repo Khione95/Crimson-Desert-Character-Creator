@@ -7,6 +7,7 @@
 #include "commands.h"
 #include "game.h"
 #include "glide.h"
+#include "twohand.h"
 #include "height.h"
 #include "hotkeys.h"
 #include "identity.h"
@@ -117,6 +118,11 @@ static DWORD WINAPI MainThread(LPVOID)
         GlideInit();
     else if (gameReady && !FixEnabled("Glide"))
         Log("glide: off in CharacterCreator.ini ([Fixes] Glide = 0) - characters glide as their gender does");
+
+    if (gameReady && !PartDisabled("twohand") && FixEnabled("TwoHandGrip"))
+        TwoHandInit();
+    else if (gameReady && !FixEnabled("TwoHandGrip"))
+        Log("two-handed grip: off in CharacterCreator.ini ([Fixes] TwoHandGrip = 0)");
 
     if (gameReady && !PartDisabled("height"))
         HeightInit();

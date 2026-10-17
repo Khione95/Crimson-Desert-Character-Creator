@@ -42,7 +42,7 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 4. Start the game, load a save and press [b]F6[/b].
 
 [b]Manual install[/b] (another mod manager, or no .asi support)
-1. Install the game files with your mod manager as usual: the [b]CC Files[/b] folder inside [b]Character Creator[/b] holds the 0009 and 0012 folders ([i]Character Creator.field.json[/i] is only for DMM and changes nothing).
+1. Install the game files with your mod manager as usual: the [b]CC Files[/b] folder inside [b]Character Creator[/b] holds the 0009, 0010 and 0012 folders ([i]Character Creator.field.json[/i] is only for DMM and changes nothing).
 2. Install the [b]Ultimate ASI Loader[/b] into [i]<game>\bin64[/i] if you do not have it yet (many mods use it, usually as winmm.dll).
 3. Copy [i]CharacterCreator.asi[/i] from the [b]Character Creator[/b] folder into [i]<game>\bin64[/i].
 4. Start the game, load a save and press [b]F6[/b].
@@ -62,6 +62,7 @@ A few pieces with unusual models still keep their male shape.
 • [b]Heads of other races[/b] were made for their own race's body, so some may not sit perfectly at the neck.
 • [b]Lip sync[/b]: a character played as the other gender keeps their own mouth movements in dialogue, matching what they say.
 • [b]Gliding[/b]: each character glides their own way whatever their gender - Kliff with the crow wings, Damiane with her glider, Oongka with his rocket. If another mod handles gliding, set [i]Glide = 0[/i] under [i][Fixes][/i] in [i]<game>\bin64\CharacterCreator.ini[/i] (DMM's ASI config can edit it) and restart the game.
+• [b]Two-handed swords as a woman[/b]: with Female (female animations), rolls move the whole body, and the sword sits in the right hand for Kliff's attacks and in the left for her own moves. Both fixes come from sevnupp's [url=https://www.nexusmods.com/crimsondesert/mods/3477]Female Longsword Fix[/url] - thank you! [i]TwoHandGrip = 0[/i] under [i][Fixes][/i] switches the grip fix off.
 • [b]Eye colour[/b] changes at once for most heads - the head is swapped for about a second while the eyes reload. Some heads use the game's shared eye files (Kliff's and Oongka's own heads, Damiane's head and a few others): for these the editor tells you, and the new colour shows [b]after a restart[/b]. Characters and NPCs that share those eye files also share the colour.
 • [b]Characters without colours yet[/b] (Oongka early in the story, or anyone who never visited a barber) get them from the mod the first time you open the editor for them - colours and tattoos work a moment later. A barber visit does the same.
 • [b]The barber[/b] still works, but anything you set in the mod wins over it; things you never touched in the mod stay as the game has them.

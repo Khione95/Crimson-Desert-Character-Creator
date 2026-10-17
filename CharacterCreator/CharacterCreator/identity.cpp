@@ -454,8 +454,9 @@ static std::string ChosenHead(int ch)
 // left them without a face. It is the game's own head, not the character's
 // private copy: only the game's own heads come with their face shape here,
 // and they are in any part table (another mod's included). The slot then
-// shows the private copy (eye colour). Its head scale was meant for the
-// file's own head: 1 for any other (as the Face Fix mod had it).
+// shows the private copy (eye colour). The file's head scale stays: it is
+// the character's (Kliff 0.92, Oongka 0.9, Damiane 1.02), and 1 (as the Face
+// Fix mod had it) made Kliff's and Oongka's heads bigger.
 static void NameChosenHead(uintptr_t root, int ch)
 {
     // Only heads with a prefab (those the package has copies of): a few in
@@ -483,13 +484,8 @@ static void NameChosenHead(uintptr_t root, int ch)
     if (!text)
         return;
 
-    bool own = head == text;
-
     if (head != text && SetValue(name, head, ch, 3, "head"))
         Log("base character: %S's file names their chosen head %s", CHARACTER_NAMES[ch], head.c_str());
-
-    if (!own)
-        SetValue(Attribute(prefab, "HeadScale"), "1", ch, 4, "head scale");
 }
 
 static void TrySwap(void* rootHolder)

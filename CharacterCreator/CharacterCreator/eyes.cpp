@@ -421,19 +421,22 @@ void EyesInit(const char* folder)
         if (char* slash = strrchr(game, '\\'))
             *slash = 0;
 
-    unsigned expected = 0;
+    // The package's table size, then Female Armor Fit's (the package's table
+    // with the armor copies added: the heads are in it too).
+    uint32_t expected[8];
+    int sizes = 0;
     sprintf_s(sizePath, "%s\\parttable.txt", folder);
     FILE* f = NULL;
 
     if (fopen_s(&f, sizePath, "r") == 0 && f)
     {
-        if (fscanf_s(f, "%u", &expected) != 1)
-            expected = 0;
+        while (sizes < 8 && fscanf_s(f, "%u", &expected[sizes]) == 1)
+            ++sizes;
 
         fclose(f);
     }
 
-    g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, expected);
+    g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, expected, sizes);
 
     int gender, race;
     IdentityChosen(CHAR_KLIFF, &gender, &race);

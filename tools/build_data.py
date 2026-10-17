@@ -64,13 +64,17 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.13'
+VERSION = '9.1.15'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
 # Female Armor Fit's part table, from its released package (see private_eyes.py).
 ARMOR_FIT_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'armor_fit_released',
                                'character', 'bin__', 'partprefabtable.pappt')
+# Female Armor Fit's released tables (this package's with its armor copies
+# added, the heads included): the plugin keeps the characters' own heads with
+# them too. 1.0.3 and 1.0.4 (the necklaces' copies).
+ARMOR_FIT_TABLE_SIZES = [2282576]
 DESCRIPTION = ('In-game appearance editor for Kliff, Damiane and Oongka (F6 / F7 / F8): gender, race, body, '
                'head, hair, beard, eyebrows, eye colour, tattoos, scars and paint. Needs CharacterCreator.asi.')
 
@@ -493,6 +497,49 @@ def male_shield_descriptions(game_out):
         print('  male description with Damiane shield entry:', name)
 
 
+# Two-handed sword dodges for women (sevnupp's data edit, Female Longsword
+# Fix, nexusmods.com/crimsondesert/mods/3477): the dodge's animation binding
+# chose from a list of 13 with no women's animations, so with Damiane's
+# animations the roll moved only the upper body out of combat. It now points
+# at the list of 276 (entry 16), which has them; the game picks from it. Found
+# by its bytes (binding 844, the count 13 150 bytes on), not by offset.
+TWO_HAND_CHART = 'actionchart/bin__/upperaction/1_pc/1_phm/twohandsword_upper.paac'
+DODGE_BINDING, DODGE_BINDING_FIX, DODGE_COUNT_AT, DODGE_COUNT, DODGE_COUNT_FIX = 844, 16, 150, 13, 276
+TWO_HAND_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache', 'twohandsword_upper.paac')
+
+
+def two_hand_dodge(game_out):
+    import struct
+    import game_files
+    key = struct.pack('<I', DODGE_BINDING)
+
+    def find(data):
+        return [m.start() for m in re.finditer(re.escape(key), data)
+                if data[m.start() + DODGE_COUNT_AT:m.start() + DODGE_COUNT_AT + 2] == struct.pack('<H', DODGE_COUNT)]
+
+    # The game's chart; when DMM has written a mod's copy into the game's
+    # archive (the archive index no longer fits), the copy kept in cache/.
+    try:
+        data = bytearray(game_files.read(next(game_files.entries(re.escape(TWO_HAND_CHART) + '$'))))
+    except Exception:
+        data = bytearray()
+    hits = find(data)
+    if len(hits) != 1 and os.path.exists(TWO_HAND_CACHE):
+        data = bytearray(open(TWO_HAND_CACHE, 'rb').read())
+        hits = find(data)
+        print('  two-handed dodge: the chart from cache/ (the game archive has another copy)')
+    if len(hits) != 1:
+        raise SystemExit(f'two-handed dodge: {len(hits)} matches in {TWO_HAND_CHART} (the game changed?)')
+    at = hits[0]
+    data[at:at + 4] = struct.pack('<I', DODGE_BINDING_FIX)
+    data[at + DODGE_COUNT_AT:at + DODGE_COUNT_AT + 2] = struct.pack('<H', DODGE_COUNT_FIX)
+    path = os.path.join(game_out, '0010', *TWO_HAND_CHART.split('/'))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'wb') as f:
+        f.write(data)
+    print('  two-handed dodge for women: binding at', at)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Build the unified Character Creator package.')
@@ -700,6 +747,7 @@ def main():
     print(f'  {len(converted)} icons converted')
 
     male_shield_descriptions(game_out)
+    two_hand_dodge(game_out)
 
     # The player characters' own heads and eyes (tools/private_eyes.py), loose
     # in the package's 0009: the head lists name them and the plugin gets the
@@ -715,7 +763,7 @@ def main():
     # table or another mod's (parttable.cpp).
     table = os.path.join(game_out, '0009', 'character', 'bin__', 'partprefabtable.pappt')
     with open(os.path.join(runtime_out, 'parttable.txt'), 'w') as f:
-        f.write(f'{os.path.getsize(table)}'+chr(10))
+        f.write(' '.join(str(n) for n in [os.path.getsize(table)] + ARMOR_FIT_TABLE_SIZES) + chr(10))
     pack_runtime_data(runtime_out, os.path.join(output, 'CharacterCreator.data'))
     print('done:', output)
 

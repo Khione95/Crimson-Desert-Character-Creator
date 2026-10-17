@@ -1,4 +1,4 @@
-Character Creator 9.1.13 - Crimson Desert
+Character Creator 9.1.15 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -24,8 +24,8 @@ With DMM (recommended)
 
 Manual install (another mod manager, or no .asi support)
   1. Install the game files with your mod manager as usual: the "Character
-     Creator Enhanced" folder inside "Character Creator" holds the 0009 and
-     0012 folders ("Equip All Armor.json" is a DMM mod: every character can
+     Creator Enhanced" folder inside "Character Creator" holds the 0009, 0010
+     and 0012 folders ("Equip All Armor.json" is a DMM mod: every character can
      wear each other's armor).
   2. Install the Ultimate ASI Loader into <game>\bin64 if you do not have it
      yet (many mods use it, usually as winmm.dll).
@@ -105,6 +105,11 @@ GOOD TO KNOW
   another mod handles gliding, set Glide = 0 under [Fixes] in
   <game>\bin64\CharacterCreator.ini (added there on the next start; DMM's ASI
   config can edit it) and restart the game.
+- Two-handed swords as a woman (Female, female animations): rolls move the
+  whole body, and the sword sits in the right hand for Kliff's attacks and in
+  the left for her own moves. Both are sevnupp's fixes (Female Longsword Fix,
+  nexusmods.com/crimsondesert/mods/3477) - thank you! TwoHandGrip = 0 under
+  [Fixes] switches the grip fix off (e.g. while using sevnupp's mod).
 - Eye colour changes at once: the head is swapped for about a second while
   the eyes reload. Each character has their own copy of the heads and eyes, so
   NPCs keep their own eye colour.

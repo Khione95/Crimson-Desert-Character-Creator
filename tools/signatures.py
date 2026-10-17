@@ -38,6 +38,9 @@ TARGETS = [
     ('ManagerPointer', 0x6D69A48, 'ref'),
     ('ScaleComponentVtable', 0x5B4C6C0, 'ref'),
     ('ScaleObjectVtable', 0x5B4D168, 'ref'),
+    ('AttachPart', 0x2C7C300, 'call'),
+    ('WorldPointer', 0x6D69190, 'ref'),
+    ('NamesPointer', 0x6C8CCE8, 'ref'),
 ]
 
 PATTERNS_PER_TARGET = 3

@@ -131,38 +131,6 @@ static uint32_t __cdecl ChooseType(uintptr_t component, uintptr_t holder)
     return OWN_TYPE[ch];
 }
 
-static void* AllocateNear(uintptr_t target, size_t size)
-{
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    uintptr_t step = si.dwAllocationGranularity;
-    uintptr_t lo = target > 0x70000000 ? target - 0x70000000 : step;
-
-    for (uintptr_t a = (target & ~(step - 1)) - step; a > lo; a -= step)
-    {
-        void* p = VirtualAlloc((void*)a, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
-        if (p)
-            return p;
-    }
-
-    // Nothing free below the code (other plugins and the game take that
-    // memory early): above it, past the end of the game's image.
-    uintptr_t module = (uintptr_t)GetModuleHandleW(NULL);
-    IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module + ((IMAGE_DOS_HEADER*)module)->e_lfanew);
-    uintptr_t end = (module + nt->OptionalHeader.SizeOfImage + step - 1) & ~(step - 1);
-
-    for (uintptr_t a = end; a < target + 0x70000000; a += step)
-    {
-        void* p = VirtualAlloc((void*)a, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
-        if (p)
-            return p;
-    }
-
-    return NULL;
-}
-
 static uintptr_t FindSite()
 {
     uintptr_t module = (uintptr_t)GetModuleHandleW(NULL);

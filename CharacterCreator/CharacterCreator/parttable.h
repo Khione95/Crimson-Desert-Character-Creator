@@ -10,8 +10,10 @@
 //
 // The game takes a file from the first archive group in meta/0.papgt that
 // has it (DMM's groups come first). Each group's index (0.pamt) gives the
-// file's unpacked size, which is compared with the package's table.
+// file's unpacked size, which is compared with the package's table and with
+// Female Armor Fit's (the same table with the armor copies added).
 //
 // gameFolder: the game's folder (the one holding meta and the groups).
-// expectedSize: the package's table size (parttable.txt in the data folder).
-bool PartTableIsOurs(const char* gameFolder, uint32_t expectedSize);
+// sizes, count: the tables' sizes (parttable.txt in the data folder); none:
+// nothing can be told.
+bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count);

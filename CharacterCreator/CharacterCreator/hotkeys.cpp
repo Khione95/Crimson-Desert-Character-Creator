@@ -138,9 +138,12 @@ static const char DEFAULT_INI[] =
     "; Glide - each character glides their own way whatever their gender (Kliff\r\n"
     ";   with the crow wings, Damiane with her glider, Oongka with his rocket).\r\n"
     ";   Set 0 when another mod handles gliding.\r\n"
+    "; TwoHandGrip - a woman holds a two-handed sword in the right hand for\r\n"
+    ";   Kliff's attacks and in the left for her own moves.\r\n"
     "\r\n"
     "[Fixes]\r\n"
-    "Glide = 1\r\n";
+    "Glide = 1\r\n"
+    "TwoHandGrip = 1\r\n";
 
 // The [Fixes] part of the default ini, added to an ini made by an older
 // version that has no [Fixes] section yet.
@@ -150,9 +153,12 @@ static const char FIXES_INI[] =
     "; Glide - each character glides their own way whatever their gender (Kliff\r\n"
     ";   with the crow wings, Damiane with her glider, Oongka with his rocket).\r\n"
     ";   Set 0 when another mod handles gliding.\r\n"
+    "; TwoHandGrip - a woman holds a two-handed sword in the right hand for\r\n"
+    ";   Kliff's attacks and in the left for her own moves.\r\n"
     "\r\n"
     "[Fixes]\r\n"
-    "Glide = 1\r\n";
+    "Glide = 1\r\n"
+    "TwoHandGrip = 1\r\n";
 
 static char g_iniPath[MAX_PATH] = "";
 
