@@ -311,6 +311,8 @@ static const DWORD PREVIEW_OWNER_ACTIVE_MS = 500;
 static Tracked g_tracked[MAX_TRACKED];
 static SRWLOCK g_trackedLock = SRWLOCK_INIT;
 static bool g_warnedUnknown = false;
+static volatile bool g_unknownWithoutMarker = false;   // a character without the package's marker options was seen
+static volatile bool g_anyKnown = false;               // Kliff, Damiane or Oongka was recognised at least once
 
 // Returns false if the controller belongs to no known character.
 static bool Track(uintptr_t controller, DWORD now)
@@ -320,6 +322,9 @@ static bool Track(uintptr_t controller, DWORD now)
 
     if (character < 0)
     {
+        if (count == 0)
+            g_unknownWithoutMarker = true;
+
         if (!g_warnedUnknown)
         {
             g_warnedUnknown = true;
@@ -328,6 +333,8 @@ static bool Track(uintptr_t controller, DWORD now)
         }
         return false;
     }
+
+    g_anyKnown = true;
 
     AcquireSRWLockExclusive(&g_trackedLock);
 
@@ -450,6 +457,11 @@ bool GameCharacterHasValues(int ch)
 {
     uintptr_t controller = ValidCharacter(ch) ? MainFor(ch) : 0;
     return !controller || HasDecorations(controller);
+}
+
+bool GamePackageMissing()
+{
+    return g_unknownWithoutMarker && !g_anyKnown;
 }
 
 bool GameCharacterPresent(int ch)

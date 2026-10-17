@@ -63,6 +63,11 @@ void GameGetDesired(int ch, Appearance* values, AppearanceMask* mask);
 // True if the game currently has the character (their controller is updated).
 bool GameCharacterPresent(int ch);
 
+// True when characters are seen without the mod package's marker options and
+// none was ever recognised: the package's game files are not loaded (not
+// applied in DMM, or another mod replaces the same character files).
+bool GamePackageMissing();
+
 // False if the character is present but has no appearance values yet: the
 // game creates them on the character's first barber visit (Oongka has none
 // until then). Colours and sliders do nothing, meshes still change.

@@ -62,6 +62,7 @@ static const Tab TABS[] =
         { L"Skin shine", PAGE_SLIDERS, 0, NULL, { 23 }, { L"Shine" }, 1 } }, 3 },
     { L"Height", { { L"Height", PAGE_SLIDERS, 0, NULL, { SLIDER_HEIGHT }, { L"Height" }, 1 } }, 1 },
     { L"Head", { { L"Head", PAGE_MESH, MESH_HEAD, L"Head" } }, 1 },
+    { L"Face Details", { { L"Face details", PAGE_MESH, MESH_WHISKERS, L"Details" } }, 1 },
     { L"Hair", {
         { L"Hair", PAGE_MESH, MESH_HAIR, L"Hair" },
         { L"Hair colour", PAGE_COLOR, 6 },
@@ -166,6 +167,7 @@ static Appearance g_openActual;
 static AppearanceMask g_touched;
 static int g_openGender, g_openRace, g_openEyes, g_openHeight;
 static bool g_openFemaleMoves;
+static int g_openDetails;
 
 // A notice shown for a while after the editor closes.
 static const DWORD RESTART_NOTICE_MS = 6000;
@@ -373,6 +375,18 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
                 *selected = 0;
         }
 
+        // Face details: slot 5 shows another head mixed into the chosen one,
+        // or ("Same as head") follows the head.
+        bool details = page.target == MESH_WHISKERS;
+
+        if (details)
+        {
+            items->push_back({ L"Same as head", L"", -1 });
+
+            if (ProfileDetails(g_char) < 0)
+                *selected = 0;
+        }
+
         size_t fixedItems = items->size();
 
         for (int pass = 0; pass < 2 && items->size() == fixedItems; ++pass)
@@ -388,7 +402,7 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
                 swprintf_s(label, L"%s %d", ItemWord(TABS[g_tab], page), (int)(items->size() - fixedItems) + 1);
                 items->push_back({ label, m.icon, m.index[g_char] });
 
-                if (m.index[g_char] == g_view.mesh[page.target])
+                if (m.index[g_char] == g_view.mesh[page.target] && (!details || ProfileDetails(g_char) >= 0))
                     *selected = (int)items->size() - 1;
             }
         }
@@ -470,6 +484,18 @@ static void SetMesh(int slot, int option)
     GameSetMesh(g_char, slot, (uint8_t)option);
 }
 
+static int FindOption(int ch, int slot, const std::string& mesh);
+
+// The slot 5 option showing the same head as head option `head`, or -1.
+static int HeadInSlot5(int ch, int head)
+{
+    for (const MeshOption& h : g_data.meshes)
+        if (h.slot == MESH_HEAD && h.index[ch] == head)
+            return FindOption(ch, MESH_WHISKERS, h.mesh);
+
+    return -1;
+}
+
 static void SetValue(int index, int value)
 {
     const DecorationParam& p = g_data.params[index];
@@ -520,6 +546,18 @@ static void Choose(const Page& page, const Item& item)
         break;
 
     case PAGE_MESH:
+        if (page.target == MESH_WHISKERS)
+        {
+            // Face details: the chosen head, or slot 5 back to the head's own.
+            ProfileSetDetails(g_char, item.value);
+            int option = item.value >= 0 ? item.value : HeadInSlot5(g_char, g_view.mesh[MESH_HEAD]);
+
+            if (option >= 0)
+                SetMesh(MESH_WHISKERS, option);
+
+            break;
+        }
+
         SetMesh(page.target, item.value);
         break;
 
@@ -607,6 +645,7 @@ static void Open(int ch)
     g_openEyes = EyesChosen(g_char);
     g_openHeight = IdentityHeight(g_char);
     g_openFemaleMoves = IdentityFemaleMoves(g_char);
+    g_openDetails = ProfileDetails(g_char);
     g_scrollRow = 0;
     g_sliderRow = 0;
 }
@@ -687,6 +726,7 @@ static void Cancel()
     IdentityChoose(g_char, g_gender, g_race);
     IdentityChooseHeight(g_char, g_openHeight);
     IdentityChooseFemaleMoves(g_char, g_openFemaleMoves);
+    ProfileSetDetails(g_char, g_openDetails);
 
     bool makeupTouched = false;
 
@@ -799,20 +839,36 @@ static void FitCharacter(int ch)
                 current = &m;
 
         // Slot 5 follows the head: "none" there shows option 0 (Kliff's head).
+        // Face details chosen in the editor (another head of the gender,
+        // mixed into the chosen one) stay; one that no longer fits the
+        // character's gender goes back to following the head.
         if (slot == MESH_WHISKERS)
         {
-            int wanted = -1;
+            int wanted = -1, details = ProfileDetails(ch);
 
-            for (const MeshOption& h : g_data.meshes)
-                if (h.slot == MESH_HEAD && h.index[ch] == look.mesh[MESH_HEAD])
-                    wanted = FindOption(ch, MESH_WHISKERS, h.mesh);
+            if (details >= 0)
+            {
+                for (const MeshOption& d : g_data.meshes)
+                    if (d.slot == MESH_WHISKERS && d.index[ch] == details && OptionFitsFor(d, gender, race))
+                        wanted = details;
+
+                if (wanted < 0)
+                {
+                    Log("menu: %S's face details (%d) do not fit a %s - back to the head's own", CHARACTER_NAMES[ch], details,
+                        gender == GENDER_FEMALE ? "woman" : "man");
+                    ProfileSetDetails(ch, -1);
+                }
+            }
+
+            if (wanted < 0)
+                wanted = HeadInSlot5(ch, look.mesh[MESH_HEAD]);
 
             // Set once: until the character is built it stays pending.
             bool pending = desiredMask.mesh[MESH_WHISKERS] && desired.mesh[MESH_WHISKERS] == wanted;
 
             if (wanted >= 0 && wanted != look.mesh[MESH_WHISKERS] && !pending)
             {
-                Log("menu: %S's slot 5 set to match the head (%d)", CHARACTER_NAMES[ch], wanted);
+                Log("menu: %S's slot 5 set to %s (%d)", CHARACTER_NAMES[ch], details >= 0 ? "the face details" : "match the head", wanted);
                 GameSetMesh(ch, MESH_WHISKERS, (uint8_t)wanted);
             }
 
@@ -1471,6 +1527,9 @@ void MenuDraw(const OverlayDrawContext& ctx)
             CHARACTER_NAMES[g_char]);
         note = absent;
     }
+
+    if (!note && !GameCharacterPresent(g_char) && GamePackageMissing())
+        note = L"The mod's game files are not loaded: apply Character Creator in DMM (or another mod replaces them).";
 
     if (!note && !GameCharacterPresent(g_char))
     {

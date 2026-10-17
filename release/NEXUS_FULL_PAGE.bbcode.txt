@@ -11,7 +11,7 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]Gender and race[/b]: male or female, Human, Orc, Dwarf or Goblin - for each of the three characters. Kliff can also be [b]Female (male animations)[/b]: a female body that keeps his own animations, so his crow wings and two-handed swords work as usual
 • [b]Body[/b]: body shape, skin colour (with extra skin tones), skin shine
 • [b]Height[/b]: from -20% to +20%, previewed live
-• [b]Head[/b]: every head of the character's gender, from all four races
+• [b]Head[/b]: every head of the character's gender, from all four races - and [b]Face details[/b]: mix features of a second head into the chosen one, for many more faces
 • [b]Hair[/b]: every hair style of every race and gender, colour, length, shine
 • [b]Beard[/b]: every beard for every character (with a "None" option), colour, length
 • [b]Eyebrows[/b]: type, colour, length

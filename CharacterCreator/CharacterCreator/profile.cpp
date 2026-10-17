@@ -9,6 +9,19 @@
 static char g_path[CHARACTER_COUNT][MAX_PATH] = {};
 static Appearance g_savedValues[CHARACTER_COUNT] = {};
 static AppearanceMask g_savedMask[CHARACTER_COUNT] = {};
+static int g_details[CHARACTER_COUNT] = { -1, -1, -1 };
+static int g_savedDetails[CHARACTER_COUNT] = { -1, -1, -1 };
+
+int ProfileDetails(int ch)
+{
+    return ch >= 0 && ch < CHARACTER_COUNT ? g_details[ch] : -1;
+}
+
+void ProfileSetDetails(int ch, int option)
+{
+    if (ch >= 0 && ch < CHARACTER_COUNT)
+        g_details[ch] = option >= 0 && option <= 255 ? option : -1;
+}
 
 void ProfileInit(const char* folder)
 {
@@ -47,6 +60,11 @@ static void Load(int ch)
             mask.mesh[index] = true;
             ++loaded;
         }
+        else if (strcmp(kind, "details") == 0 && index == 5)
+        {
+            g_details[ch] = value;
+            g_savedDetails[ch] = value;
+        }
     }
 
     fclose(f);
@@ -70,7 +88,7 @@ static void SaveIfChanged(int ch)
     GameGetDesired(ch, &values, &mask);
 
     if (memcmp(&values, &g_savedValues[ch], sizeof(values)) == 0 &&
-        memcmp(&mask, &g_savedMask[ch], sizeof(mask)) == 0)
+        memcmp(&mask, &g_savedMask[ch], sizeof(mask)) == 0 && g_details[ch] == g_savedDetails[ch])
         return;
 
     FILE* f = NULL;
@@ -102,11 +120,15 @@ static void SaveIfChanged(int ch)
         }
     }
 
+    if (g_details[ch] >= 0)
+        fprintf(f, "details 5 %d\n", g_details[ch]);
+
     fclose(f);
 
     g_savedValues[ch] = values;
     g_savedMask[ch] = mask;
-    Log("%S profile saved: %d values", CHARACTER_NAMES[ch], saved);
+    g_savedDetails[ch] = g_details[ch];
+    Log("%S profile saved: %d values%s", CHARACTER_NAMES[ch], saved, g_details[ch] >= 0 ? " and face details" : "");
 }
 
 void ProfileSaveIfChanged()

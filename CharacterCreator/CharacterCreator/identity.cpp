@@ -565,7 +565,7 @@ static void HookParser()
 enum FieldMask
 {
     F_APPEARANCE = 1, F_PREFAB = 2, F_SKELETON = 4, F_LOOKUP24 = 8, F_LOOKUP25 = 16, F_F36 = 32,
-    F_ACTION = 64, F_WEIGHT = 128,
+    F_ACTION = 64, F_WEIGHT = 128, F_TRIBE = 256, F_WEARER = 512,
 };
 
 // The entries and fields Female Animations.field.json changes for Kliff, and
@@ -580,6 +580,9 @@ struct GenderEntry
     const char* femaleFrom;
 };
 
+// Tribe and wearer type (+0xA4 _tribeInfoWrapper, +0xAC _characterTribeAndGenderString)
+// pick an item's prefab entry; copying either from Damiane crashed the game
+// at start (tested 2026-10-17), so female Kliff keeps Kliff's.
 static const int KLIFF_FIELDS = F_APPEARANCE | F_PREFAB | F_SKELETON | F_ACTION | F_F36 | F_LOOKUP24 | F_LOOKUP25;
 static const int CLONE_FIELDS = F_APPEARANCE | F_PREFAB | F_WEIGHT | F_F36 | F_LOOKUP24 | F_LOOKUP25;
 
@@ -604,6 +607,7 @@ static const FieldInfo FIELDS[] =
 {
     { F_APPEARANCE, 0x8C, 2 }, { F_PREFAB, 0x8E, 2 }, { F_SKELETON, 0x90, 2 }, { F_LOOKUP24, 0x96, 2 },
     { F_LOOKUP25, 0x98, 2 }, { F_F36, 0xBA, 2 }, { F_ACTION, 0x1CC, 4 }, { F_WEIGHT, 0x1E0, 4 },
+    { F_TRIBE, 0xA4, 4 }, { F_WEARER, 0xAC, 2 },
 };
 
 static const int FIELD_COUNT = sizeof(FIELDS) / sizeof(FIELDS[0]);
@@ -675,11 +679,13 @@ static bool PrepareTable()
 // without field / entry names in it) everything is copied, as always.
 // ---------------------------------------------------------------------------
 
-static const char* const FIELD_NAMES[] = { "appearance", "prefab", "skeleton", "lookup24", "lookup25", "f36", "action", "weight" };
+static const char* const FIELD_NAMES[] = { "appearance", "prefab", "skeleton", "lookup24", "lookup25", "f36", "action", "weight",
+                                            "tribe", "wearer" };
+static const int NAMED_FIELDS = sizeof(FIELD_NAMES) / sizeof(FIELD_NAMES[0]);
 static char g_filterPath[MAX_PATH];
 static bool g_filterFields = false, g_filterEntries = false;
-static bool g_fieldAllowed[8], g_entryAllowed[16];
-static bool g_pairExcluded[16][8];      // "-entry.field": that field of that entry keeps its value
+static bool g_fieldAllowed[NAMED_FIELDS], g_entryAllowed[16];
+static bool g_pairExcluded[16][NAMED_FIELDS];      // "-entry.field": that field of that entry keeps its value
 
 static void LoadGenderFilter()
 {
@@ -693,7 +699,7 @@ static void LoadGenderFilter()
     if (!f)
         return;
 
-    bool fields[8] = {}, entries[16] = {};
+    bool fields[NAMED_FIELDS] = {}, entries[16] = {};
     char word[64];
 
     char excluded[256] = "";
@@ -705,7 +711,7 @@ static void LoadGenderFilter()
         if (dot)
         {
             for (int e = 0; e < ENTRY_COUNT; ++e)
-                for (int i = 0; i < 8; ++i)
+                for (int i = 0; i < NAMED_FIELDS; ++i)
                     if (_strnicmp(word + 1, GENDER_ENTRIES[e].name, dot - word - 1) == 0 &&
                         strlen(GENDER_ENTRIES[e].name) == (size_t)(dot - word - 1) && _stricmp(dot + 1, FIELD_NAMES[i]) == 0)
                     {
@@ -717,7 +723,7 @@ static void LoadGenderFilter()
             continue;
         }
 
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i < NAMED_FIELDS; ++i)
             if (_stricmp(word, FIELD_NAMES[i]) == 0)
                 fields[i] = g_filterFields = true;
 
@@ -734,7 +740,7 @@ static void LoadGenderFilter()
     {
         strcat_s(text, "fields:");
 
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i < NAMED_FIELDS; ++i)
         {
             g_fieldAllowed[i] = fields[i];
 

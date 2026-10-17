@@ -1,4 +1,4 @@
-Character Creator 9.1.12 - Crimson Desert
+Character Creator 9.1.13 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -66,6 +66,7 @@ WHAT YOU CAN CHANGE
   Body             body shape, skin colour (with extra skin tones), skin shine
   Height           -20% to +20% (previewed live, exact after a restart)
   Head             every head of the character's gender, from all races
+  Face Details     mix features of a second head into the chosen one
   Hair             every style of every race and gender, colour, length, shine
   Beard            every beard, for everyone (with "None"), colour, length
   Eyebrow          type, colour, length
