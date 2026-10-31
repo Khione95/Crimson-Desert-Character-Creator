@@ -8,7 +8,7 @@ The plugin's full source code is public on [url=https://github.com/Khione95/Crim
 [/b][/size]
 [b]An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere - no barber - and see every change live.[/b]
 
-Version 9.0 is a complete rewrite. The old version edited characters through the barber; this one has its own editor panel that works everywhere, for all three playable characters, with gender and race switching built in.
+It has its own editor panel that works everywhere, for all three playable characters, with gender and race switching built in.
 
 [size=4][b]Features[/b][/size]
 • [b]Open anywhere[/b]: [b]F6[/b] Kliff, [b]F7[/b] Damiane, [b]F8[/b] Oongka
