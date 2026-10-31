@@ -5,6 +5,8 @@
 #include "log.h"
 #include "switches.h"
 
+#include "MinHook.h"
+
 #include <string.h>
 
 // ---------------------------------------------------------------------------
@@ -16,22 +18,122 @@
 static const char* CONTROLLER_RTTI = ".?AVCharacterCustomizationController@pa@@";
 static const int HOOK_SLOT = 1;
 
-// SetDecoration(controller, index, value): writes one appearance value, marks
-// the controller as changed and refreshes its materials.
+// SetDecoration(controller, index, value, unused): writes one appearance
+// value, marks the controller as changed and refreshes its materials. The
+// value is first passed through NormalizeDecoration(controller, index, value),
+// as the game's callers do (since the 2026-10-30 update; before, SetDecoration
+// did it itself).
 // QueueMeshChange(controller + 0xF8, {slot, old, new}): registers a mesh swap;
 // the caller then writes the new option into the mesh list, like the barber.
-// Rebuild(controller): what the barber calls after copying a look in.
+// Rebuild(controller, holder): what the barber calls after copying a look in.
+// Since the 2026-10-30 update it takes a second object (from the character's
+// scene, its list at +0x38 / +0x40), and does nothing without it: the plugin
+// keeps the one the game last passed for each controller (HookedRebuild).
 
-typedef bool(__fastcall* SetDecorationFn)(uintptr_t controller, uint32_t index, uint8_t value);
+typedef bool(__fastcall* SetDecorationFn)(uintptr_t controller, uint32_t index, uint8_t value, uint8_t unused);
+typedef uint8_t(__fastcall* NormalizeDecorationFn)(uintptr_t controller, uint32_t index, uint8_t value);
 typedef void(__fastcall* QueueMeshChangeFn)(uintptr_t queue, const uint8_t* change);
-typedef void(__fastcall* RebuildFn)(uintptr_t controller);
+typedef void(__fastcall* RebuildFn)(uintptr_t controller, uintptr_t holder);
 typedef uint64_t(__fastcall* SlotFn)(uint64_t, uint64_t, uint64_t, uint64_t);
 
 static uintptr_t g_base = 0;
 static uintptr_t g_controllerVtable = 0;
-static SetDecorationFn g_setDecoration = NULL;
+static SetDecorationFn g_setDecorationRaw = NULL;
+static NormalizeDecorationFn g_normalizeDecoration = NULL;
 static QueueMeshChangeFn g_queueMeshChange = NULL;
-static RebuildFn g_rebuild = NULL;
+static RebuildFn g_rebuildRaw = NULL;
+static RebuildFn g_originalRebuild = NULL;
+
+// The holder the game last passed to Rebuild, for each controller.
+static const int REBUILD_HOLDERS = 64;
+static struct { uintptr_t controller, holder; } g_rebuildHolders[REBUILD_HOLDERS];
+static SRWLOCK g_rebuildLock = SRWLOCK_INIT;
+static int g_rebuildNext = 0;
+static volatile LONG g_holderMissingLogged = 0;
+
+static void RememberHolder(uintptr_t controller, uintptr_t holder)
+{
+    if (!controller || !holder)
+        return;
+
+    AcquireSRWLockExclusive(&g_rebuildLock);
+    bool known = false;
+
+    for (auto& e : g_rebuildHolders)
+        if (e.controller == controller)
+        {
+            known = e.holder != 0;
+            e.holder = holder;
+            ReleaseSRWLockExclusive(&g_rebuildLock);
+
+            if (!known)
+                Log("rebuild: the game's holder for controller %016llX is %016llX", (unsigned long long)controller, (unsigned long long)holder);
+
+            return;
+        }
+
+    g_rebuildHolders[g_rebuildNext] = { controller, holder };
+    g_rebuildNext = (g_rebuildNext + 1) % REBUILD_HOLDERS;
+    ReleaseSRWLockExclusive(&g_rebuildLock);
+    Log("rebuild: the game's holder for controller %016llX is %016llX", (unsigned long long)controller, (unsigned long long)holder);
+}
+
+static bool SafeRead(uintptr_t address, void* out, size_t size);
+
+// The holder is the character's AppearanceTableData, which the controller
+// keeps at +0x138 from the start (NPCs that never saw a barber have theirs):
+// without a Rebuild seen yet (the game calls it only at the barber), that one.
+static const size_t APPEARANCE_TABLE = 0x138;
+
+static uintptr_t HolderOf(uintptr_t controller)
+{
+    uintptr_t holder = 0;
+    AcquireSRWLockShared(&g_rebuildLock);
+
+    for (const auto& e : g_rebuildHolders)
+        if (e.controller == controller)
+            holder = e.holder;
+
+    ReleaseSRWLockShared(&g_rebuildLock);
+
+    uintptr_t own = 0, vtable = 0;
+    uintptr_t tableVtable = AddressOf(ADDR_APPEARANCETABLEVTABLE);
+
+    if (!holder && tableVtable && SafeRead(controller + APPEARANCE_TABLE, &own, sizeof(own)) && own &&
+        SafeRead(own, &vtable, sizeof(vtable)) && vtable == tableVtable)
+        holder = own;
+
+    return holder;
+}
+
+static void __fastcall HookedRebuild(uintptr_t controller, uintptr_t holder)
+{
+    RememberHolder(controller, holder);
+    g_originalRebuild(controller, holder);
+}
+
+static bool SetDecorationValue(uintptr_t controller, uint32_t index, uint8_t value)
+{
+    uint8_t v = g_normalizeDecoration ? g_normalizeDecoration(controller, index, value) : value;
+    return g_setDecorationRaw(controller, index, v, 0);
+}
+
+// Rebuild with the holder the game uses for this controller; without one yet
+// (the game has not rebuilt it), nothing is rebuilt.
+static void RebuildController(uintptr_t controller)
+{
+    uintptr_t holder = HolderOf(controller);
+
+    if (!holder)
+    {
+        if (InterlockedIncrement(&g_holderMissingLogged) <= 5)
+            Log("rebuild: no holder known yet for controller %016llX - not rebuilt", (unsigned long long)controller);
+
+        return;
+    }
+
+    g_originalRebuild(controller, holder);
+}
 static SlotFn g_originalSlot = NULL;
 
 // ---------------------------------------------------------------------------
@@ -159,20 +261,22 @@ static bool ReadLook(uintptr_t controller, Appearance* out)
 
 static uint32_t ReadMeshOptionCount(uintptr_t controller, int slot)
 {
-    // Same bounds the barber checks before a mesh swap.
+    // The controller's CustomizationMeshParamData (layout since the 2026-10-30
+    // update): +0x48 the slots, +0x50 their number; a slot is 0xC0 bytes, its
+    // options counted at +0xB8 (+0x88: those shown at the barber).
     uint64_t table = 0, slots = 0;
     uint32_t slotCount = 0, options = 0;
 
     if (!SafeRead(controller + 0x128, &table, sizeof(table)) || !table)
         return 0;
 
-    if (!SafeRead((uintptr_t)table + 0x30, &slotCount, sizeof(slotCount)) || (uint32_t)slot >= slotCount)
+    if (!SafeRead((uintptr_t)table + 0x50, &slotCount, sizeof(slotCount)) || (uint32_t)slot >= slotCount)
         return 0;
 
-    if (!SafeRead((uintptr_t)table + 0x28, &slots, sizeof(slots)) || !slots)
+    if (!SafeRead((uintptr_t)table + 0x48, &slots, sizeof(slots)) || !slots)
         return 0;
 
-    SafeRead((uintptr_t)slots + slot * 0x58 + 8, &options, sizeof(options));
+    SafeRead((uintptr_t)slots + slot * 0xC0 + 0xB8, &options, sizeof(options));
     return options;
 }
 
@@ -189,9 +293,16 @@ static bool IsPlayerLike(uintptr_t controller)
     if (!SafeRead(controller, &vtable, sizeof(vtable)) || vtable != g_controllerVtable)
         return false;
 
-    uintptr_t mesh;
-    uint32_t count;
+    uintptr_t mesh = 0;
+    uint32_t count = 0;
     uint8_t body = 0xFF;
+    uint32_t marker = 0;
+
+    // Before his first barber visit Oongka has no mesh list either (since the
+    // 2026-10-30 update). Only he is told this way: thousands of NPCs without
+    // one share Kliff's and Damiane's lists.
+    if (SafeRead(controller + 0xA8, &count, sizeof(count)) && count == 0)
+        return CharacterOf(controller, &marker) == CHAR_OONGKA;
 
     if (!ReadArrayHeader(controller, 0xA0, &mesh, &count) || count != MESH_SLOT_COUNT)
         return false;
@@ -199,7 +310,6 @@ static bool IsPlayerLike(uintptr_t controller)
     if (!SafeRead(mesh, &body, 1))
         return false;
 
-    uint32_t marker = 0;
     return body != 0xFF || CharacterOf(controller, &marker) >= 0;
 }
 
@@ -236,6 +346,13 @@ static int CharacterOf(uintptr_t controller, uint32_t* count)
 static const int SEEN_SIZE = 2048;
 static uintptr_t g_seen[SEEN_SIZE];
 static uint8_t g_seenPlayer[SEEN_SIZE];
+#if CC_RESEARCH
+// The last player-like controller seen, known or not: the research commands
+// use it when the mod's package is not mounted (no character is known then).
+static volatile uintptr_t g_researchPlayerLike = 0;
+// Damiane's without the package: a full mesh list with no body (her file gives it).
+static volatile uintptr_t g_researchNoBody = 0;
+#endif
 static DWORD g_seenCleared = 0;
 
 struct Tracked
@@ -383,6 +500,25 @@ static bool Track(uintptr_t controller, DWORD now)
     Log("%S found: controller %016llX%s", CHARACTER_NAMES[character], (unsigned long long)controller,
         preview ? " (preview copy)" : "");
 
+    // Research: the controller's two other arrays (+0x80, +0x90) - one may
+    // hold the bone values (since the 2026-10-30 update the game's bone list,
+    // boneparam_example_new.xml, is the eyeballs' scale, rotation, position).
+    for (size_t offset = 0x80; offset <= 0x90 && !preview; offset += 0x10)
+    {
+        uintptr_t data;
+        uint32_t count;
+        uint8_t first[24] = {};
+
+        if (ReadArrayHeader(controller, offset, &data, &count) && SafeRead(data, first, sizeof(first)))
+            Log("  array +0x%zX: %u entries, first bytes %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+                "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", offset, count, first[0], first[1], first[2],
+                first[3], first[4], first[5], first[6], first[7], first[8], first[9], first[10], first[11], first[12],
+                first[13], first[14], first[15], first[16], first[17], first[18], first[19], first[20], first[21], first[22],
+                first[23]);
+        else
+            Log("  array +0x%zX: empty", offset);
+    }
+
     ReleaseSRWLockExclusive(&g_trackedLock);
     return true;
 }
@@ -432,6 +568,23 @@ static uintptr_t MainFor(int ch)
 uintptr_t GameController(int ch)
 {
     return ValidCharacter(ch) ? MainFor(ch) : 0;
+}
+
+void GameRebuild(int ch)
+{
+    uintptr_t controller = ValidCharacter(ch) ? MainFor(ch) : 0;
+
+    if (controller)
+        RebuildController(controller);
+}
+
+static volatile LONG g_rebuildWanted[CHARACTER_COUNT];
+static const DWORD REBUILD_QUIET_MS = 200;
+
+void GameRequestRebuild(int ch)
+{
+    if (ValidCharacter(ch))
+        InterlockedExchange(&g_rebuildWanted[ch], (LONG)(GetTickCount() | 1));
 }
 
 int GameCharacterOfController(uintptr_t controller)
@@ -561,6 +714,26 @@ static bool CreateValues(uintptr_t controller, int ch)
     if (!AddressOf(ADDR_GROWBYTES))
         return false;
 
+    // No mesh list yet either (Oongka): every slot "none", as in his file.
+    uintptr_t meshVector = controller + 0xA0;
+    uint64_t meshHeader[2];
+
+    if (SafeRead(meshVector, meshHeader, sizeof(meshHeader)) && !meshHeader[0])
+    {
+        ((GrowBytesFn)AddressOf(ADDR_GROWBYTES))(meshVector, MESH_SLOT_COUNT);
+        uintptr_t meshes = 0;
+
+        if (!SafeRead(meshVector, &meshes, sizeof(meshes)) || !meshes)
+        {
+            Log("%S: could not create a mesh list", CHARACTER_NAMES[ch]);
+            return false;
+        }
+
+        memset((void*)meshes, MESH_NONE, MESH_SLOT_COUNT);
+        *(uint32_t*)(meshVector + 8) = MESH_SLOT_COUNT;
+        Log("%S: created a mesh list (%d slots), as a barber visit does", CHARACTER_NAMES[ch], MESH_SLOT_COUNT);
+    }
+
     ((GrowBytesFn)AddressOf(ADDR_GROWBYTES))(vector, DECORATION_COUNT);
 
     uintptr_t data = 0;
@@ -626,12 +799,12 @@ static void ReapplyChosenValues(uintptr_t controller, int ch, bool rebuild)
         else
             continue;
 
-        g_setDecoration(controller, (uint32_t)i, value);
+        SetDecorationValue(controller, (uint32_t)i, value);
         ++count;
     }
 
     if (rebuild)
-        g_rebuild(controller);
+        RebuildController(controller);
 
     if (count)
         Log("re-applied %d values to %S after a mesh change%s", count, CHARACTER_NAMES[ch], rebuild ? " (rebuilt)" : "");
@@ -669,7 +842,7 @@ static void RequeueBeard(uintptr_t controller, Tracked* t)
     if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_BEARD < count)
         *(uint8_t*)(mesh + MESH_BEARD) = wanted;
 
-    g_rebuild(controller);
+    RebuildController(controller);
     Log("preview: %S's beard swapped again (%d -> %d)", CHARACTER_NAMES[t->character], t->firstBeard, wanted);
 }
 
@@ -689,6 +862,19 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     GameGetDesired(ch, &desired, &mask);
 
     bool preview = t->preview;
+
+    LONG rebuildWanted = g_rebuildWanted[ch];
+
+    if (!preview && rebuildWanted && now - (DWORD)rebuildWanted >= REBUILD_QUIET_MS && !GameHeadRebuilding(ch) &&
+        InterlockedCompareExchange(&g_rebuildWanted[ch], 0, rebuildWanted) == rebuildWanted)
+    {
+        // With the values sent again: Rebuild alone did not bring Damiane's
+        // new body shape, only a change of clothes did.
+        if (HasDecorations(controller))
+            ReapplyChosenValues(controller, ch, true);
+        else
+            RebuildController(controller);
+    }
 
     // The head the game puts on while loading (the save's head slot, or the
     // list's first head when the slot is empty) comes without its face shape
@@ -744,7 +930,7 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_HEAD < count)
             *(uint8_t*)(mesh + MESH_HEAD) = shownHead;
 
-        g_rebuild(controller);
+        RebuildController(controller);
 
         // The head comes back without its skin colour: pushed again as after
         // any mesh change.
@@ -762,7 +948,7 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         if (!mask.decoration[i] || current.decoration[i] == desired.decoration[i])
             continue;
 
-        g_setDecoration(controller, (uint32_t)i, desired.decoration[i]);
+        SetDecorationValue(controller, (uint32_t)i, desired.decoration[i]);
         ++decorationChanges;
     }
 
@@ -820,7 +1006,7 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     if (!decorationChanges && !meshChanges)
         return;
 
-    g_rebuild(controller);
+    RebuildController(controller);
 
     if (meshChanges)
     {
@@ -945,7 +1131,7 @@ static void SwitchHead(uintptr_t controller, uint8_t from, uint8_t to)
     if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_HEAD < count)
         *(uint8_t*)(mesh + MESH_HEAD) = to;
 
-    g_rebuild(controller);
+    RebuildController(controller);
 }
 
 // Starts the rebuild. Returns false if the head cannot be switched.
@@ -1041,8 +1227,8 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
             return false;
         }
 
-        g_setDecoration(controller, SKIN_COLOR, (uint8_t)(g_skin > 0 ? g_skin - 1 : g_skin + 1));
-        g_rebuild(controller);
+        SetDecorationValue(controller, SKIN_COLOR, (uint8_t)(g_skin > 0 ? g_skin - 1 : g_skin + 1));
+        RebuildController(controller);
         g_headAt = now;
         g_headPhase = HEAD_NUDGED;
         return true;
@@ -1051,8 +1237,8 @@ static bool StepHeadReload(uintptr_t controller, Tracked* t, DWORD now)
         if (now - g_headAt < SKIN_RESTORE_AFTER_MS)
             return true;
 
-        g_setDecoration(controller, SKIN_COLOR, g_skin);
-        g_rebuild(controller);
+        SetDecorationValue(controller, SKIN_COLOR, g_skin);
+        RebuildController(controller);
         g_headPhase = HEAD_IDLE;
         g_headCharacter = -1;
         Log("head rebuild (%S): done (skin colour %d restored)", CHARACTER_NAMES[ch], g_skin);
@@ -1113,7 +1299,23 @@ static void OnControllerUpdate(uintptr_t controller)
     if (g_seen[h] != controller)
     {
         g_seen[h] = controller;
-        g_seenPlayer[h] = IsPlayerLike(controller) && Track(controller, now) ? 1 : 0;
+        bool playerLike = IsPlayerLike(controller);
+#if CC_RESEARCH
+        if (playerLike)
+            g_researchPlayerLike = controller;
+        else
+        {
+            uintptr_t mesh;
+            uint32_t slots;
+            uint8_t body = 0;
+            uint64_t vtable = 0;
+
+            if (SafeRead(controller, &vtable, sizeof(vtable)) && vtable == g_controllerVtable &&
+                ReadArrayHeader(controller, 0xA0, &mesh, &slots) && slots == MESH_SLOT_COUNT && SafeRead(mesh, &body, 1) && body == 0xFF)
+                g_researchNoBody = controller;
+        }
+#endif
+        g_seenPlayer[h] = playerLike && Track(controller, now) ? 1 : 0;
         LogCandidate(controller);
     }
 
@@ -1197,7 +1399,7 @@ static void OnControllerUpdate(uintptr_t controller)
             // Used up: after another load it takes the editor again.
             InterlockedExchange(&g_valuesWanted[t->character], 0);
             Log("%S: rebuilding with the new appearance values", CHARACTER_NAMES[t->character]);
-            g_rebuild(controller);
+            RebuildController(controller);
             Log("%S: rebuilt", CHARACTER_NAMES[t->character]);
             t->valuesCreatedAt = now;
             t = NULL;
@@ -1210,8 +1412,11 @@ static void OnControllerUpdate(uintptr_t controller)
 
     // Without appearance values the look is not applied: changing the meshes
     // of such a character (while a save loads) crashed the game. They get
-    // values from the editor (F6-F8) or a barber visit.
-    if (t && !HasDecorations(controller))
+    // values from the editor (F6-F8) or a barber visit. Preview copies get
+    // the meshes all the same (the colours need values): a memory scene's
+    // Kliff is such a copy, and as a woman he kept the list's first head, a
+    // man's, on her body.
+    if (t && !HasDecorations(controller) && !preview)
     {
         if (!t->noValuesNoted)
         {
@@ -1324,13 +1529,24 @@ bool GameInit()
         return false;
     }
 
-    g_setDecoration = (SetDecorationFn)AddressOf(ADDR_SETDECORATION);
+    g_setDecorationRaw = (SetDecorationFn)AddressOf(ADDR_SETDECORATION);
+    g_normalizeDecoration = (NormalizeDecorationFn)AddressOf(ADDR_NORMALIZEDECORATION);
     g_queueMeshChange = (QueueMeshChangeFn)AddressOf(ADDR_QUEUEMESHCHANGE);
-    g_rebuild = (RebuildFn)AddressOf(ADDR_REBUILD);
+    g_rebuildRaw = (RebuildFn)AddressOf(ADDR_REBUILD);
 
-    if (!g_setDecoration || !g_queueMeshChange || !g_rebuild)
+    if (!g_setDecorationRaw || !g_normalizeDecoration || !g_queueMeshChange || !g_rebuildRaw)
     {
         Log("ERROR: this game version is not supported (appearance functions not found)");
+        return false;
+    }
+
+    MH_STATUS init = MH_Initialize();
+
+    if ((init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) ||
+        MH_CreateHook((void*)g_rebuildRaw, (void*)&HookedRebuild, (void**)&g_originalRebuild) != MH_OK ||
+        MH_EnableHook((void*)g_rebuildRaw) != MH_OK)
+    {
+        Log("ERROR: could not hook the rebuild");
         return false;
     }
 
@@ -1350,3 +1566,180 @@ bool GameInit()
     Log("game hooks installed (module base %016llX)", (unsigned long long)g_base);
     return true;
 }
+
+#if CC_RESEARCH
+// Research (command.txt "arrays"): the character's controller fields that look
+// like arrays (pointer, then a count), and objects it points at whose arrays
+// have the counts of a customization (+0x30: 250 values, +0x40: 16 meshes,
+// +0x50: 3072 bone values, as the game's reader fills them, rva 80EA60).
+static uintptr_t ResearchController(int ch)
+{
+    uintptr_t controller = GameController(ch);
+    if (controller)
+        return controller;
+
+    return ch == CHAR_DAMIANE && g_researchNoBody ? g_researchNoBody : g_researchPlayerLike;
+}
+
+void GameResearchArrays(int ch)
+{
+    uintptr_t controller = ResearchController(ch);
+
+    if (!controller)
+    {
+        Log("arrays: %S not found yet (and no player-like controller seen)", CHARACTER_NAMES[ch]);
+        return;
+    }
+
+    if (!GameController(ch))
+        Log("arrays: %S not known (package not mounted?) - the last player-like controller instead", CHARACTER_NAMES[ch]);
+
+    Log("arrays: %S controller %016llX", CHARACTER_NAMES[ch], (unsigned long long)controller);
+
+    for (size_t offset = 0x08; offset <= 0x140; offset += 8)
+    {
+        uint64_t field[2];
+        uint8_t first[16] = {};
+
+        if (!SafeRead(controller + offset, field, sizeof(field)) || field[0] < 0x10000)
+            continue;
+
+        uint32_t count = (uint32_t)(field[1] & 0xFFFFFFFF);
+        uint64_t counts[3];
+
+        if (count > 0 && count <= 100000 && SafeRead((uintptr_t)field[0], first, sizeof(first)))
+            Log("  +0x%03zX: %u entries at %016llX: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+                offset, count, (unsigned long long)field[0], first[0], first[1], first[2], first[3], first[4], first[5],
+                first[6], first[7], first[8], first[9], first[10], first[11], first[12], first[13], first[14], first[15]);
+
+        // A customization object: its decoration, mesh and bone array counts.
+        uintptr_t object = (uintptr_t)field[0];
+
+        if (SafeRead(object + 0x30, &counts[0], 8) && SafeRead(object + 0x40, &counts[1], 8) &&
+            SafeRead(object + 0x50, &counts[2], 8) && (uint32_t)counts[0] == DECORATION_COUNT && (uint32_t)counts[1] == 16)
+            Log("  +0x%03zX points at a customization: values %u, meshes %u, bone values %u", offset,
+                (uint32_t)counts[0], (uint32_t)counts[1], (uint32_t)counts[2]);
+    }
+}
+
+// Research (command.txt "bone"): writes one entry (width 1 or 2 bytes) of the
+// controller's array at offset - or, with object set, of the customization
+// object the controller points at there (its bone values at +0x48) - and
+// rebuilds the character when asked.
+void GameResearchBone(int ch, size_t offset, bool object, uint32_t slot, uint32_t value, int width, bool rebuild)
+{
+    uintptr_t controller = ResearchController(ch);
+    uint64_t field[2];
+
+    if (!controller || !SafeRead(controller + offset, field, sizeof(field)) || field[0] < 0x10000)
+    {
+        Log("bone: no array at +0x%zX", offset);
+        return;
+    }
+
+    if (object && (!SafeRead((uintptr_t)field[0] + 0x48, field, sizeof(field)) || field[0] < 0x10000))
+    {
+        Log("bone: no bone values in the object at +0x%zX", offset);
+        return;
+    }
+
+    uint32_t count = (uint32_t)(field[1] & 0xFFFFFFFF);
+
+    if (slot >= count || (width != 1 && width != 2))
+    {
+        Log("bone: slot %u out of %u (width %d)", slot, count, width);
+        return;
+    }
+
+    uint8_t* at = (uint8_t*)field[0] + (size_t)slot * width;
+    uint32_t before = width == 2 ? *(uint16_t*)at : *at;
+
+    __try
+    {
+        if (width == 2)
+            *(uint16_t*)at = (uint16_t)value;
+        else
+            *at = (uint8_t)value;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        Log("bone: could not write slot %u", slot);
+        return;
+    }
+
+    Log("bone: %S +0x%zX%s slot %u: %u -> %u%s", CHARACTER_NAMES[ch], offset, object ? " (object)" : "", slot, before, value,
+        rebuild ? ", rebuilt" : "");
+
+    if (rebuild)
+        RebuildController(controller);
+}
+
+bool GameResearchStandIn(int ch)
+{
+    return ch == CHAR_KLIFF ? g_researchPlayerLike != 0 : ch == CHAR_DAMIANE && g_researchNoBody != 0;
+}
+
+// Research (faceshape.cpp "facetest"): rebuilds the character (or the last
+// player-like controller), with the holder the game passed or the
+// controller's own (+0x138).
+void GameResearchRebuild(int ch)
+{
+    uintptr_t controller = ResearchController(ch);
+    uintptr_t holder = controller ? HolderOf(controller) : 0;
+    Log("rebuild (research): controller %016llX, holder %016llX", (unsigned long long)controller, (unsigned long long)holder);
+
+    if (controller)
+        RebuildController(controller);
+}
+#endif // CC_RESEARCH
+
+#if CC_RESEARCH
+// Research (command.txt "bonegrow"): gives the character's customization
+// object (the controller's +0x110) its 3072 bone values, as the game's reader
+// does when a file has a bone section (rva 80EA60: the u16 array at +0x48
+// grown with rva 4A59C0, the new entries 0, the count 0xC00). A character
+// whose file has none has an empty array, and no bone of its is changed.
+static const uintptr_t GROW_U16_RVA = 0x4A5A20;
+static const uint8_t GROW_U16_START[] = { 0x48, 0x89, 0x5C, 0x24, 0x20, 0x41, 0x56, 0x48, 0x83, 0xEC, 0x20, 0x44, 0x8B, 0xF2, 0x48, 0x8B };
+typedef void(__fastcall* GrowU16Fn)(void* array, uint32_t count);
+static const uint32_t BONE_VALUES = 0xC00;
+
+void GameResearchBoneGrow(int ch)
+{
+    uintptr_t controller = ResearchController(ch);
+    uintptr_t object = 0;
+    uint64_t counts[3] = {};
+
+    if (!controller || !SafeRead(controller + 0x110, &object, 8) || !object || !SafeRead(object + 0x30, &counts[0], 8) ||
+        !SafeRead(object + 0x40, &counts[1], 8) || !SafeRead(object + 0x50, &counts[2], 8) ||
+        (uint32_t)counts[0] != DECORATION_COUNT || (uint32_t)counts[1] != 16)
+    {
+        Log("bonegrow: no customization object at the controller's +0x110");
+        return;
+    }
+
+    uint8_t* grow = (uint8_t*)g_base + GROW_U16_RVA;
+
+    if (memcmp(grow, GROW_U16_START, sizeof(GROW_U16_START)) != 0)
+    {
+        Log("bonegrow: the game's array grow is not at rva %llX (another game build)", (unsigned long long)GROW_U16_RVA);
+        return;
+    }
+
+    uint32_t had = (uint32_t)counts[2];
+
+    if (had < BONE_VALUES)
+    {
+        ((GrowU16Fn)grow)((void*)(object + 0x48), BONE_VALUES);
+        uint16_t* values = *(uint16_t**)(object + 0x48);
+
+        for (uint32_t i = had; i < BONE_VALUES; ++i)
+            values[i] = 0;
+
+        *(uint32_t*)(object + 0x50) = BONE_VALUES;
+    }
+
+    Log("bonegrow: %S customization %016llX: %u bone values (had %u) at %016llX", CHARACTER_NAMES[ch], (unsigned long long)object,
+        *(uint32_t*)(object + 0x50), had, (unsigned long long)*(uintptr_t*)(object + 0x48));
+}
+#endif // CC_RESEARCH

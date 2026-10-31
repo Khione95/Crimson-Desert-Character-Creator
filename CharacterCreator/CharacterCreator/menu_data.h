@@ -61,6 +61,31 @@ struct MenuData
     BaseCharacter bases[2][4];  // [gender][race]
     BaseCharacter own[3];       // [character]: their own look (Kliff, Damiane, Oongka)
 
+    // [gender][race]: the eyebrow and eyelash prefabs of a character built as
+    // that (since the 2026-10-30 update a human head has none of its own);
+    // empty: none (the head brings its own). browsKnown: the data has them.
+    bool browsKnown;
+    std::string brows[2][4][2];
+
+    // Saved looks of 9.1.16 and before (profile.cpp converts them once): the
+    // option and colour numbers as they are since the 2026-10-30 update; -1:
+    // unchanged.
+    static const int RENUMBER_SLOTS = 8;
+    std::vector<int16_t> renumber;  // [character][slot][old option]
+    std::vector<int16_t> recolour;  // [setting][old colour]
+
+    int Renumbered(int ch, int slot, int option) const
+    {
+        size_t i = ((size_t)ch * RENUMBER_SLOTS + slot) * 256 + option;
+        return slot < RENUMBER_SLOTS && option < 256 && i < renumber.size() && renumber[i] >= 0 ? renumber[i] : option;
+    }
+
+    int Recoloured(int setting, int colour) const
+    {
+        size_t i = (size_t)setting * 256 + colour;
+        return colour < 256 && i < recolour.size() && recolour[i] >= 0 ? recolour[i] : colour;
+    }
+
     // [character]: starting appearance values (their customization file).
     bool startKnown[3];
     uint8_t start[3][250];

@@ -34,6 +34,7 @@ bool MenuDataLoad(const char* folder, MenuData* out)
     out->loadedGender = -1;
     out->loadedRace = -1;
     out->markerSlot = -1;
+    out->browsKnown = false;
     out->markerCount = 0;
 
     char line[4096];
@@ -141,6 +142,41 @@ bool MenuDataLoad(const char* folder, MenuData* out)
             {
                 auto text = [](const char* x) { return std::string(strcmp(x, "-") == 0 ? "" : x); };
                 out->bases[gender][race] = { true, text(v[0]), text(v[1]), text(v[2]), text(v[3]), text(v[4]), text(v[5]) };
+            }
+        }
+        else if (strcmp(kind, "renumber") == 0)
+        {
+            int ch, slot, from, to;
+
+            if (sscanf_s(line, "renumber %d %d %d %d", &ch, &slot, &from, &to) == 4 && ch >= 0 && ch < 3 && slot >= 0 &&
+                slot < MenuData::RENUMBER_SLOTS && from >= 0 && from < 256 && to >= 0 && to < 256)
+            {
+                out->renumber.resize(3 * MenuData::RENUMBER_SLOTS * 256, -1);
+                out->renumber[((size_t)ch * MenuData::RENUMBER_SLOTS + slot) * 256 + from] = (int16_t)to;
+            }
+        }
+        else if (strcmp(kind, "recolour") == 0)
+        {
+            int setting, from, to;
+
+            if (sscanf_s(line, "recolour %d %d %d", &setting, &from, &to) == 3 && setting >= 0 && setting < 250 &&
+                from >= 0 && from < 256 && to >= 0 && to < 256)
+            {
+                out->recolour.resize(250 * 256, -1);
+                out->recolour[(size_t)setting * 256 + from] = (int16_t)to;
+            }
+        }
+        else if (strcmp(kind, "brows") == 0)
+        {
+            int gender, race;
+            char brow[128], lash[128];
+
+            if (sscanf_s(line, "brows %d %d %127s %127s", &gender, &race, brow, 128, lash, 128) == 4 &&
+                gender >= 0 && gender < 2 && race >= 0 && race < 4)
+            {
+                out->browsKnown = true;
+                out->brows[gender][race][0] = strcmp(brow, "-") == 0 ? "" : brow;
+                out->brows[gender][race][1] = strcmp(lash, "-") == 0 ? "" : lash;
             }
         }
         else if (strcmp(kind, "eyes") == 0)

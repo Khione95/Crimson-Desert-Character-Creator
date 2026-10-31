@@ -2,6 +2,7 @@
 #include "commands.h"
 #include "chartable.h"
 #include "eyes.h"
+#include "faceshape.h"
 #include "game.h"
 #include "log.h"
 #include "menu.h"
@@ -256,6 +257,35 @@ static void Run(const char* line)
 
         if (sscanf_s(line, "%*s %llx %15s", &rva, value, (unsigned)sizeof(value)) == 2)
             WatchForce((uintptr_t)rva, _stricmp(value, "off") != 0, (uint32_t)strtoul(value, NULL, 16));
+    }
+    else if (strcmp(kind, "arrays") == 0)
+        GameResearchArrays(g_character);
+    else if (strcmp(kind, "bonegrow") == 0)
+        GameResearchBoneGrow(g_character);
+    else if (strcmp(kind, "bone") == 0)
+    {
+        // bone <controller offset hex>[o] <slot> <value> [width 1/2] [rebuild 0/1]
+        // ("o": the customization object the controller points at there)
+        char where[16] = "";
+        unsigned slot = 0, value = 0;
+        int width = 2, rebuild = 1;
+
+        if (sscanf_s(line, "%*s %15s %u %u %d %d", where, (unsigned)sizeof(where), &slot, &value, &width, &rebuild) >= 3)
+        {
+            size_t len = strlen(where);
+            bool object = len > 1 && where[len - 1] == 'o';
+            GameResearchBone(g_character, (size_t)strtoull(where, NULL, 16), object, slot, value, width, rebuild != 0);
+        }
+    }
+    else if (strcmp(kind, "rebuild") == 0)
+        GameResearchRebuild(g_character);       // the last player-like character, if CC does not know them
+    else if (strcmp(kind, "facetest") == 0)
+    {
+        // facetest <slider> <value> [print]
+        int slider = 0, value = 0, print = -1;
+
+        if (sscanf_s(line, "%*s %d %d %d", &slider, &value, &print) >= 2)
+            FaceResearchTest(slider, value, print);
     }
     else if (strcmp(kind, "findowner") == 0)
         ResearchFindOwner(GameMainController());

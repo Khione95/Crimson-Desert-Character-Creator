@@ -55,13 +55,14 @@ uintptr_t CharTableEntry(int index)
     return Entry(index);
 }
 
-// The name is reached through two pointers: entry+8 -> string object -> text.
+// The name is reached through two pointers: entry+0 -> string object -> text
+// (entry+8 before the 2026-10-30 update).
 bool CharTableName(int index, char* out, size_t size)
 {
     uintptr_t e = Entry(index);
     uint64_t object = 0, text = 0;
 
-    if (!e || !SafeRead(e + 8, &object, 8) || !object || !SafeRead((uintptr_t)object, &text, 8) ||
+    if (!e || !SafeRead(e, &object, 8) || !object || !SafeRead((uintptr_t)object, &text, 8) ||
         !text || !SafeRead((uintptr_t)text, out, size - 1))
         return false;
 
@@ -172,7 +173,20 @@ bool CharTableAvailable()
 
     if (AddressOf(ADDR_MANAGERPOINTER) && SafeRead(AddressOf(ADDR_MANAGERPOINTER), &current, 8) && current &&
         current == g_manager)
+    {
+        // The same manager gets a new list of entries while the game starts
+        // (since the 2026-10-30 update): the old one is freed.
+        uint32_t count = 0;
+        uint64_t entries = 0;
+
+        if (SafeRead(g_manager + 0x08, &count, 4) && SafeRead(g_manager + 0x58, &entries, 8) && entries && count)
+        {
+            g_entries = (uintptr_t)entries;
+            g_count = (int)count;
+        }
+
         return true;
+    }
 
     g_manager = g_entries = 0;
     g_count = 0;
@@ -182,6 +196,11 @@ bool CharTableAvailable()
 uintptr_t CharTableInstance()
 {
     return g_manager;
+}
+
+uintptr_t CharTableList()
+{
+    return g_entries;
 }
 
 bool CharTableFind()
@@ -252,13 +271,13 @@ bool CharTableRead(int index, CharacterFields* out)
     uintptr_t e = Entry(index);
 
     return e &&
-        SafeRead(e + 0x8C, &out->appearance, 2) &&
-        SafeRead(e + 0x8E, &out->prefab, 2) &&
-        SafeRead(e + 0x90, &out->skeleton, 2) &&
-        SafeRead(e + 0x96, &out->lookup24, 2) &&
-        SafeRead(e + 0x98, &out->lookup25, 2) &&
-        SafeRead(e + 0xBA, &out->f36, 2) &&
-        SafeRead(e + 0x1CC, &out->action, 4);
+        SafeRead(e + 0x7C, &out->appearance, 2) &&
+        SafeRead(e + 0x7A, &out->prefab, 2) &&
+        SafeRead(e + 0x8E, &out->skeleton, 2) &&
+        SafeRead(e + 0x88, &out->lookup24, 2) &&
+        SafeRead(e + 0x80, &out->lookup25, 2) &&
+        SafeRead(e + 0x94, &out->f36, 2) &&
+        SafeRead(e + 0xE0, &out->action, 4);
 }
 
 bool CharTableWrite(int index, const CharacterFields& f)
@@ -266,13 +285,13 @@ bool CharTableWrite(int index, const CharacterFields& f)
     uintptr_t e = Entry(index);
 
     return e &&
-        SafeWrite(e + 0x8C, &f.appearance, 2) &&
-        SafeWrite(e + 0x8E, &f.prefab, 2) &&
-        SafeWrite(e + 0x90, &f.skeleton, 2) &&
-        SafeWrite(e + 0x96, &f.lookup24, 2) &&
-        SafeWrite(e + 0x98, &f.lookup25, 2) &&
-        SafeWrite(e + 0xBA, &f.f36, 2) &&
-        SafeWrite(e + 0x1CC, &f.action, 4);
+        SafeWrite(e + 0x7C, &f.appearance, 2) &&
+        SafeWrite(e + 0x7A, &f.prefab, 2) &&
+        SafeWrite(e + 0x8E, &f.skeleton, 2) &&
+        SafeWrite(e + 0x88, &f.lookup24, 2) &&
+        SafeWrite(e + 0x80, &f.lookup25, 2) &&
+        SafeWrite(e + 0x94, &f.f36, 2) &&
+        SafeWrite(e + 0xE0, &f.action, 4);
 }
 
 int CharTableIndexOf(const char* name)

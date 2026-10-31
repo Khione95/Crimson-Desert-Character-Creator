@@ -8,6 +8,8 @@ too. Each player character gets copies of the eye models under its own
 prefix, and copies of the heads that use them:
 
   zk_... Kliff    zd_... Damiane    zo_... Oongka     (instead of cd_...)
+  phm_k0_... / phm_d0_... / phm_o0_...   (for a name without the prefix,
+  phm_00_..., since the 2026-10-30 update: the first digit; names.copy_name)
 
 Per head:        character/bin__/prefab/<dir>/<prefix><name>.prefab
                  (the eye models' paths replaced by the character's copies)
@@ -34,12 +36,15 @@ import re
 import sys
 
 import game_files
+import names
 import pappt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MENU = os.path.join(HERE, '..', 'build', 'bin64', 'CharacterCreator', 'menu.txt')
 TABLE = 'character/bin__/partprefabtable.pappt'
-IRIS = b'character/texture/cd_phm_00_eye_iris_'
+# An iris texture path: character/texture/<name>.dds, the name cd_phm_00_eye_iris_...
+# or (since the 2026-10-30 update) phm_00_eye_iris_... / PHM_00_Eye_iris_...
+IRIS = re.compile(rb'character/texture/((?:cd_)?[A-Za-z]{3}_0\d_[Ee]ye_iris_[A-Za-z0-9_]*\.dds)')
 PREFIXES = {'zk_': 'Kliff', 'zd_': 'Damiane', 'zo_': 'Oongka'}
 HEAD_LISTS = {'zk_': 'meshparam_example_kliff.xml', 'zd_': 'meshparam_example_damian.xml',
               'zo_': 'meshparam_example_oongka.xml'}
@@ -48,7 +53,8 @@ HEAD_SLOTS = (1, 5)
 
 def copy_name(path, prefix):
     folder, name = path.rsplit('/', 1)
-    return f'{folder}/{prefix}{name[3:]}' if name.startswith('cd_') else None
+    copy = names.copy_name(name, prefix)
+    return f'{folder}/{copy}' if copy else None
 
 
 def model_copy_name(path, prefix):
@@ -84,7 +90,7 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
     eye_models = set()
     for head in heads:
         path = prefab_of.get(head)
-        if not path or not head.startswith('cd_'):
+        if not path or not names.can_copy(head):
             print('skipped', head, '(no prefab)')
             continue
         data = game_files.read(index[path])
@@ -93,8 +99,8 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
         for m in models:
             prop = 'character/modelproperty/' + m[len('character/model/'):-len('.pac')] + '.pac_xml'
             if m not in has_iris:
-                has_iris[m] = prop in index and IRIS in game_files.read(index[prop])
-            if has_iris[m] and m.rsplit('/', 1)[1].startswith('cd_'):
+                has_iris[m] = prop in index and IRIS.search(game_files.read(index[prop])) is not None
+            if has_iris[m] and names.can_copy(m.rsplit('/', 1)[1]):
                 eyes.append((m, prop))
         if not eyes:
             print('skipped', head, '(no eyes with an iris)')
@@ -105,7 +111,7 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
                 new = new.replace(m.encode(), model_copy_name(m, prefix).encode())
                 eye_models.add((m, prop, prefix))
             write(out_dir, copy_name(path, prefix), new)
-            copies[head] = copies.get(head, []) + [prefix + head[3:]]
+            copies[head] = copies.get(head, []) + [names.copy_name(head, prefix)]
 
     models = {}
     for m, prop, prefix in sorted(eye_models):
@@ -115,14 +121,15 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
         # The iris paths are marked with the character's prefix (same length):
         # the plugin points them at the chosen colour, or back at the
         # original texture - these copies need the plugin.
-        marked = game_files.read(index[prop]).replace(IRIS, IRIS.replace(b'/cd_', b'/' + prefix.encode()))
+        marked = IRIS.sub(lambda t: b'character/texture/' + names.copy_name(t.group(1).decode(), prefix).encode(),
+                          game_files.read(index[prop]))
         write(out_dir, model_copy_name(prop, prefix), marked)
 
     table = (open(table_path, 'rb').read() if table_path else
              game_files.read(next(game_files.entries('^' + re.escape(TABLE) + '$'))))
     added_total = 0
     for prefix in PREFIXES:
-        table, added = pappt.add_copies(table, {h: prefix + h[3:] for h in copies})
+        table, added = pappt.add_copies(table, {h: names.copy_name(h, prefix) for h in copies})
         added_total += added
     write(out_dir, TABLE, table)
 
@@ -135,8 +142,8 @@ def build(out_dir, meshparam_dir, list_file, heads=None, menu=MENU, table_path=N
         text = raw.decode('utf-8-sig')
         for index in HEAD_SLOTS:
             head = re.search(rf'<ParamDesc Index="{index}".*?</ParamDesc>', text, re.S)
-            block = re.sub(r'MeshFileName="cd_([^"]+)"',
-                           lambda m: f'MeshFileName="{prefix}{m.group(1)}"' if 'cd_' + m.group(1) in copies else m.group(0),
+            block = re.sub(r'MeshFileName="([^"]+)"',
+                           lambda m: f'MeshFileName="{names.copy_name(m.group(1), prefix)}"' if m.group(1) in copies else m.group(0),
                            head.group(0))
             text = text[:head.start()] + block + text[head.end():]
         open(path, 'wb').write((b'\xef\xbb\xbf' if raw[:3] == b'\xef\xbb\xbf' else b'') + text.encode('utf-8'))

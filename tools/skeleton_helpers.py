@@ -143,6 +143,13 @@ def load(path):
     return game_files.read(entry)
 
 
+def patched_skeletons():
+    """{game path: the skeleton with the other gender's bones}."""
+    data = {k: load(p) for k, p in SKELETONS.items()}
+    bones = {k: read_pab(d)[1] for k, d in data.items()}
+    return {SKELETONS[body]: add_helpers(data[body], bones[other])[0] for body, other in (('female', 'male'), ('male', 'female'))}
+
+
 def main():
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)

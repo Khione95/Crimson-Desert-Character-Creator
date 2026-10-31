@@ -37,9 +37,104 @@ ICONS = r'0012\ui\texture\image\customizeimage'
 DECORATION = META + r'\decorationparam_player.xml'
 CUSTOMIZATION_FOLDER = r'0009\character\descriptors\customization'
 
-# Unmodified game files. The colour palette file is built from the game's own
-# (with the mod's extra colours appended, see build_palette).
-ORIGINAL_META = os.path.join(DESKTOP, r'Crimson Browser Sharp\extract', META)
+# Unmodified game files, taken from the game as it is now (extract_originals:
+# cache/extract). The colour palette file is built from the game's own (with
+# the mod's extra colours appended, see build_palette).
+EXTRACT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache', 'extract')
+ORIGINAL_META = os.path.join(EXTRACT, META)
+ORIGINAL_FILES = [r'^character/descriptors/customizationmeta/[^/]+$',
+                  r'^character/descriptors/characterdescription/ph[mw]_description_player_(001|kliff)\.xml$',
+                  r'^character/descriptors/socketbonedata/1_pc/[12]_ph[mw]/ph[mw]_(damian_|kliff_)?01\.pab\.sockets\.xml$',
+                  r'^character/appearance/1_pc/(1_phm/cd_phm_(macduff|oongka)|2_phw/cd_phw_damian)/[^/]+_00000\.app_xml$']
+
+
+# The women's player description and socket files. The mod's copies (old
+# versions of the game's files with the men's weapon entries added, so a
+# woman Kliff carries his weapons) are not shipped as they are: the game's
+# current files get the entries the mod added that they lack, as the men's
+# current files have them (women_weapon_files).
+WOMEN_DESCRIPTION = r'0009\character\descriptors\characterdescription\phw_description_player_001.xml'
+MEN_DESCRIPTION = r'0009\character\descriptors\characterdescription\phm_description_player_kliff.xml'
+WOMEN_SOCKETS = [r'0009\character\descriptors\socketbonedata\1_pc\2_phw\phw_01.pab.sockets.xml',
+                 r'0009\character\descriptors\socketbonedata\1_pc\2_phw\phw_damian_01.pab.sockets.xml']
+MEN_SOCKETS = r'0009\character\descriptors\socketbonedata\1_pc\1_phm\phm_01.pab.sockets.xml'
+SOCKET_ATTRIBUTES = ('InSocketBone', 'OutSocketBone', 'InChildSocketBone', 'OutChildSocketBone', 'BagSocketBone',
+                     'VehicleBagSocketBone')
+
+
+def _read(path):
+    return open(path, encoding='utf-8-sig', errors='replace').read()
+
+
+def _write(path, text):
+    with open(path, 'w', encoding='utf-8-sig', newline='\r\n') as f:
+        f.write(text.replace('\r\n', '\n'))
+
+
+def _definitions(text):
+    """PartName -> its full PartInOutSocket line (one with an InSocketBone)."""
+    out = {}
+    for line in text.splitlines():
+        m = re.search(r'<PartInOutSocket\s+PartName="([^"]+)"[^>]*\bInSocketBone=', line)
+        if m:
+            out.setdefault(m.group(1), line.strip())
+    return out
+
+
+def _sockets(text):
+    """Socket name -> its <Socket .../> line."""
+    return {m.group(1): m.group(0) for m in re.finditer(r'<Socket\s+Name="([^"]+)"[^>]*/>', text)}
+
+
+def women_weapon_files(base, game_out):
+    from names import rename_text
+    mod = _definitions(rename_text(_read(os.path.join(base, WOMEN_DESCRIPTION))))
+    game_text = _read(os.path.join(EXTRACT, WOMEN_DESCRIPTION))
+    game = _definitions(game_text)
+    men = _definitions(_read(os.path.join(EXTRACT, MEN_DESCRIPTION)))
+    added = [men.get(part, line) for part, line in mod.items() if part not in game]
+    if added:
+        indent = '\t'
+        block = ''.join(f'{indent}{line} <!-- Character Creator -->\n' for line in added)
+        game_text = game_text.replace('</PartInOutSocketInfo>', block + '</PartInOutSocketInfo>', 1)
+    _write(os.path.join(game_out, WOMEN_DESCRIPTION), game_text)
+    print(f'  women\'s description: the game\'s own with {len(added)} weapon entries of the mod:',
+          ', '.join(re.search(r'PartName="([^"]+)"', l).group(1) for l in added))
+
+    needed = set()
+    for line in added:
+        for attr in SOCKET_ATTRIBUTES:
+            m = re.search(attr + r'="([^"]+)"', line)
+            if m:
+                needed.add(m.group(1))
+    men_sockets = _sockets(_read(os.path.join(EXTRACT, MEN_SOCKETS)))
+    for path in WOMEN_SOCKETS:
+        text = _read(os.path.join(EXTRACT, path))
+        have = _sockets(text)
+        mod_sockets = _sockets(rename_text(_read(os.path.join(base, path)))) if os.path.exists(os.path.join(base, path)) else {}
+        extra = [men_sockets.get(n) or mod_sockets.get(n) for n in sorted(needed) if n not in have and (men_sockets.get(n) or mod_sockets.get(n))]
+        missing = [n for n in sorted(needed) if n not in have and not (men_sockets.get(n) or mod_sockets.get(n))]
+        if extra:
+            text = text.replace('</SocketList>', ''.join(f'\t\t{l}\n' for l in extra) + '\t</SocketList>', 1)
+            count = len(_sockets(text.split('</SocketList>')[0]))
+            text = re.sub(r'<SocketList Count="\d+">', f'<SocketList Count="{count}">', text, count=1)
+        _write(os.path.join(game_out, path), text)
+        print(f'  {os.path.basename(path)}: the game\'s own with {len(extra)} sockets for them'
+              + (f' (not defined anywhere: {", ".join(missing)})' if missing else ''))
+
+
+def extract_originals():
+    """The game's own versions of the files the package changes, into EXTRACT."""
+    import game_files
+    count = 0
+    for pattern in ORIGINAL_FILES:
+        for e in game_files.entries(pattern):
+            path = os.path.join(EXTRACT, '0009', *e['path'].split('/'))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'wb') as f:
+                f.write(game_files.read(e))
+            count += 1
+    print(f'  {count} of the game\'s own files extracted')
 
 # Texture palettes (tattoo, scar and dirt types). Only used to know how many
 # types there are; the game has its own copy.
@@ -64,17 +159,38 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.15'
+VERSION = '9.1.17'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
-# Female Armor Fit's part table, from its released package (see private_eyes.py).
-ARMOR_FIT_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'armor_fit_released',
-                               'character', 'bin__', 'partprefabtable.pappt')
-# Female Armor Fit's released tables (this package's with its armor copies
-# added, the heads included): the plugin keeps the characters' own heads with
-# them too. 1.0.3 and 1.0.4 (the necklaces' copies).
-ARMOR_FIT_TABLE_SIZES = [2282576]
+# The part table both packages ship (the game's with Female Armor Fit's armor
+# copies, zz_..., and this package's head copies): made from the game's
+# current table and Female Armor Fit's rules (shared_base_table), so the two
+# packages stay one table across game updates.
+# Female Armor Fit's rules (of its 1.0.5 build, game_data/faf_rules_1.0.5.xml, written by faf_port.py).
+ARMOR_FIT_RULES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'game_data', 'faf_rules_1.0.5.xml')
+SHARED_BASE_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache', 'shared_base_table.pappt')
+# Other tables the plugin counts as the package's (none since the shared
+# table is made this way).
+ARMOR_FIT_TABLE_SIZES = []
+
+
+def shared_base_table():
+    """The game's part table with Female Armor Fit's copies (each part its rules
+    swap to a zz_... copy: that copy) - the head copies are added after."""
+    import game_files
+    import pappt
+    table = game_files.read(next(game_files.entries(r'^character/bin__/partprefabtable\.pappt$')))
+    copies = {}
+    if os.path.exists(ARMOR_FIT_RULES):
+        for source, target in re.findall(r'<Condition SourcePartPrefab="([^"]+)">\s*<If Type="Match" TargetPartPrefab="(zz_[^"]+)"',
+                                         open(ARMOR_FIT_RULES, encoding='utf-8-sig').read()):
+            copies[source] = target
+    table, added = pappt.add_copies(table, copies)
+    print(f"  shared part table: the game's with {added} of Female Armor Fit's {len(copies)} armor copies")
+    os.makedirs(os.path.dirname(SHARED_BASE_TABLE), exist_ok=True)
+    open(SHARED_BASE_TABLE, 'wb').write(table)
+    return SHARED_BASE_TABLE
 DESCRIPTION = ('In-game appearance editor for Kliff, Damiane and Oongka (F6 / F7 / F8): gender, race, body, '
                'head, hair, beard, eyebrows, eye colour, tattoos, scars and paint. Needs CharacterCreator.asi.')
 
@@ -146,6 +262,51 @@ def add_character_meshes(per_slot, headers):
     return added
 
 
+def hide_missing_parts(per_slot):
+    """Bodies, heads, hair and beards whose part the game's part table no longer has
+    (the 2026-10-30 update removed some the mod's lists still name) are kept,
+    hidden: their number stays, and nothing empty is offered. The beard slot's
+    "no beard" stand-in (a model without a part, see NO_BEARD_MESH in menu.cpp)
+    stays as it is."""
+    import game_files
+    import pappt
+    table = {n.lower() for n, _, _ in pappt.records(game_files.read(next(game_files.entries(r'^character/bin__/partprefabtable\.pappt$'))))[0]}
+    hidden = []
+    for slot in (0, 1, 2, 3, 5):
+        for ms in per_slot.get(slot, []):
+            name = ms['names'][0] if ms['names'] else None
+            if name and '_eyebrow_' not in name and name.lower() not in table and ms['attrs'].get('ShowInGame', 'True').lower() != 'false':
+                ms['attrs'] = dict(ms['attrs'], ShowInGame='False')
+                hidden.append(name)
+    if hidden:
+        print(f'  hidden (no part in the game any more): {", ".join(sorted(set(hidden)))}')
+
+
+def add_update_heads(per_slot):
+    """Appends the heads the 2026-10-30 update added (tools/game_data/
+    update_heads.txt: prefab and its face shape, the skeleton variation; only
+    heads whose prefab brings eyes) to the head slot and slot 5, at the end so
+    no existing option moves."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'game_data', 'update_heads.txt')
+    added = []
+    for line in open(path, encoding='utf-8'):
+        parts = line.split()
+        if len(parts) != 2 or line.startswith('#'):
+            continue
+        mesh, skeleton = parts
+        for slot in (1, 5):
+            ms = {'attrs': {'SkeletonVariation': skeleton, 'UseSkeletonVariation': 'True'},
+                  'lists': [f'<MeshList MeshFileName="{mesh}"/>'], 'names': [mesh], 'icon': ''}
+            sets = per_slot.setdefault(slot, [])
+            if mesh_key(ms) not in {mesh_key(s) for s in sets}:
+                sets.append(ms)
+                if slot == 1:
+                    added.append(mesh)
+            if len(sets) > MAX_OPTIONS:
+                raise SystemExit(f'{SLOT_NAMES[slot]} has {len(sets)} options, more than the game can store ({MAX_OPTIONS})')
+    return added
+
+
 def add_all_hair_and_beards(per_slot):
     """Appends every player hair and beard the game has (tools/game_data/
     hair_beard_prefabs.txt) that the lists do not have yet, at the end so no
@@ -160,13 +321,14 @@ def add_all_hair_and_beards(per_slot):
     # files of the game's file list). The others are pieces that borrow another
     # hair's parts and are never worn alone; cd_phw_00_hair_00_0504_02 crashed
     # the game when worn.
-    models = {l.strip() for l in open(os.path.join(folder, 'hair_beard_models.txt'), encoding='utf-8') if l.strip()}
+    from names import new_name
+    models = {new_name(l.strip()) for l in open(os.path.join(folder, 'hair_beard_models.txt'), encoding='utf-8') if l.strip()}
     skipped = []
     for line in open(path, encoding='utf-8'):
         parts = line.split()
         if len(parts) != 2 or line.startswith('#'):
             continue
-        slot, name = int(parts[0]), parts[1]
+        slot, name = int(parts[0]), new_name(parts[1])
         sets = per_slot.setdefault(slot, [])
         if any(ms['names'] and ms['names'][0] == name for ms in sets):
             continue
@@ -180,6 +342,101 @@ def add_all_hair_and_beards(per_slot):
     if skipped:
         print(f'  left out {len(skipped)} hair/beard prefabs without a model of their own:', ', '.join(skipped))
     return added
+
+
+# The options' order of the last release (its menu.txt): saved looks and the
+# game's saves store options by their number, so every option keeps the
+# number it had, under its new name; options new to the lists go at the end.
+PREVIOUS_ORDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'game_data', 'menu_order_9.1.16.txt')
+
+
+def keep_previous_order(per_slot):
+    from names import new_name
+    if not os.path.exists(PREVIOUS_ORDER):
+        print('  no previous option order - options keep the order they are built in')
+        return
+    previous = {}
+    for line in open(PREVIOUS_ORDER, encoding='utf-8'):
+        parts = line.split()
+        if parts and parts[0] == 'mesh':
+            previous.setdefault(int(parts[1]), []).append(new_name(parts[6]))
+    for slot, sets in per_slot.items():
+        by_name = {}
+        for ms in sets:
+            by_name.setdefault(ms['names'][0] if ms['names'] else '-', []).append(ms)
+        ordered, lost = [], []
+        for name in previous.get(slot, []):
+            if by_name.get(name):
+                ordered.append(by_name[name].pop(0))
+            else:
+                lost.append(name)
+                # Its number stays taken: the option is kept, hidden.
+                ordered.append({'attrs': {'ShowInGame': 'False'}, 'lists': [f'<MeshList MeshFileName="{name}"/>'],
+                                'names': [name], 'icon': ''})
+        rest = [ms for ms in sets if not any(ms is o for o in ordered)]
+        per_slot[slot] = ordered + rest
+        print(f'  {SLOT_NAMES[slot]}: {len(ordered)} options in the last release\'s order, {len(rest)} new at the end'
+              + (f'; no longer in the lists: {", ".join(lost)}' if lost else ''))
+
+
+# Saved looks of the last release are converted once by the plugin
+# (profile.cpp): its option numbers (renumber <character> <slot> <old> <new>)
+# and colour numbers (recolour <setting> <old> <new>: the 2026-10-30 update
+# changed the colour palettes - skin cut from 133 colours to 49, hair grown to
+# 238 - and moved settings to other palettes). The last release's palette is
+# rebuilt from the game's palette of then (game_data/previous) as it was built.
+PREVIOUS_GAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'game_data', 'previous')
+
+
+def migration_lines(per_slot, orders, mod_palette, new_palette):
+    from names import new_name
+    lines = ['# renumber <character> <slot> <old option> <new option>: saved looks of 9.1.16 and before',
+             '# recolour <setting> <old colour> <new colour>: saved looks of 9.1.16 and before']
+    old = {}
+    for line in open(PREVIOUS_ORDER, encoding='utf-8'):
+        parts = line.split()
+        if parts and parts[0] == 'mesh':
+            old.setdefault(int(parts[1]), []).append((new_name(parts[6]), int(parts[2]), int(parts[7]), int(parts[8])))
+    renumbered = 0
+    for slot, sets in per_slot.items():
+        seen = {}
+        for i, ms in enumerate(sets):
+            name = ms['names'][0] if ms['names'] else '-'
+            k = seen.get(name, 0)
+            seen[name] = k + 1
+            match = [o for o in old.get(slot, []) if o[0] == name]
+            if k >= len(match):
+                continue
+            before = match[k]
+            now = (i, orders[1][slot][id(ms)], orders[2][slot][id(ms)])
+            for ch in range(3):
+                if before[1 + ch] != now[ch]:
+                    lines.append(f'renumber {ch} {slot} {before[1 + ch]} {now[ch]}')
+                    renumbered += 1
+
+    previous = os.path.join(EXTRACT, 'previous_palette.xml')
+    build_palette(previous, mod_palette, os.path.join(PREVIOUS_GAME, 'customizationcolorpalette.xml'))
+    before_palettes, now_palettes = read_palettes(previous), read_palettes(new_palette)
+    before_params = {p[0]: p[5] for p in read_decoration_params(os.path.join(PREVIOUS_GAME, 'decorationparam_player.xml'))}
+    now_params = {p[0]: p[5] for p in read_decoration_params(os.path.join(ORIGINAL_META, os.path.basename(DECORATION)))}
+    recoloured = 0
+    for index, palette in sorted(now_params.items()):
+        was = before_params.get(index, -1)
+        if palette < 0 or was < 0:
+            continue
+        colours, now_colours = before_palettes.get(was, []), now_palettes.get(palette, [])
+        if not now_colours:
+            continue
+        for value, rgb in enumerate(colours):
+            if value < len(now_colours) and now_colours[value] == rgb:
+                continue
+            target = now_colours.index(rgb) if rgb in now_colours else \
+                min(range(len(now_colours)), key=lambda i: sum((a - b) ** 2 for a, b in zip(now_colours[i], rgb)))
+            if target != value:
+                lines.append(f'recolour {index} {value} {target}')
+                recoloured += 1
+    print(f'  saved looks of the last release: {renumbered} option numbers and {recoloured} colours to convert')
+    return lines
 
 
 EXTRA_MESHES = [(slot, 'cd_pom_00_head_00_0001_oongka', '1_pc/5_pom/head/head/cd_pom_oongka_head_0001.pabc',
@@ -267,8 +524,12 @@ def build_palette(out_path, mod_path, original_path):
             raise SystemExit(f'palette {target} is not in the game\'s colour palette file')
         existing = {key(l) for l in re.findall(r'<Color\s[^>]*/>', strip_comments(m.group(1)))}
         extra = [l for l in extra if key(l) not in existing]
-        if len(existing) + len(extra) > 255:
-            raise SystemExit(f'palette {target} would have {len(existing) + len(extra)} colours, more than a setting can choose (255)')
+        # A setting chooses one of 255 (the 2026-10-30 update filled the hair
+        # palette up to 238): the mod's colours only as far as they fit.
+        room = max(0, 255 - len(existing))
+        if len(extra) > room:
+            print(f'  palette {target}: {len(extra) - room} of the mod\'s {len(extra)} colours left out (the game has {len(existing)})')
+            extra = extra[:room]
         block = ''.join(f'\t{l} <!-- Character Creator -->\n' for l in extra)
         text = text[:m.end(1)] + block + text[m.end(1):]
         counts[target] = (len(existing), len(extra))
@@ -291,7 +552,8 @@ def read_palettes(path):
 def read_base_character(path):
     """Values of a race's base character file (cd_phm_macduff_00000.app_xml)
     that the plugin swaps in when the player loads as that race and gender."""
-    text = strip_comments(open(path, encoding='utf-8-sig', errors='replace').read())
+    from names import rename_text
+    text = rename_text(strip_comments(open(path, encoding='utf-8-sig', errors='replace').read()))
 
     def attr(element, name):
         m = re.search(r'<' + element + r'\b.*?<Prefab\b[^>]*\b' + name + r'="([^"]*)"', text, re.S) \
@@ -472,10 +734,10 @@ def pack_runtime_data(folder, out_path):
 # descriptions get the same entry, and the dock override that hides it.
 MALE_DESCRIPTIONS = ['phm_description_player_001.xml', 'phm_description_player_kliff.xml']
 DESCRIPTION_FOLDER = r'0009\character\descriptors\characterdescription'
-SHIELD_R = ('<PartInOutSocket PartName="CD_MainWeapon_Shield_R" InSocketBone="Spine2_B_Shield_Socket" '
+SHIELD_R = ('<PartInOutSocket PartName="MainWeapon_Shield_R" InSocketBone="Spine2_B_Shield_Socket" '
             'OutSocketBone="RHand_Socket" InChildSocketBone="Spine2_B_Shield_ChildSocket" '
             'OutChildSocketBone="Basic_ChildSocket" BagSocketBone="Bag_Shield_Socket"/>')
-SHIELD_R_OUT = '<PartInOutSocket PartName="CD_MainWeapon_Shield_R" Visible="Out"/>'
+SHIELD_R_OUT = '<PartInOutSocket PartName="MainWeapon_Shield_R" Visible="Out"/>'
 
 
 def male_shield_descriptions(game_out):
@@ -490,7 +752,7 @@ def male_shield_descriptions(game_out):
         for line in lines:
             out.append(line)
             indent = line[:len(line) - len(line.lstrip())]
-            if 'PartName="CD_MainWeapon_Shield_L"' in line:
+            if 'PartName="MainWeapon_Shield_L"' in line:
                 out.append(indent + (SHIELD_R if 'InSocketBone' in line else SHIELD_R_OUT))
         with open(os.path.join(folder, name), 'w', encoding='utf-8-sig', newline='') as f:
             f.write((chr(13) + chr(10)).join(out))
@@ -504,40 +766,39 @@ def male_shield_descriptions(game_out):
 # at the list of 276 (entry 16), which has them; the game picks from it. Found
 # by its bytes (binding 844, the count 13 150 bytes on), not by offset.
 TWO_HAND_CHART = 'actionchart/bin__/upperaction/1_pc/1_phm/twohandsword_upper.paac'
-DODGE_BINDING, DODGE_BINDING_FIX, DODGE_COUNT_AT, DODGE_COUNT, DODGE_COUNT_FIX = 844, 16, 150, 13, 276
-TWO_HAND_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache', 'twohandsword_upper.paac')
+DODGE_BINDING, DODGE_BINDING_FIX, DODGE_COUNT, DODGE_COUNT_FIX = 844, 16, 13, 276
+# The count is this many bytes after the binding: 150 before the 2026-10-30
+# update, 154 since (the entries grew).
+DODGE_COUNT_AT = (154, 150)
 
 
 def two_hand_dodge(game_out):
     import struct
     import game_files
-    key = struct.pack('<I', DODGE_BINDING)
+    data = bytearray(game_files.read(next(game_files.entries(re.escape(TWO_HAND_CHART) + '$'))))
 
-    def find(data):
+    def find(binding, count, gap):
+        key = struct.pack('<I', binding)
         return [m.start() for m in re.finditer(re.escape(key), data)
-                if data[m.start() + DODGE_COUNT_AT:m.start() + DODGE_COUNT_AT + 2] == struct.pack('<H', DODGE_COUNT)]
+                if data[m.start() + gap:m.start() + gap + 2] == struct.pack('<H', count)]
 
-    # The game's chart; when DMM has written a mod's copy into the game's
-    # archive (the archive index no longer fits), the copy kept in cache/.
-    try:
-        data = bytearray(game_files.read(next(game_files.entries(re.escape(TWO_HAND_CHART) + '$'))))
-    except Exception:
-        data = bytearray()
-    hits = find(data)
-    if len(hits) != 1 and os.path.exists(TWO_HAND_CACHE):
-        data = bytearray(open(TWO_HAND_CACHE, 'rb').read())
-        hits = find(data)
-        print('  two-handed dodge: the chart from cache/ (the game archive has another copy)')
-    if len(hits) != 1:
-        raise SystemExit(f'two-handed dodge: {len(hits)} matches in {TWO_HAND_CHART} (the game changed?)')
+    for gap in DODGE_COUNT_AT:
+        hits = find(DODGE_BINDING, DODGE_COUNT, gap)
+        # The list it is pointed at (the one with the women's animations) must
+        # be there as well, as another entry uses it.
+        if len(hits) == 1 and find(DODGE_BINDING_FIX, DODGE_COUNT_FIX, gap):
+            break
+    else:
+        print(f'  two-handed dodge: the entry was not found in {TWO_HAND_CHART} (the game changed) - NOT in the package')
+        return
     at = hits[0]
     data[at:at + 4] = struct.pack('<I', DODGE_BINDING_FIX)
-    data[at + DODGE_COUNT_AT:at + DODGE_COUNT_AT + 2] = struct.pack('<H', DODGE_COUNT_FIX)
+    data[at + gap:at + gap + 2] = struct.pack('<H', DODGE_COUNT_FIX)
     path = os.path.join(game_out, '0010', *TWO_HAND_CHART.split('/'))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'wb') as f:
         f.write(data)
-    print('  two-handed dodge for women: binding at', at)
+    print(f'  two-handed dodge for women: binding at {at}, count {gap} bytes on')
 
 
 def main():
@@ -560,6 +821,9 @@ def main():
 
     if os.path.exists(output):
         shutil.rmtree(output)
+
+    print('the game\'s own files')
+    extract_originals()
 
     print('copying shared game files from', BASE_FOLDER)
     for sub in ('0009', '0012'):
@@ -585,9 +849,19 @@ def main():
     race_name, gender_name = identity.split()
     female = gender_name == 'Female'
     print('character loads as', identity)
-    shutil.copy2(os.path.join(source, identity, APPEARANCE), os.path.join(game_out, APPEARANCE))
+    # The characters' base files: the game's own, without the beard (the Beard
+    # tab gives it) - their eyebrows and eyelashes are in them since the
+    # 2026-10-30 update. Another identity: the mod's file for it.
     for path in BASE_FILES:
+        if path == APPEARANCE and identity != DEFAULT_IDENTITY:
+            from names import rename_text
+            _write(os.path.join(game_out, path), rename_text(_read(os.path.join(source, identity, APPEARANCE))))
+        else:
+            text = _read(os.path.join(EXTRACT, path))
+            text = re.sub(r'[ \t]*<Prefab Name="[^"]*_beard_[^"]*"\s*/>\r?\n', '', text)
+            _write(os.path.join(game_out, path), text)
         pad_scales(os.path.join(game_out, path))
+    women_weapon_files(base, game_out)
     oongka = os.path.join(game_out, BASE_FILES[2])
     text = open(oongka, encoding='utf-8-sig').read()
     with open(oongka, 'w', encoding='utf-8-sig', newline='\r\n') as f:
@@ -615,6 +889,9 @@ def main():
     per_slot, headers = merged_mesh_lists(source)
     added = add_character_meshes(per_slot, headers)
     added += add_all_hair_and_beards(per_slot)
+    added += add_update_heads(per_slot)
+    keep_previous_order(per_slot)
+    hide_missing_parts(per_slot)
     if args.empty:
         add_empty_options(per_slot, headers)
     if added:
@@ -696,6 +973,38 @@ def main():
         values[2] = BASE_SCALE_FIXES.get(folder, values[2])
         lines.append(f'base {GENDERS.index(gender)} {RACES.index(race)} ' + ' '.join(values))
 
+    # Eyebrows and eyelashes: since the 2026-10-30 update a human head has
+    # none of its own; the base files list them under Hair (Kliff's the men's,
+    # Damiane's the women's). A character built as another gender or race
+    # gets that one's (brows <gender> <race> <eyebrow> <eyelash>, "-": none,
+    # for a head that brings its own).
+    def brows_of(path):
+        text = _read(path)
+        brow = re.search(r'<Prefab Name="([^"]*_eyebrow_[^"]*)"', text)
+        lash = re.search(r'<Prefab Name="([^"]*_eyelash_[^"]*)"', text)
+        return (brow.group(1) if brow else '-', lash.group(1) if lash else '-')
+
+    human = [brows_of(os.path.join(EXTRACT, BASE_FILES[0])), brows_of(os.path.join(EXTRACT, BASE_FILES[1]))]
+    head_models = {}
+    for e in game_files.entries(r'^character/bin__/prefab/1_pc/[^/]+/head/head/[^/]+\.prefab$'):
+        head_models[e['path'].rsplit('/', 1)[1][:-len('.prefab')]] = e
+    lines.append('# brows <gender> <race> <eyebrow prefab> <eyelash prefab>   ("-" = none)')
+    for folder in FOLDER_ORDER:
+        path = os.path.join(source, folder, APPEARANCE)
+        if not os.path.exists(path):
+            continue
+        race, gender = folder.split()
+        g = GENDERS.index(gender)
+        brows = human[g]
+        if race != 'Human':
+            head = read_base_character(path)[3]
+            data = game_files.read(head_models[head]) if head in head_models else b''
+            if re.search(rb'_(eyebrow|eyelash|head_sub)_', data):
+                brows = ('-', '-')
+        lines.append(f'brows {g} {RACES.index(race)} {brows[0]} {brows[1]}')
+
+    lines += migration_lines(per_slot, orders, os.path.join(base, PALETTE), os.path.join(game_out, PALETTE))
+
     # The part of each head that holds its eyes (see tools/head_eyes.txt): the
     # plugin rebuilds a head through one with other eyes, so they reload.
     head_eyes = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'head_eyes.txt')
@@ -758,7 +1067,18 @@ def main():
     print('private eyes:')
     private_eyes.build(os.path.join(game_out, '0009'), os.path.join(game_out, META),
                        os.path.join(runtime_out, 'private_heads.txt'), menu=os.path.join(runtime_out, 'menu.txt'),
-                       table_path=ARMOR_FIT_TABLE if os.path.exists(ARMOR_FIT_TABLE) else None)
+                       table_path=shared_base_table())
+    # The makeup mask on the offered human heads (tools/head_makeup.py).
+    import head_makeup
+    head_makeup.build(os.path.join(game_out, '0009'), os.path.join(runtime_out, 'menu.txt'))
+    # Each character's own copies of the heads' face shapes, marked, so the
+    # Face Shape sliders reach only them (tools/private_shapes.py); then the
+    # sliders' data for the plugin (tools/face_sliders.py, faceshape_data.inc).
+    import private_shapes
+    print('private face shapes:')
+    private_shapes.build(os.path.join(game_out, '0009'), os.path.join(game_out, META))
+    import face_sliders
+    face_sliders.main()
     # The table's size, for the plugin to tell whether the game loads this
     # table or another mod's (parttable.cpp).
     table = os.path.join(game_out, '0009', 'character', 'bin__', 'partprefabtable.pappt')

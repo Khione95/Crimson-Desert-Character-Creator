@@ -59,13 +59,14 @@ def variants():
     return out
 
 
-def women_parts(sources):
-    """Reshaped part -> the women's part: Damiane's variant right after each
-    variant that gives the part to Kliff, of the same slot, all agreeing."""
+def women_parts(sources=None):
+    """Kliff's part -> the women's part: Damiane's variant right after each
+    variant that gives the part to Kliff, of the same slot, all agreeing
+    (for the parts in sources, or every part when it is None)."""
     found = collections.defaultdict(list)
     v = variants()
     for i, (part, wearers) in enumerate(v):
-        if part in sources and KLIFF in wearers:
+        if (sources is None or part in sources) and KLIFF in wearers:
             nxt = v[i + 1] if i + 1 < len(v) else (None, set())
             ok = DAMIANE in nxt[1] and KLIFF not in nxt[1] and slot(nxt[0]) == slot(part)
             found[part].append(nxt[0] if ok else None)

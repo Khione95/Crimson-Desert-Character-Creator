@@ -18,21 +18,21 @@
 const EyeColour EYE_COLOURS[] =
 {
     { L"Default",      NULL,                                                       110, 115, 120 },
-    { L"Grey blue",    "character/texture/cd_phm_00_eye_iris_0001.dds",            100, 110, 120 },
-    { L"Grey hazel",   "character/texture/cd_phm_00_eye_iris_0002.dds",             95,  90,  80 },
-    { L"Silver",       "character/texture/cd_phm_00_eye_iris_0003.dds",            160, 160, 165 },
-    { L"Dark brown",   "character/texture/cd_phm_00_eye_iris_0004.dds",             60,  45,  30 },
-    { L"Amber",        "character/texture/cd_phm_00_eye_iris_0005.dds",            140, 100,  60 },
-    { L"Hazel",        "character/texture/cd_phm_00_eye_iris_0009.dds",            125, 100,  80 },
-    { L"Ringed brown", "character/texture/cd_phm_00_eye_iris_0013.dds",             90,  75,  55 },
-    { L"Light brown",  "character/texture/cd_phm_00_eye_iris_0014.dds",            175, 130, 100 },
-    { L"Blood red",    "character/texture/cd_phm_00_eye_iris_0011.dds",            120,  10,  15 },
-    { L"Blue",         "character/texture/cd_animal_00_eye_iris_0014.dds",          70,  95, 130 },
+    { L"Grey blue",    "character/texture/phm_00_eye_iris_0001.dds",               100, 110, 120 },
+    { L"Grey hazel",   "character/texture/phm_00_eye_iris_0002.dds",                95,  90,  80 },
+    { L"Silver",       "character/texture/phm_00_eye_iris_0003.dds",               160, 160, 165 },
+    { L"Dark brown",   "character/texture/phm_00_eye_iris_0004.dds",                60,  45,  30 },
+    { L"Amber",        "character/texture/phm_00_eye_iris_0005.dds",               140, 100,  60 },
+    { L"Hazel",        "character/texture/phm_00_eye_iris_0009.dds",               125, 100,  80 },
+    { L"Ringed brown", "character/texture/phm_00_eye_iris_0013.dds",                90,  75,  55 },
+    { L"Light brown",  "character/texture/phm_00_eye_iris_0014.dds",               175, 130, 100 },
+    { L"Blood red",    "character/texture/phm_00_eye_iris_0011.dds",               120,  10,  15 },
+    { L"Blue",         "character/texture/animal_00_eye_iris_0014.dds",             70,  95, 130 },
     { L"Green",        "character/texture/cd_animal_00_eye_iris_0010.dds",          70,  85,  60 },
     { L"Olive",        "character/texture/cd_animal_00_eye_iris_0004.dds",         105, 105,  80 },
     { L"Moss",         "character/texture/cd_animal_00_eye_iris_0013.dds",          80,  85,  45 },
     { L"Gold",         "character/texture/cd_animal_00_eye_iris_0005.dds",         185, 135,  40 },
-    { L"Red",          "character/texture/cd_animal_00_eye_iris_0006.dds",         190,  80,  60 },
+    { L"Red",          "character/texture/animal_00_eye_iris_0006.dds",            190,  80,  60 },
     { L"Dark red",     "character/texture/cd_animal_00_eye_iris_0007.dds",         100,  35,  25 },
     { L"Black",        "character/texture/cd_animal_00_eye_iris_0002.dds",          12,  12,  12 },
     { L"Ice",          "character/texture/cd_m0002_00_husky_eye_iris_0001.dds",    140, 165, 170 },
@@ -76,6 +76,10 @@ static void Save(int ch)
 
 static void Load(int ch)
 {
+    // The Barber edition has no editor: the characters' own eye colour.
+    if (CC_BARBER)
+        return;
+
     FILE* f = NULL;
     fopen_s(&f, g_path[ch], "r");
 
@@ -125,20 +129,18 @@ static uintptr_t Ptr(uintptr_t node, size_t offset)
     return *(uintptr_t*)(node + offset);
 }
 
-// The player characters' own eye files (tools/private_eyes.py) name their
-// iris textures with the character's prefix in place of "cd":
-// character/texture/zk_phm_00_eye_iris_... (Kliff), zd_ (Damiane), zo_
-// (Oongka). Only those are changed: NPC eyes read the game's own files.
-static const char MARK_START[] = "character/texture/z";
-static const char MARK_REST[] = "_phm_00_eye_iris_";
+// The player characters' own copies of heads, eye models and their iris
+// textures (tools/private_eyes.py, names.py) are marked in their names, at
+// the same length: zk_... / zd_... / zo_... in place of "cd_" (Kliff,
+// Damiane, Oongka), and for a name without that prefix (since the 2026-10-30
+// update) the character's letter for its first digit: phm_k0_eye_iris_...,
+// PHM_d0_Eye_iris_... Only those are changed: NPC eyes read the game's own
+// files.
+static const char TEXTURE_FOLDER[] = "character/texture/";
 
-static int MarkedOwner(const char* value)
+static int OwnerOfLetter(char c)
 {
-    if (strncmp(value, MARK_START, sizeof(MARK_START) - 1) != 0 ||
-        strncmp(value + sizeof(MARK_START), MARK_REST, sizeof(MARK_REST) - 1) != 0)
-        return -1;
-
-    switch (value[sizeof(MARK_START) - 1])
+    switch (c)
     {
     case 'k': return CHAR_KLIFF;
     case 'd': return CHAR_DAMIANE;
@@ -147,14 +149,68 @@ static int MarkedOwner(const char* value)
     }
 }
 
-static bool IsNormalMap(const char* value)
+// Whose copy a part or texture name marks (-1: none); *at: where the mark is
+// (0: "z?" for "cd", 4: the letter for the digit 0).
+static int MarkOf(const char* n, int* at)
+{
+    if (n[0] == 'z' && n[1] && n[2] == '_' && OwnerOfLetter(n[1]) >= 0)
+    {
+        *at = 0;
+        return OwnerOfLetter(n[1]);
+    }
+
+    if ((n[0] == 'p' || n[0] == 'P') && n[1] && n[2] && n[3] == '_' && n[4] && n[5] >= '0' && n[5] <= '9' &&
+        OwnerOfLetter(n[4]) >= 0)
+    {
+        *at = 4;
+        return OwnerOfLetter(n[4]);
+    }
+
+    return -1;
+}
+
+// The game's own name back, in place.
+static void Unmark(char* n, int at)
+{
+    if (at == 0)
+        memcpy(n, "cd", 2);
+    else
+        n[4] = '0';
+}
+
+static bool HasIris(const char* value)
+{
+    for (const char* p = value; *p; ++p)
+        if (_strnicmp(p, "_eye_iris_", 10) == 0)
+            return true;
+
+    return false;
+}
+
+static int MarkedOwner(const char* value, int* at)
+{
+    if (strncmp(value, TEXTURE_FOLDER, sizeof(TEXTURE_FOLDER) - 1) != 0 || !HasIris(value))
+        return -1;
+
+    return MarkOf(value + sizeof(TEXTURE_FOLDER) - 1, at);
+}
+
+// The iris's normal map (_n) and, in the women's eye files, its material map
+// (_sp) stay the game's: only the colour map takes the chosen colour.
+static bool IsColourMap(const char* value)
 {
     const char* dot = strrchr(value, '.');
-    return dot && dot - value >= 2 && dot[-2] == '_' && dot[-1] == 'n';
+
+    if (!dot)
+        return false;
+
+    bool normal = dot - value >= 2 && dot[-2] == '_' && dot[-1] == 'n';
+    bool material = dot - value >= 3 && dot[-3] == '_' && dot[-2] == 's' && dot[-1] == 'p';
+    return !normal && !material;
 }
 
 // Points every marked iris path of the tree at its character's colour, or
-// back at the game's texture (the mark written over with "cd"). The game
+// back at the game's texture (the mark undone, Unmark). The game
 // reads attribute values up to their terminating zero, so a static string of
 // any length can stand in.
 static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
@@ -176,17 +232,18 @@ static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
             {
                 const char* name = (const char*)Ptr(a, 0x00);
                 char* value = (char*)Ptr(a, 0x08);
-                int owner = name && value && strcmp(name, "_path") == 0 ? MarkedOwner(value) : -1;
+                int at = 0;
+                int owner = name && value && strcmp(name, "_path") == 0 ? MarkedOwner(value, &at) : -1;
 
                 if (owner < 0)
                     continue;
 
                 int colour = g_chosen[owner];
 
-                if (colour > 0 && !IsNormalMap(value))
+                if (colour > 0 && IsColourMap(value))
                     *(const char**)(a + 0x08) = EYE_COLOURS[colour].texture;
                 else
-                    memcpy(value + sizeof(MARK_START) - 2, "cd", 2);
+                    Unmark(value + sizeof(TEXTURE_FOLDER) - 1, at);
 
                 ++counts[owner];
                 ++swapped;
@@ -205,8 +262,8 @@ static int SwapIris(uintptr_t root, int counts[CHARACTER_COUNT])
 // Only model property files (the eye files are ones) are looked through.
 // When the game loads another mod's part table, it does not know the
 // characters' own head copies: the head lists (meshparam_example_*.xml) are
-// set back to the game's heads while they load (zk_..., zd_..., zo_... ->
-// cd_..., same length). Eye colour is then off.
+// set back to the game's heads while they load (the copies' marks undone,
+// Unmark). Eye colour is then off.
 static bool g_ownHeadsOff = false;
 
 static int GameHeads(uintptr_t root)
@@ -232,11 +289,11 @@ static int GameHeads(uintptr_t root)
                 const char* name = (const char*)Ptr(a, 0x00);
                 char* value = (char*)Ptr(a, 0x08);
 
-                if (name && value && strcmp(name, "MeshFileName") == 0 && value[0] == 'z' &&
-                    (value[1] == 'k' || value[1] == 'd' || value[1] == 'o') && value[2] == '_')
+                int at = 0;
+
+                if (name && value && strcmp(name, "MeshFileName") == 0 && MarkOf(value, &at) >= 0)
                 {
-                    value[0] = 'c';
-                    value[1] = 'd';
+                    Unmark(value, at);
                     ++changed;
                 }
             }
@@ -297,7 +354,7 @@ static int TrySwap(void* rootOut, int counts[CHARACTER_COUNT])
 // holds the two-handed sword in the left hand, as Damiane's animations hold
 // it. A woman Kliff with his own animations holds it in the right, as his
 // description does: while that file is loaded, the socket is set back.
-static const char* const TWO_HAND_SWORD_PARTS[] = { "CD_TwoHandWeapon_Sword", "CD_TwoHandWeapon_Sword_IN" };
+static const char* const TWO_HAND_SWORD_PARTS[] = { "TwoHandWeapon_Sword", "TwoHandWeapon_Sword_IN" };
 
 static const char* AttributeValue(uintptr_t element, const char* name)
 {
@@ -336,7 +393,10 @@ static int RightHandTwoHandSword(uintptr_t root)
 
                 for (const char* p : TWO_HAND_SWORD_PARTS)
                 {
-                    if (part && socket && strcmp(part, p) == 0 && strcmp(socket, "LHand_Socket") == 0)
+                    // "CD_" before the 2026-10-30 update.
+                    const char* bare = part && strncmp(part, "CD_", 3) == 0 ? part + 3 : part;
+
+                    if (bare && socket && strcmp(bare, p) == 0 && strcmp(socket, "LHand_Socket") == 0)
                     {
                         socket[0] = 'R';    // "RHand_Socket", same length
                         ++changed;
@@ -367,9 +427,162 @@ static int TryRightHandTwoHandSword(void* rootOut)
     }
 }
 
+#if CC_RESEARCH
+// Research: the game's bone customization list (boneparam_example_new.xml:
+// ParamDesc Index, BoneName, Component S/R/T). Its loader (rva 807D70 on build
+// 6AE387F2, slot 3 of CustomizationBoneParamData's vtable) loads the file and
+// adds each entry to a table (bone hash -> parameter index for S, R and T)
+// without clearing it. The loader is hooked at the start: after the game's own
+// pass it runs again on a list made from bonemap.txt ("<index> <S|R|T> <bone
+// name>", bone names have spaces). The game's XML reader parses in place (it
+// writes into the text), so the file's text can't be read a second time; the
+// loader only passes the file on to the XML loader, which reads its first
+// field, the text.
+static char g_boneMapPath[MAX_PATH] = { 0 };
+static const char* const COMPONENTS[] = { "S", "R", "T" };
+static const int BONE_ENTRIES = 256;
+
+struct BoneEntry
+{
+    int index;
+    const char* component;
+    char bone[64];
+};
+
+static BoneEntry g_boneEntries[BONE_ENTRIES];
+static int g_boneEntryCount = 0;
+static char g_boneListText[BONE_ENTRIES * 128 + 64];
+
+static const char* AttributeText(uintptr_t element, const char* name)
+{
+    for (uintptr_t a = Ptr(element, 0x48); a; a = Ptr(a, 0x38))
+        if (Ptr(a, 0x00) && _stricmp((const char*)Ptr(a, 0x00), name) == 0)
+            return Ptr(a, 0x08) ? (const char*)Ptr(a, 0x08) : "";
+
+    return NULL;
+}
+
+static void LoadBoneMap()
+{
+    g_boneEntryCount = 0;
+    FILE* f = NULL;
+    char line[160];
+
+    if (fopen_s(&f, g_boneMapPath, "r") != 0 || !f)
+        return;
+
+    while (fgets(line, sizeof(line), f) && g_boneEntryCount < BONE_ENTRIES)
+    {
+        int index = -1, used = 0;
+        char component[4] = "";
+
+        if (sscanf_s(line, "%d %3s %n", &index, component, (unsigned)sizeof(component), &used) < 2 || index < 0 || !line[used])
+            continue;
+
+        BoneEntry& b = g_boneEntries[g_boneEntryCount++];
+        b.index = index;
+        strncpy_s(b.bone, line + used, _TRUNCATE);
+        b.bone[strcspn(b.bone, "\r\n")] = 0;
+        b.component = component[0] == 'S' || component[0] == 's' ? COMPONENTS[0] :
+                      component[0] == 'R' || component[0] == 'r' ? COMPONENTS[1] : COMPONENTS[2];
+    }
+
+    fclose(f);
+}
+
+static void BoneList(uintptr_t root)
+{
+    // The loaded root is the BoneParam element itself (the loader, rva
+    // 807D70, checks its name and walks its children).
+    uintptr_t list = Ptr(root, 0x00) && _stricmp((const char*)Ptr(root, 0x00), "BoneParam") == 0 ? root : 0;
+
+    for (uintptr_t c = Ptr(root, 0x38); c && !list; c = Ptr(c, 0x60))
+        if (Ptr(c, 0x00) && _stricmp((const char*)Ptr(c, 0x00), "BoneParam") == 0)
+            list = c;
+
+    // CC's own list (from bonemap.txt) is not logged again.
+    if (!list || !Ptr(list, 0x38) || !AttributeText(Ptr(list, 0x38), "BoneName") || Ptr(root, 0x00) - (uintptr_t)g_boneListText < sizeof(g_boneListText))
+        return;
+
+    for (uintptr_t p = Ptr(list, 0x38); p; p = Ptr(p, 0x60))
+    {
+        const char* index = AttributeText(p, "Index");
+        const char* bone = AttributeText(p, "BoneName");
+        const char* comp = AttributeText(p, "Component");
+        Log("bone list: %s %s %s", index ? index : "?", bone ? bone : "?", comp ? comp : "?");
+    }
+}
+
+static void TryBoneList(void* rootOut)
+{
+    __try
+    {
+        uintptr_t root = rootOut ? *(uintptr_t*)rootOut : 0;
+
+        if (root)
+            BoneList(root);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+}
+
+static const uintptr_t BONE_LIST_LOAD_RVA = 0x807DA0;
+static const BYTE BONE_LIST_LOAD_START[] = { 0x48, 0x89, 0x5C, 0x24, 0x08, 0x55, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56,
+                                             0x41, 0x57, 0x48, 0x8D, 0xAC, 0x24, 0x60, 0xFF, 0xFF, 0xFF };
+typedef uintptr_t(__fastcall* BoneListLoadFn)(void* self, void* file, void* c, void* d);
+static BoneListLoadFn g_originalBoneListLoad = NULL;
+
+// The table's bone count (the table is at +0x28: buckets, then the count).
+static uint32_t BoneTableCount(void* self)
+{
+    __try
+    {
+        return *(uint32_t*)((uintptr_t)self + 0x2C);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        return 0;
+    }
+}
+
+static uintptr_t __fastcall HookedBoneListLoad(void* self, void* file, void* c, void* d)
+{
+    uintptr_t result = g_originalBoneListLoad(self, file, c, d);
+    Log("bone list loaded: %u bones in the table (object %p)", BoneTableCount(self), self);
+
+    LoadBoneMap();
+
+    if (g_boneEntryCount)
+    {
+        size_t used = sprintf_s(g_boneListText, "<BoneParam>\n");
+
+        for (int i = 0; i < g_boneEntryCount; ++i)
+            used += sprintf_s(g_boneListText + used, sizeof(g_boneListText) - used, "<ParamDesc Index=\"%d\" BoneName=\"%s\" Component=\"%s\"/>\n",
+                              g_boneEntries[i].index, g_boneEntries[i].bone, g_boneEntries[i].component);
+        sprintf_s(g_boneListText + used, sizeof(g_boneListText) - used, "</BoneParam>\n");
+
+        // The loader is given a file whose text is CC's list (its other
+        // arguments are not used).
+        void* ownFile[4] = { g_boneListText, 0, 0, 0 };
+        uintptr_t added = g_originalBoneListLoad(self, ownFile, c, d);
+        Log("bone list: %d entries of bonemap.txt %s - %u bones in the table", g_boneEntryCount, added & 0xFF ? "added" : "NOT added (the list was refused)",
+            BoneTableCount(self));
+    }
+
+    return result;
+}
+
+static bool g_xmlHookedEarly = false;
+#endif // CC_RESEARCH
+
 static uintptr_t __fastcall HookedLoad(void* a, void* rootOut, void* file, uintptr_t flags, void* e)
 {
     uintptr_t result = g_originalLoad(a, rootOut, file, flags, e);
+
+#if CC_RESEARCH
+    TryBoneList(rootOut);
+#endif
 
     // As the game was started (the description is not read again).
     if (g_kliffFemaleWithOwnMoves)
@@ -407,6 +620,7 @@ static uintptr_t __fastcall HookedLoad(void* a, void* rootOut, void* file, uintp
 
 void EyesInit(const char* folder)
 {
+
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
     {
         CharacterFile(g_path[ch], MAX_PATH, folder, "eyes", ch);
@@ -445,6 +659,14 @@ void EyesInit(const char* folder)
     if (PartDisabled("eyes"))
         return;
 
+#if CC_RESEARCH
+    if (g_xmlHookedEarly)
+    {
+        Log("XML loader hooked at the start (research build; eye colours %ld %ld %ld)", g_chosen[0], g_chosen[1], g_chosen[2]);
+        return;
+    }
+#endif
+
     BYTE* target = (BYTE*)AddressOf(ADDR_LOADXML);
 
     // On other game builds the address comes from checked patterns (addresses.h).
@@ -466,3 +688,30 @@ void EyesInit(const char* folder)
 
     Log("XML loader hooked (eye colours %ld %ld %ld)", g_chosen[0], g_chosen[1], g_chosen[2]);
 }
+
+#if CC_RESEARCH
+// Research: the bone list loader and the XML loader hooked before the game
+// loads its customization files (on build 6AE387F2 only: the known places,
+// their first bytes checked), so the bone list's batches can be added.
+void EyesResearchEarly(const char* folder)
+{
+    sprintf_s(g_boneMapPath, "%s\\bonemap.txt", folder);
+    uintptr_t base = (uintptr_t)GetModuleHandleW(NULL);
+    BYTE* list = (BYTE*)(base + BONE_LIST_LOAD_RVA);
+    BYTE* xml = (BYTE*)(base + 0x160B0B0);
+    MH_STATUS init = MH_Initialize();
+
+    if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+        return;
+
+    if (memcmp(xml, LOAD_XML_PROLOGUE, sizeof(LOAD_XML_PROLOGUE)) == 0 &&
+        MH_CreateHook(xml, (void*)&HookedLoad, (void**)&g_originalLoad) == MH_OK && MH_EnableHook(xml) == MH_OK)
+        g_xmlHookedEarly = true;
+
+    bool listHooked = memcmp(list, BONE_LIST_LOAD_START, sizeof(BONE_LIST_LOAD_START)) == 0 &&
+        MH_CreateHook(list, (void*)&HookedBoneListLoad, (void**)&g_originalBoneListLoad) == MH_OK && MH_EnableHook(list) == MH_OK;
+
+    Log("research: XML loader %s, bone list loader %s at the start", g_xmlHookedEarly ? "hooked" : "NOT hooked",
+        listHooked ? "hooked" : "NOT hooked");
+}
+#endif

@@ -18,12 +18,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "Khione"
-            VALUE "FileDescription", "Character Creator - appearance editor plugin for Crimson Desert"
+            VALUE "FileDescription", PLUGIN_NAME
             VALUE "FileVersion", PLUGIN_VERSION
             VALUE "InternalName", "CharacterCreator"
             VALUE "LegalCopyright", "Khione"
             VALUE "OriginalFilename", "CharacterCreator.asi"
-            VALUE "ProductName", "Character Creator"
+            VALUE "ProductName", PLUGIN_NAME
             VALUE "ProductVersion", PLUGIN_VERSION
         END
     END

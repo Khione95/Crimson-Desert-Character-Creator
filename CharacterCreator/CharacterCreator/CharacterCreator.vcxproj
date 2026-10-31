@@ -117,13 +117,17 @@
       <PreprocessorDefinitions>_DEBUG;CC_RESEARCH=1;CHARACTERCREATOR_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\external\minhook\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -154,6 +158,19 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
+  <!-- The Barber edition (msbuild /p:CcBarber=1, see pch.h), in its own folder: x64\ReleaseBarber. -->
+  <PropertyGroup Condition="'$(CcBarber)'=='1'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)Barber\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)Barber\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(CcBarber)'=='1'">
+    <ClCompile>
+      <PreprocessorDefinitions>CC_BARBER=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>CC_BARBER=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="characters.h" />
@@ -161,6 +178,7 @@
     <ClInclude Include="commands.h" />
     <ClInclude Include="data_pack.h" />
     <ClInclude Include="eyes.h" />
+    <ClInclude Include="faceshape.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="switches.h" />
     <ClInclude Include="framework.h" />
@@ -171,6 +189,7 @@
     <ClInclude Include="height.h" />
     <ClInclude Include="hotkeys.h" />
     <None Include="signatures.inc" />
+    <None Include="faceshape_data.inc" />
     <ClInclude Include="identity.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="menu.h" />
@@ -195,6 +214,7 @@
     <ClCompile Include="data_pack.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="eyes.cpp" />
+    <ClCompile Include="faceshape.cpp" />
     <ClCompile Include="parttable.cpp" />
     <ClCompile Include="hotkeys.cpp" />
     <ClCompile Include="game.cpp" />

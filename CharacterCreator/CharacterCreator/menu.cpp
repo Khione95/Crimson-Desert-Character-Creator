@@ -2,6 +2,7 @@
 #include "menu.h"
 #include "camera.h"
 #include "eyes.h"
+#include "faceshape.h"
 #include "game.h"
 #include "hotkeys.h"
 #include "identity.h"
@@ -43,12 +44,31 @@ struct Page
 struct Tab
 {
     const wchar_t* label;
-    Page pages[10];
+    Page pages[12];
     int pageCount;
 };
 
 // A slider that is not an appearance value: the height (see identity.h).
 static const int SLIDER_HEIGHT = -1;
+
+// Face Shape sliders (faceshape.h): SLIDER_FACE - n is slider n of
+// faceshape_data.inc (tools/face_sliders.py, the same order and names).
+static const int SLIDER_FACE = -100;
+#define FACE(n) (SLIDER_FACE - (n))
+
+// Body Shape sliders the same way (SLIDER_BODY - n).
+static const int SLIDER_BODY = -200;
+#define BODYSHAPE(n) (SLIDER_BODY - (n))
+
+static bool IsFaceSlider(int index)
+{
+    return index <= SLIDER_FACE && index > SLIDER_BODY;
+}
+
+static bool IsBodySlider(int index)
+{
+    return index <= SLIDER_BODY;
+}
 
 // Decoration indices come from the game's decorationparam_player.xml
 // (6 hairBaseColor, 22 skinColor, ...).
@@ -59,39 +79,84 @@ static const Tab TABS[] =
     { L"Body", {
         { L"Body", PAGE_MESH, MESH_BODY, L"Body" },
         { L"Skin colour", PAGE_COLOR, 22 },
-        { L"Skin shine", PAGE_SLIDERS, 0, NULL, { 23 }, { L"Shine" }, 1 } }, 3 },
+        // Brightness and subsurface (24, 25) are new in the 2026-10-30 update.
+        { L"Skin look", PAGE_SLIDERS, 0, NULL, { 23, 24, 25 }, { L"Shine", L"Brightness", L"Subsurface" }, 3 } }, 3 },
     { L"Height", { { L"Height", PAGE_SLIDERS, 0, NULL, { SLIDER_HEIGHT }, { L"Height" }, 1 } }, 1 },
     { L"Head", { { L"Head", PAGE_MESH, MESH_HEAD, L"Head" } }, 1 },
     { L"Face Details", { { L"Face details", PAGE_MESH, MESH_WHISKERS, L"Details" } }, 1 },
+    { L"Face Shape", {
+        { L"Face", PAGE_SLIDERS, 0, NULL, { FACE(0), FACE(1), FACE(2), FACE(3), FACE(4), FACE(5) },
+            { L"Face width", L"Jaw width", L"Jaw height", L"Cheekbone width", L"Cheekbone height", L"Cheek fullness" }, 6 },
+        { L"Chin", PAGE_SLIDERS, 0, NULL, { FACE(6), FACE(7), FACE(8) }, { L"Chin length", L"Chin width", L"Chin forward" }, 3 },
+        { L"Nose", PAGE_SLIDERS, 0, NULL, { FACE(9), FACE(10), FACE(11), FACE(12) },
+            { L"Nose length", L"Nose height", L"Nose width", L"Nose bridge" }, 4 },
+        { L"Mouth", PAGE_SLIDERS, 0, NULL, { FACE(13), FACE(14), FACE(15), FACE(16) },
+            { L"Mouth width", L"Mouth height", L"Upper lip", L"Lower lip" }, 4 },
+        { L"Eyes", PAGE_SLIDERS, 0, NULL, { FACE(17), FACE(18), FACE(19), FACE(20) },
+            { L"Eye spacing", L"Eye height", L"Eye size", L"Eye depth" }, 4 },
+        { L"Brows and ears", PAGE_SLIDERS, 0, NULL, { FACE(21), FACE(22), FACE(23) },
+            { L"Brow height", L"Brow depth", L"Ears out" }, 3 } }, 6 },
+    { L"Body Shape", {
+        { L"Chest", PAGE_SLIDERS, 0, NULL, { BODYSHAPE(0), BODYSHAPE(1), BODYSHAPE(2), BODYSHAPE(3) },
+            { L"Chest / bust size", L"Bust shape (women)", L"Bust sides (women)", L"Upper chest" }, 4 },
+        { L"Arms", PAGE_SLIDERS, 0, NULL, { BODYSHAPE(4), BODYSHAPE(5), BODYSHAPE(13), BODYSHAPE(14), BODYSHAPE(15), BODYSHAPE(6) },
+            { L"Shoulders", L"Upper arms", L"Biceps", L"Triceps", L"Forearms", L"Neck" }, 6 },
+        { L"Torso", PAGE_SLIDERS, 0, NULL, { BODYSHAPE(7), BODYSHAPE(8), BODYSHAPE(9), BODYSHAPE(10) },
+            { L"Waist", L"Belly", L"Hips", L"Glutes" }, 4 },
+        { L"Legs", PAGE_SLIDERS, 0, NULL, { BODYSHAPE(11), BODYSHAPE(16), BODYSHAPE(17), BODYSHAPE(18), BODYSHAPE(12) },
+            { L"Thighs", L"Quads", L"Outer thighs", L"Inner thighs", L"Calves" }, 5 } }, 4 },
     { L"Hair", {
         { L"Hair", PAGE_MESH, MESH_HAIR, L"Hair" },
         { L"Hair colour", PAGE_COLOR, 6 },
         { L"Hair length", PAGE_SLIDERS, 0, NULL, { 0, 1, 2 }, { L"Length 1", L"Length 2", L"Length 3" }, 3 },
-        { L"Hair shine", PAGE_SLIDERS, 0, NULL, { 5 }, { L"Shine" }, 1 } }, 4 },
+        // Brightness (112, since the 2026-10-30 update) is the beard's,
+        // eyebrows' and eyelashes' too.
+        { L"Hair shine", PAGE_SLIDERS, 0, NULL, { 5, 112 }, { L"Shine", L"Brightness" }, 2 },
+        // Tips and inner hair in their own colour: only on hair whose material
+        // takes them (_hairTailColor, _hairInnerColor: the update's women's
+        // hair 0524, 0525 and 0010_06). Before it no hair had them.
+        { L"Hair tip colour", PAGE_COLOR, 9 },
+        { L"Inner hair colour", PAGE_COLOR, 12 },
+        { L"Two-tone", PAGE_SLIDERS, 0, NULL, { 7, 8, 10, 11 },
+            { L"Tips", L"Tip length", L"Inner", L"Inner amount" }, 4 } }, 7 },
     { L"Beard", {
         { L"Beard", PAGE_MESH, MESH_BEARD, L"Beard" },
         { L"Beard colour", PAGE_COLOR, 32 },
         { L"Beard length", PAGE_SLIDERS, 0, NULL, { 29 }, { L"Length" }, 1 } }, 3 },
+    // No eyebrow type or makeup pages: the eyebrow makeup type (41) has no
+    // palette in the game's list, so the game stores 0 whatever is chosen, and
+    // the makeup's colour and sliders (42-46) show nothing without a type.
     { L"Eyebrow", {
-        { L"Eyebrow", PAGE_TYPE, 41, L"Eyebrow" },
         { L"Eyebrow colour", PAGE_COLOR, 50 },
-        { L"Eyebrow length", PAGE_SLIDERS, 0, NULL, { 47 }, { L"Length" }, 1 } }, 3 },
+        { L"Eyebrow length", PAGE_SLIDERS, 0, NULL, { 47 }, { L"Length" }, 1 } }, 2 },
     { L"Face Tattoo", {
         { L"Face tattoo", PAGE_TYPE, 63, L"Tattoo" },
         { L"Tattoo colour", PAGE_COLOR, 71 },
-        { L"Tattoo opacity", PAGE_SLIDERS, 0, NULL, { 69 }, { L"Opacity" }, 1 },
+        { L"Tattoo opacity", PAGE_SLIDERS, 0, NULL, { 69, 70 }, { L"Opacity", L"Gloss" }, 2 },
         { L"Tattoo placement", PAGE_SLIDERS, 0, NULL, { 64, 65, 66, 67, 68 },
             { L"Left / right", L"Up / down", L"Rotation", L"Width", L"Height" }, 5 } }, 4 },
     { L"Body Tattoo", {
         { L"Body tattoo", PAGE_TYPE, 114, L"Tattoo" },
         { L"Tattoo colour", PAGE_COLOR, 122 },
-        { L"Tattoo opacity", PAGE_SLIDERS, 0, NULL, { 120 }, { L"Opacity" }, 1 },
+        { L"Tattoo opacity", PAGE_SLIDERS, 0, NULL, { 120, 121 }, { L"Opacity", L"Gloss" }, 2 },
         { L"Tattoo placement", PAGE_SLIDERS, 0, NULL, { 115, 116, 117, 118, 119 },
             { L"Left / right", L"Up / down", L"Rotation", L"Width", L"Height" }, 5 } }, 4 },
-    { L"Eye Colour", { { L"Eye colour", PAGE_EYES } }, 1 },
-    // Eyelash length (85) does nothing on the player's eyelashes. The dye
-    // shows mostly on the lighter tips; dark colours barely change them.
-    { L"Eyelashes", { { L"Eyelash colour", PAGE_COLOR, 86 } }, 1 },
+    // The 2026-10-30 update gave the eye material iris brightness (111) and a
+    // real iris size (101), and the iris colour (104) the main palette. Before
+    // it, any iris colour gave a pale iris; "Iris tint" tries the game's own.
+    { L"Eye Colour", {
+        { L"Eye colour", PAGE_EYES },
+        { L"Iris tint", PAGE_COLOR, 104 },
+        { L"Iris", PAGE_SLIDERS, 0, NULL, { 111, 100, 101, 97 }, { L"Brightness", L"Tint strength", L"Size", L"Pupil size" }, 4 },
+        // The eye files have 8 materials since the update, one per iris
+        // texture: the game's iris type (99) may pick among them (test).
+        { L"Iris pattern", PAGE_TYPE, 99, L"Pattern" } }, 4 },
+    // The dye shows mostly on the lighter tips; dark colours barely change
+    // them. 85 was the length (it did nothing), since the 2026-10-30 update
+    // the opacity.
+    { L"Eyelashes", {
+        { L"Eyelash colour", PAGE_COLOR, 86 },
+        { L"Eyelash opacity", PAGE_SLIDERS, 0, NULL, { 85 }, { L"Opacity" }, 1 } }, 2 },
     { L"Scars", {
         { L"Face scar", PAGE_TYPE, 13, L"Scar" },
         { L"Face scar colour", PAGE_COLOR, 21 },
@@ -110,15 +175,57 @@ static const Tab TABS[] =
         { L"Body paint colour", PAGE_COLOR, 131 },
         { L"Body paint placement", PAGE_SLIDERS, 0, NULL, { 129, 124, 125, 126, 127, 128 },
             { L"Opacity", L"Left / right", L"Up / down", L"Rotation", L"Width", L"Height" }, 6 } }, 6 },
+    // Face makeup shows on heads whose material has the makeup mask
+    // (_faceMaskTexture: Damiane's own head phw_00_head_00_0111, 0552, the
+    // man's 0604; the game's barber has makeup since the 2026-10-30 update).
+    // It is only taken in when the head is built: a change rebuilds the head.
+    { L"Lips", {
+        { L"Lipstick", PAGE_TYPE, 156, L"Lipstick" },
+        { L"Lipstick colour", PAGE_COLOR, 158 },
+        { L"Lip detail", PAGE_TYPE, 159, L"Detail" },
+        { L"Lip detail colour", PAGE_COLOR, 161 },
+        { L"Lip strength", PAGE_SLIDERS, 0, NULL, { 157, 182, 160, 183 },
+            { L"Lipstick", L"Lipstick gloss", L"Detail", L"Detail gloss" }, 4 } }, 5 },
+    { L"Eyeliner", {
+        { L"Eyeliner", PAGE_TYPE, 150, L"Eyeliner" },
+        { L"Eyeliner colour", PAGE_COLOR, 152 },
+        { L"Lower eyeliner", PAGE_TYPE, 153, L"Eyeliner" },
+        { L"Lower eyeliner colour", PAGE_COLOR, 155 },
+        { L"Eyeliner strength", PAGE_SLIDERS, 0, NULL, { 151, 154 },
+            { L"Eyeliner", L"Lower eyeliner" }, 2 } }, 5 },
+    // The barber's Eye A, B, C and Gloss: the lid's eyeshadow, the one above
+    // it, the one under the eye, and glitter.
+    { L"Eyeshadow", {
+        { L"Eyeshadow", PAGE_TYPE, 172, L"Eyeshadow" },
+        { L"Eyeshadow colour", PAGE_COLOR, 176 },
+        { L"Upper eyeshadow", PAGE_TYPE, 167, L"Eyeshadow" },
+        { L"Upper eyeshadow colour", PAGE_COLOR, 171 },
+        { L"Under-eye shadow", PAGE_TYPE, 162, L"Shadow" },
+        { L"Under-eye shadow colour", PAGE_COLOR, 166 },
+        { L"Glitter", PAGE_TYPE, 177, L"Glitter" },
+        { L"Glitter colour", PAGE_COLOR, 181 },
+        { L"Eyeshadow strength", PAGE_SLIDERS, 0, NULL, { 173, 168, 163, 178 },
+            { L"Eyeshadow", L"Upper", L"Under-eye", L"Glitter" }, 4 },
+        { L"Eyeshadow gloss", PAGE_SLIDERS, 0, NULL, { 174, 169, 164, 179 },
+            { L"Eyeshadow", L"Upper", L"Under-eye", L"Glitter" }, 4 },
+        { L"Eyeshadow shimmer", PAGE_SLIDERS, 0, NULL, { 175, 170, 165, 180 },
+            { L"Eyeshadow", L"Upper", L"Under-eye", L"Glitter" }, 4 } }, 11 },
+    { L"Face Makeup", {
+        { L"Blush", PAGE_TYPE, 147, L"Blush" },
+        { L"Blush colour", PAGE_COLOR, 149 },
+        { L"Highlighter", PAGE_TYPE, 141, L"Highlighter" },
+        { L"Highlighter colour", PAGE_COLOR, 143 },
+        { L"Contour", PAGE_TYPE, 144, L"Contour" },
+        { L"Contour colour", PAGE_COLOR, 146 },
+        { L"Face makeup strength", PAGE_SLIDERS, 0, NULL, { 148, 142, 145 },
+            { L"Blush", L"Highlighter", L"Contour" }, 3 } }, 7 },
 };
 
-// Face makeup (not in the menu yet: player heads lack the makeup mask) is only
-// taken in when the head is built, so changing it rebuilds the head.
 static const int MAKEUP_FIRST = 141, MAKEUP_LAST = 183;
 
 static const int TAB_COUNT = sizeof(TABS) / sizeof(TABS[0]);
 static const int GRID_COLUMNS = 3;
-static const int TAB_ROWS = 3;
+static const int TAB_ROWS = 4;
 
 // The panel's width (at 1080 lines; it scales with the screen height). It
 // stays within the right third of a 16:9 screen, clear of the character.
@@ -168,6 +275,9 @@ static AppearanceMask g_touched;
 static int g_openGender, g_openRace, g_openEyes, g_openHeight;
 static bool g_openFemaleMoves;
 static int g_openDetails;
+static const int FACE_OPEN_MAX = 64;
+static int g_openFace[FACE_OPEN_MAX];
+static int g_openBody[FACE_OPEN_MAX];
 
 // A notice shown for a while after the editor closes.
 static const DWORD RESTART_NOTICE_MS = 6000;
@@ -235,8 +345,9 @@ static bool OptionFits(const MeshOption& m)
     return OptionFitsFor(m, FilterGender(), FilterRace());
 }
 
-// The eyes and face makeup are taken in when the head is built, so they are
-// applied by rebuilding it. The eyes are a part of the head (head_sub or
+// The eye colour is taken in when the head is built, so it is applied by
+// rebuilding it (face makeup only needs the game's Rebuild, as at the barber:
+// no other head shows in between). The eyes are a part of the head (head_sub or
 // eyeleft/right) that many heads share; the game only reads them again if the
 // head shown for that moment has other eyes. Preferred: the nearest such head
 // of the same race and gender, then of the same gender, then any.
@@ -304,12 +415,15 @@ static void ReloadHead()
 // back to option 0 (a beard). "No beard" is the women's eyebrow entry the
 // mod's lists have in the beard slot (a model without a prefab, which shows
 // nothing there); the game crashed on options without meshes.
-static const char* const NO_BEARD_MESH = "cd_phw_00_eyebrow_00_0001";
+// Since the 2026-10-30 update the women's eyebrow is a part (it showed on the
+// face): a men's eyebrow model without a part stands in (tools/names.py).
+static const char* const NO_BEARD_MESH = "phm_00_eyebrow_00_0004";
+static const char* const NO_BEARD_MESH_OLD = "cd_phw_00_eyebrow_00_0001";
 
 static int NoneOption(int ch, int slot)
 {
     for (const MeshOption& m : g_data.meshes)
-        if (m.slot == slot && (m.mesh == "-" || (slot == MESH_BEARD && m.mesh == NO_BEARD_MESH)))
+        if (m.slot == slot && (m.mesh == "-" || (slot == MESH_BEARD && (m.mesh == NO_BEARD_MESH || m.mesh == NO_BEARD_MESH_OLD))))
             return m.index[ch];
 
     return MESH_NONE;
@@ -512,7 +626,7 @@ static void SetValue(int index, int value)
     GameSetDecoration(g_char, index, (uint8_t)value);
 
     if (changed && index >= MAKEUP_FIRST && index <= MAKEUP_LAST)
-        ReloadHead();
+        GameRequestRebuild(g_char);
 }
 
 // The opacity value of a scar, tattoo or paint type, or -1.
@@ -558,6 +672,10 @@ static void Choose(const Page& page, const Item& item)
             break;
         }
 
+        // A sculpt belongs to the head it was made on.
+        if (page.target == MESH_HEAD && g_view.mesh[MESH_HEAD] != (uint8_t)item.value)
+            FaceResetAll(g_char);
+
         SetMesh(page.target, item.value);
         break;
 
@@ -601,6 +719,7 @@ void MenuInit(const char* folder)
 {
     strcpy_s(g_folder, folder);
     g_dataLoaded = MenuDataLoad(folder, &g_data);
+    ProfileSetConversion(&g_data);
     IdentityInit(folder, &g_data);
     EyesInit(folder);
     GameSetMarker(g_data.markerSlot, (uint32_t)g_data.markerCount);
@@ -646,6 +765,13 @@ static void Open(int ch)
     g_openHeight = IdentityHeight(g_char);
     g_openFemaleMoves = IdentityFemaleMoves(g_char);
     g_openDetails = ProfileDetails(g_char);
+
+    for (int i = 0; i < FaceSliderCount() && i < FACE_OPEN_MAX; ++i)
+        g_openFace[i] = FaceValue(g_char, i);
+
+    for (int i = 0; i < BodySliderCount() && i < FACE_OPEN_MAX; ++i)
+        g_openBody[i] = BodyValue(g_char, i);
+
     g_scrollRow = 0;
     g_sliderRow = 0;
 }
@@ -728,6 +854,14 @@ static void Cancel()
     IdentityChooseFemaleMoves(g_char, g_openFemaleMoves);
     ProfileSetDetails(g_char, g_openDetails);
 
+    for (int i = 0; i < FaceSliderCount() && i < FACE_OPEN_MAX; ++i)
+        if (FaceValue(g_char, i) != g_openFace[i])
+            FaceSetValue(g_char, i, g_openFace[i]);
+
+    for (int i = 0; i < BodySliderCount() && i < FACE_OPEN_MAX; ++i)
+        if (BodyValue(g_char, i) != g_openBody[i])
+            BodySetValue(g_char, i, g_openBody[i]);
+
     bool makeupTouched = false;
 
     for (int i = MAKEUP_FIRST; i <= MAKEUP_LAST; ++i)
@@ -738,8 +872,10 @@ static void Cancel()
     if (eyesTouched)
         EyesChoose(g_char, g_openEyes);
 
-    if (makeupTouched || eyesTouched)
+    if (eyesTouched)
         ReloadHead();
+    else if (makeupTouched)
+        GameRequestRebuild(g_char);
 
     OverlaySetVisible(false);
     CameraMenuClosed();
@@ -891,7 +1027,7 @@ static void FitCharacter(int ch)
             continue;
         }
 
-        if (!current || current->mesh == "-" || current->mesh == NO_BEARD_MESH)
+        if (!current || current->mesh == "-" || current->mesh == NO_BEARD_MESH || current->mesh == NO_BEARD_MESH_OLD)
             continue;
 
         // Women start without a beard: one from the save is removed, one
@@ -913,6 +1049,9 @@ static void FitCharacter(int ch)
             static const char* const NAMES[] = { "body", "head", "hair", "beard", "slot 4", "slot 5" };
             Log("menu: %S's %s option %d does not fit, using %d", CHARACTER_NAMES[ch], NAMES[slot], look.mesh[slot], replacement);
             GameSetMesh(ch, slot, (uint8_t)replacement);
+
+            if (slot == MESH_HEAD)
+                FaceResetAll(ch);
 
             if (ch == g_char)
                 g_view.mesh[slot] = (uint8_t)replacement;
@@ -973,6 +1112,20 @@ static void AdjustSlider(int delta)
     {
         int height = IdentityHeight(g_char) + delta;
         IdentityChooseHeight(g_char, height < HEIGHT_MIN ? HEIGHT_MIN : height > HEIGHT_MAX ? HEIGHT_MAX : height);
+        return;
+    }
+
+    if (IsBodySlider(index))
+    {
+        int slider = SLIDER_BODY - index;
+        BodySetValue(g_char, slider, BodyValue(g_char, slider) + delta);
+        return;
+    }
+
+    if (IsFaceSlider(index))
+    {
+        int slider = SLIDER_FACE - index;
+        FaceSetValue(g_char, slider, FaceValue(g_char, slider) + delta);
         return;
     }
 
@@ -1042,6 +1195,19 @@ void MenuKey(int vk)
     // The preview camera: face / body.
     case 'R':
         CameraToggleView();
+        break;
+
+    // A Face or Body Shape page's sliders back to 0.
+    case 'X':
+        for (int i = 0; sliders && i < page.sliderCount; ++i)
+        {
+            int index = page.sliders[i];
+
+            if (IsBodySlider(index))
+                BodySetValue(g_char, SLIDER_BODY - index, 0);
+            else if (IsFaceSlider(index))
+                FaceSetValue(g_char, SLIDER_FACE - index, 0);
+        }
         break;
 
     case VK_PRIOR:
@@ -1387,6 +1553,8 @@ void MenuDraw(const OverlayDrawContext& ctx)
         {
             int index = page.sliders[i];
             bool height = index == SLIDER_HEIGHT;
+            bool body = IsBodySlider(index);
+            bool face = IsFaceSlider(index) || body;
             int lo = 0, hi = 100, value;
 
             if (height)
@@ -1394,6 +1562,12 @@ void MenuDraw(const OverlayDrawContext& ctx)
                 lo = HEIGHT_MIN;
                 hi = HEIGHT_MAX;
                 value = IdentityHeight(g_char);
+            }
+            else if (face)
+            {
+                lo = -100;
+                hi = 100;
+                value = body ? BodyValue(g_char, SLIDER_BODY - index) : FaceValue(g_char, SLIDER_FACE - index);
             }
             else
             {
@@ -1417,6 +1591,8 @@ void MenuDraw(const OverlayDrawContext& ctx)
             wchar_t number[16];
             if (height)
                 swprintf_s(number, value ? L"%+d%%" : L"0%%", value);
+            else if (face)
+                swprintf_s(number, value ? L"%+d" : L"0", value);
             else
                 swprintf_s(number, L"%d", value);
             Text(dc, number, st.big, D2D1::RectF(bx1 + 10 * s, ry, gx1, ry + 40 * s), on ? st.gold : st.text);
@@ -1511,6 +1687,13 @@ void MenuDraw(const OverlayDrawContext& ctx)
             : L"Height shows at once; after a change, restart the game so the body and animations fit.";
     }
 
+    bool bodyPage = page.kind == PAGE_SLIDERS && IsBodySlider(page.sliders[0]);
+    bool facePage = page.kind == PAGE_SLIDERS && (IsFaceSlider(page.sliders[0]) || bodyPage);
+
+    if (facePage)
+        note = bodyPage ? L"The body changes a moment after you stop, clothes and armor with it. Only your character changes, not NPCs. X: reset this page."
+                        : L"The face changes a moment after you stop. Only your character's face changes, not NPCs'. A new head starts unsculpted. X: reset this page.";
+
     if (page.kind == PAGE_EYES)
     {
         note = EyesOwnHeadsOff()
@@ -1520,7 +1703,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
 
     wchar_t absent[160];
 
-    if (!note && (page.kind == PAGE_COLOR || page.kind == PAGE_TYPE || page.kind == PAGE_SLIDERS) &&
+    if (!note && (page.kind == PAGE_COLOR || page.kind == PAGE_TYPE || page.kind == PAGE_SLIDERS) && !facePage &&
         !GameCharacterHasValues(g_char))
     {
         swprintf_s(absent, L"%s has no colours yet: they are being set up - colours and tattoos work in a moment.",
@@ -1528,10 +1711,10 @@ void MenuDraw(const OverlayDrawContext& ctx)
         note = absent;
     }
 
-    if (!note && !GameCharacterPresent(g_char) && GamePackageMissing())
+    // Before any other note: nothing else on the page shows while they are away.
+    if (!GameCharacterPresent(g_char) && GamePackageMissing())
         note = L"The mod's game files are not loaded: apply Character Creator in DMM (or another mod replaces them).";
-
-    if (!note && !GameCharacterPresent(g_char))
+    else if (!GameCharacterPresent(g_char))
     {
         swprintf_s(absent, L"%s is not in the game right now: changes are saved and applied when they appear.",
             CHARACTER_NAMES[g_char]);

@@ -25,6 +25,7 @@ static const int NATIVE_RACE[CHARACTER_COUNT] = { RACE_HUMAN, RACE_HUMAN, RACE_O
 // The mesh list each character's base character file names.
 static const char* const MESH_PARAM_FILES[CHARACTER_COUNT] = {
     "meshparam_example_kliff.xml", "meshparam_example_damian.xml", "meshparam_example_oongka.xml" };
+static const char KLIFF_BODY[] = "phm_00_nude_01_0002_macduff";   // cd_... before the 2026-10-30 update
 
 static const MenuData* g_data = NULL;
 static char g_path[CHARACTER_COUNT][MAX_PATH];
@@ -61,6 +62,11 @@ static void Load(int ch)
     g_race[ch] = NATIVE_RACE[ch];
     g_height[ch] = 0;
     g_femaleMoves[ch] = 1;
+
+    // The Barber edition has no editor to change these back: characters are
+    // themselves (an Anywhere edition's choices in the folder are left alone).
+    if (CC_BARBER)
+        return;
 
     FILE* f = NULL;
     fopen_s(&f, g_path[ch], "r");
@@ -216,7 +222,7 @@ static uintptr_t Attribute(uintptr_t element, const char* name)
 
 // Longer values are kept here; the attribute is pointed at them. (The game
 // reads values up to their terminating zero, see eyes.cpp.)
-static const int STORE_FIELDS = 6;
+static const int STORE_FIELDS = 8;   // customization, body, scale, head, head scale, hair, eyebrow, eyelash
 static char g_store[CHARACTER_COUNT][STORE_FIELDS][160];
 
 // Sets the attribute's text: in place if it fits, else by pointing the
@@ -276,18 +282,118 @@ static void RemoveBeards(uintptr_t hair)
     }
 }
 
-// Whose base character file this is, or -1.
+// The starting beard under Hair (Kliff's, Oongka's) comes out: the Beard tab
+// and the barber give it (mesh slot 3), and with it the file's would stay on
+// under any other. (The package changed the files for this before DMM 4.5,
+// which leaves such files out.)
+static void RemoveStartingBeard(uintptr_t hair)
+{
+    uintptr_t* link = hair ? (uintptr_t*)(hair + 0x38) : NULL;
+
+    while (link && *link)
+    {
+        uintptr_t e = *link;
+        uintptr_t name = Attribute(e, "Name");
+
+        if (name && strstr(Str(name, 0x08), "_beard_"))
+            *link = Ptr(e, 0x60);
+        else
+            link = (uintptr_t*)(e + 0x60);
+    }
+}
+
+// The clothes the characters' files put on under armor come out, so with no
+// armor they are in their underwear. By exact name: the same part with
+// Preview="true" (the character screen's outfit) stays, and so do other files
+// of the character (a story outfit) that do not name these.
+static const char* const DEFAULT_CLOTHES[CHARACTER_COUNT][3] = {
+    { "cd_phm_00_ub_inner_0054", "cd_phm_00_hand_inner_0054", "cd_phm_00_foot_inner_0054" },
+    { "cd_phw_00_ub_inner_0003", "cd_phw_00_hand_0137_04", "cd_phw_00_foot_0137_01" },
+    { "cd_phm_00_ub_inner_0003", "cd_phm_00_hand_0062_index02", "cd_phm_00_foot_0056" },
+};
+
+static void RemoveDefaultClothes(uintptr_t armor, int ch)
+{
+    uintptr_t* link = armor ? (uintptr_t*)(armor + 0x38) : NULL;
+
+    while (link && *link)
+    {
+        uintptr_t e = *link;
+        uintptr_t name = Attribute(e, "Name");
+        bool remove = false;
+
+        for (int i = 0; name && !Attribute(e, "Preview") && i < 3; ++i)
+            remove = remove || _stricmp(Str(name, 0x08), DEFAULT_CLOTHES[ch][i]) == 0;
+
+        if (remove)
+            *link = Ptr(e, 0x60);
+        else
+            link = (uintptr_t*)(e + 0x60);
+    }
+}
+
+// The eyebrow and eyelash prefabs under Hair (since the 2026-10-30 update a
+// human head has none of its own) set to those of the gender and race the
+// character is built as; without any (a head that brings its own), unlinked.
+static void SetBrows(uintptr_t hair, int ch, int gender, int race)
+{
+    if (!hair || !g_data || !g_data->browsKnown)
+        return;
+
+    const std::string* brows = g_data->brows[gender][race];
+    uintptr_t* link = (uintptr_t*)(hair + 0x38);
+
+    while (*link)
+    {
+        uintptr_t e = *link;
+        uintptr_t name = Attribute(e, "Name");
+        const char* text = name ? Str(name, 0x08) : "";
+        int kind = strstr(text, "_eyebrow_") ? 0 : strstr(text, "_eyelash_") ? 1 : -1;
+
+        if (kind >= 0 && brows[kind].empty())
+        {
+            Log("  removed %s", text);
+            *link = Ptr(e, 0x60);
+            continue;
+        }
+
+        if (kind >= 0 && brows[kind] != text && SetValue(name, brows[kind], ch, 6 + kind, kind ? "eyelash" : "eyebrow"))
+            Log("  %s: %s", kind ? "eyelash" : "eyebrow", brows[kind].c_str());
+
+        link = (uintptr_t*)(e + 0x60);
+    }
+}
+
+// Whose base character file this is, or -1. Since the 2026-10-30 update about
+// 2500 NPC files name the characters' mesh lists too, so the list alone does
+// not tell: the customization file must be the character's as well. Kliff's
+// also goes with his adult body (not the child, cd_phm_macduff_00005).
+static const char* const OWN_CUSTOMIZATIONS[CHARACTER_COUNT] = { "cd_pc/cd_phm_macduff", "cd_pc/cd_phw_damian", "cd_pc/cd_phm_oongka" };
+
 static int CharacterOfFile(uintptr_t root)
 {
     uintptr_t customization = Child(root, "Customization");
     uintptr_t meshParam = Attribute(customization, "MeshParamFile");
+    uintptr_t file = Attribute(customization, "CustomizationFile");
 
-    if (!meshParam)
+    if (!meshParam || !file)
         return -1;
 
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
-        if (_stricmp(Str(meshParam, 0x08), MESH_PARAM_FILES[ch]) == 0)
+    {
+        if (_stricmp(Str(meshParam, 0x08), MESH_PARAM_FILES[ch]) != 0 ||
+            _strnicmp(Str(file, 0x08), OWN_CUSTOMIZATIONS[ch], strlen(OWN_CUSTOMIZATIONS[ch])) != 0)
+            continue;
+
+        if (ch != CHAR_KLIFF)
             return ch;
+
+        uintptr_t body = Attribute(Child(Child(root, "Nude"), "Prefab"), "Name");
+
+        if (body && (_stricmp(Str(body, 0x08), KLIFF_BODY) == 0 ||
+                     (_strnicmp(Str(body, 0x08), "cd_", 3) == 0 && _stricmp(Str(body, 0x08) + 3, KLIFF_BODY) == 0)))
+            return ch;
+    }
 
     return -1;
 }
@@ -359,6 +465,8 @@ static void SwapBaseCharacter(uintptr_t root, int ch)
     if (gender == GENDER_FEMALE)
         RemoveBeards(Child(root, "Hair"));
 
+    SetBrows(Child(root, "Hair"), ch, gender, race);
+
     InterlockedExchange(&g_loadedGender[ch], gender);
     InterlockedExchange(&g_loadedRace[ch], race);
     Log("base character: %S built as gender %d race %d (%s, %s)", CHARACTER_NAMES[ch], gender, race,
@@ -429,18 +537,33 @@ static void LoadPrivateHeads(const char* folder)
     Log("private heads: %zu", g_privateHeads.size());
 }
 
-// The head chosen in the editor, or "" if none was chosen.
+// The head chosen in the editor (in the Barber edition: the one the barber
+// gave, the character's current head), or "" if none was chosen.
 static std::string ChosenHead(int ch)
 {
+    if (!g_data)
+        return std::string();
+
+#if CC_BARBER
+    Appearance look;
+
+    if (!GameReadAppearance(ch, &look) || look.mesh[MESH_HEAD] == MESH_NONE)
+        return std::string();
+
+    int head = look.mesh[MESH_HEAD];
+#else
     Appearance desired;
     AppearanceMask mask;
     GameGetDesired(ch, &desired, &mask);
 
-    if (!g_data || !mask.mesh[MESH_HEAD] || desired.mesh[MESH_HEAD] == MESH_NONE)
+    if (!mask.mesh[MESH_HEAD] || desired.mesh[MESH_HEAD] == MESH_NONE)
         return std::string();
 
+    int head = desired.mesh[MESH_HEAD];
+#endif
+
     for (const MeshOption& m : g_data->meshes)
-        if (m.slot == MESH_HEAD && m.index[ch] == desired.mesh[MESH_HEAD])
+        if (m.slot == MESH_HEAD && m.index[ch] == head)
             return m.mesh;
 
     return std::string();
@@ -468,10 +591,12 @@ static void NameChosenHead(uintptr_t root, int ch)
 
     // A head chosen before a gender change (a woman's head on a man) is not
     // named: the file keeps the head it was built with. Heads of any race
-    // fit ("cd_phm_...", "cd_pgw_...": the letter after the race is m or w).
+    // fit ("phm_...", "cd_pgw_...": the letter after the race is m or w; "cd_"
+    // before most names until the 2026-10-30 update).
     char genderLetter = g_gender[ch] == GENDER_FEMALE ? 'w' : 'm';
+    size_t race = head.compare(0, 3, "cd_") == 0 ? 3 : 0;
 
-    if (head.size() < 7 || head.compare(0, 4, "cd_p") != 0 || head[5] != genderLetter)
+    if (head.size() < race + 4 || head[race] != 'p' || head[race + 3] != '_' || head[race + 2] != genderLetter)
     {
         Log("base character: %S's chosen head %s is for the other gender - not named", CHARACTER_NAMES[ch], head.c_str());
         return;
@@ -498,6 +623,8 @@ static void TrySwap(void* rootHolder)
 
         if (ch >= 0)
         {
+            RemoveStartingBeard(Child(root, "Hair"));
+            RemoveDefaultClothes(Child(root, "Armor"), ch);
             SwapBaseCharacter(root, ch);
             NameChosenHead(root, ch);
         }
@@ -596,13 +723,15 @@ static const GenderEntry GENDER_ENTRIES[] =
 
 static const int ENTRY_COUNT = sizeof(GENDER_ENTRIES) / sizeof(GENDER_ENTRIES[0]);
 
-// Field offsets in an entry (see chartable.h). "Weight" is where the clones
-// keep the value the file calls character_weight.
+// Field offsets in an entry (see chartable.h). Since the 2026-10-30 update the
+// clones keep their action in the same field as everyone (before, at +0x1E0).
+// Tribe and wearer are in no entry's mask, and their places were not looked up
+// again after the update.
 struct FieldInfo { int flag; size_t offset; size_t size; };
 static const FieldInfo FIELDS[] =
 {
-    { F_APPEARANCE, 0x8C, 2 }, { F_PREFAB, 0x8E, 2 }, { F_SKELETON, 0x90, 2 }, { F_LOOKUP24, 0x96, 2 },
-    { F_LOOKUP25, 0x98, 2 }, { F_F36, 0xBA, 2 }, { F_ACTION, 0x1CC, 4 }, { F_WEIGHT, 0x1E0, 4 },
+    { F_APPEARANCE, 0x7C, 2 }, { F_PREFAB, 0x7A, 2 }, { F_SKELETON, 0x8E, 2 }, { F_LOOKUP24, 0x88, 2 },
+    { F_LOOKUP25, 0x80, 2 }, { F_F36, 0x94, 2 }, { F_ACTION, 0xE0, 4 }, { F_WEIGHT, 0xE0, 4 },
     { F_TRIBE, 0xA4, 4 }, { F_WEARER, 0xAC, 2 },
 };
 
@@ -616,6 +745,8 @@ struct EntryValues
 };
 
 static EntryValues g_entries[ENTRY_COUNT];
+static uint32_t g_written[ENTRY_COUNT][FIELD_COUNT];    // what was written last
+static bool g_wrote[ENTRY_COUNT][FIELD_COUNT];
 static bool g_tableReady = false;
 static LONG g_appliedVersion = 0;
 
@@ -812,12 +943,55 @@ static void ApplyGenders()
                 v = g_entries[e].own[f];
 
             CharTableWriteRaw(index, FIELDS[f].offset, &v, FIELDS[f].size);
+            g_written[e][f] = v;
+            g_wrote[e][f] = true;
         }
     }
 
     Log("gender: character table set (Kliff %s, Damiane %s, Oongka %s)",
         g_gender[CHAR_KLIFF] ? "female" : "male", g_gender[CHAR_DAMIANE] ? "female" : "male",
         g_gender[CHAR_OONGKA] ? "female" : "male");
+}
+
+// Since the 2026-10-30 update the game replaces the table's list while it starts,
+// with new entries for some characters (Kliff's, Yann's): what was written is
+// gone, and what is there now is the game's own value.
+static bool EntriesFilledAgain()
+{
+    static int logged = 0;
+    bool again = false;
+
+    for (int e = 0; e < ENTRY_COUNT; ++e)
+    {
+        if (g_entries[e].index < 0)
+            continue;
+
+        bool changed = false;
+
+        for (int f = 0; f < FIELD_COUNT; ++f)
+        {
+            if (!g_wrote[e][f])
+                continue;
+
+            uint32_t now = ReadField(g_entries[e].index, FIELDS[f]);
+
+            if (now != g_written[e][f])
+            {
+                g_entries[e].own[f] = now;
+                changed = true;
+            }
+        }
+
+        if (changed && logged < 20)
+        {
+            ++logged;
+            Log("gender: the game replaced %s's entry - setting it again", GENDER_ENTRIES[e].name);
+        }
+
+        again = again || changed;
+    }
+
+    return again;
 }
 
 void IdentityPoll()
@@ -841,6 +1015,7 @@ void IdentityPoll()
     if (!g_tableReady)
     {
         g_tableReady = true;
+        memset(g_wrote, 0, sizeof(g_wrote));
 
         if (!PrepareTable())
         {
@@ -851,9 +1026,19 @@ void IdentityPoll()
         Log("gender: character table ready");
     }
 
+    static uintptr_t list = 0;
+
+    if (CharTableList() != list)
+    {
+        list = CharTableList();
+
+        for (int e = 0; e < ENTRY_COUNT; ++e)
+            g_entries[e].index = CharTableIndexOf(GENDER_ENTRIES[e].name);
+    }
+
     LONG version = g_tableVersion;
 
-    if (g_appliedVersion == version || g_appliedVersion == LONG_MAX)
+    if (g_appliedVersion == LONG_MAX || (g_appliedVersion == version && !EntriesFilledAgain()))
         return;
 
     ApplyGenders();

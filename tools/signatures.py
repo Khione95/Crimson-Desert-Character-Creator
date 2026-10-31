@@ -28,22 +28,23 @@ from pe import Image
 
 TARGETS = [
     # name, rva, kind ('call' = called function, 'ref' = rip-relative data)
-    ('SetDecoration', 0x72BF80, 'call'),
-    ('QueueMeshChange', 0x72CFB0, 'call'),
-    ('Rebuild', 0x726C50, 'call'),
-    ('GrowBytes', 0x3D2BE0, 'call'),
-    ('LoadXml', 0x142BDD0, 'call'),
-    ('ParseAppearance', 0x2438A40, 'call'),
-    ('LipSyncPath', 0x2E8C460, 'call'),
-    ('ManagerPointer', 0x6D69A48, 'ref'),
-    ('ScaleComponentVtable', 0x5B4C6C0, 'ref'),
-    ('ScaleObjectVtable', 0x5B4D168, 'ref'),
-    ('AttachPart', 0x2C7C300, 'call'),
-    ('WorldPointer', 0x6D69190, 'ref'),
-    ('NamesPointer', 0x6C8CCE8, 'ref'),
+    ('SetDecoration', 0x803140, 'call'),
+    ('QueueMeshChange', 0x804780, 'call'),
+    ('Rebuild', 0x7FD820, 'call'),
+    ('GrowBytes', 0x441B30, 'call'),
+    ('LoadXml', 0x160B0B0, 'call'),
+    ('ParseAppearance', 0x26267F0, 'call'),
+    ('LipSyncPath', 0x31339E0, 'call'),
+    ('ManagerPointer', 0x71B2960, 'ref'),
+    ('ScaleComponentVtable', 0x5F087A8, 'ref'),
+    ('ScaleObjectVtable', 0x5F09F40, 'ref'),
+    ('AttachPart', 0x2F18470, 'call'),
+    ('WorldPointer', 0x71B1A40, 'ref'),
+    ('NamesPointer', 0x70CDC60, 'ref'),
+    ('NormalizeDecoration', 0x803010, 'call'),
 ]
 
-PATTERNS_PER_TARGET = 3
+PATTERNS_PER_TARGET = 5
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'CharacterCreator', 'CharacterCreator', 'signatures.inc')
 
 MAX_PATTERN = 48
@@ -57,7 +58,8 @@ def code_sections(im):
     """(rva, bytes) of the executable sections the plugin will scan."""
     out = []
     for name, rva, vsize, raw, rawsize, chars in im.sections:
-        if chars & 0x20000000 and name in ('.rsrc', '.text'):
+        # code, not writable (the section names change from build to build)
+        if chars & 0x20 and not chars & 0x80000000:
             out.append((rva, im.data[raw:raw + min(vsize, rawsize)]))
     return out
 

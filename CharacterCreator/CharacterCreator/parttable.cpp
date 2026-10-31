@@ -118,9 +118,51 @@ static bool ReadNames(const std::vector<uint8_t>& d, size_t start, size_t size, 
     return true;
 }
 
+// Since the 2026-10-30 update a piece is (varint distance back to its parent
+// piece, 0 for none; u8 length; text).
+static bool ReadNamesCompact(const std::vector<uint8_t>& d, size_t start, size_t size, Names* out)
+{
+    size_t pos = 0;
+
+    while (pos < size)
+    {
+        size_t piece = pos;
+        uint32_t back = 0;
+        int shift = 0;
+
+        while (true)
+        {
+            if (pos >= size || shift > 28)
+                return false;
+
+            uint8_t b = d[start + pos++];
+            back |= (uint32_t)(b & 0x7F) << shift;
+            shift += 7;
+
+            if (!(b & 0x80))
+                break;
+        }
+
+        if (pos >= size)
+            return false;
+
+        uint8_t length = d[start + pos++];
+
+        if (pos + length > size || back > piece)
+            return false;
+
+        out->pieces[(uint32_t)piece] = { back ? (uint32_t)(piece - back) : 0xFFFFFFFF,
+                                         std::string((const char*)&d[start + pos], length) };
+        pos += length;
+    }
+
+    return true;
+}
+
 // The table's unpacked size in one group's index, 0 if the group does not
-// have it, -1 if the index could not be read.
-static long long TableSize(const std::string& pamtPath)
+// have it, -1 if the index could not be read. compact: the index layout of
+// the 2026-10-30 update (compact names, extensions in a list at the end).
+static long long TableSize(const std::string& pamtPath, bool compact)
 {
     std::vector<uint8_t> d;
     uint32_t archives, size, count;
@@ -130,13 +172,14 @@ static long long TableSize(const std::string& pamtPath)
 
     size_t pos = 12 + (size_t)archives * 12;
     Names folders, files;
+    auto read = compact ? ReadNamesCompact : ReadNames;
 
-    if (!U32(d, pos, &size) || pos + 4 + size > d.size() || !ReadNames(d, pos + 4, size, &folders))
+    if (!U32(d, pos, &size) || pos + 4 + size > d.size() || !read(d, pos + 4, size, &folders))
         return -1;
 
     pos += 4 + size;
 
-    if (!U32(d, pos, &size) || pos + 4 + size > d.size() || !ReadNames(d, pos + 4, size, &files))
+    if (!U32(d, pos, &size) || pos + 4 + size > d.size() || !read(d, pos + 4, size, &files))
         return -1;
 
     pos += 4 + size;
@@ -146,6 +189,31 @@ static long long TableSize(const std::string& pamtPath)
 
     size_t folderRows = pos + 4;
     size_t fileTable = folderRows + (size_t)count * 16 + 4;
+    uint32_t fileCount = 0;
+    std::vector<std::string> extensions;
+
+    if (compact)
+    {
+        uint32_t listSize;
+
+        if (!U32(d, fileTable - 4, &fileCount) || fileTable + (size_t)fileCount * 20 + 4 > d.size() ||
+            !U32(d, fileTable + (size_t)fileCount * 20, &listSize) || fileTable + (size_t)fileCount * 20 + 4 + listSize > d.size())
+            return -1;
+
+        const char* list = (const char*)&d[fileTable + (size_t)fileCount * 20 + 4];
+        std::string current;
+
+        for (uint32_t i = 0; i < listSize; ++i)
+        {
+            if (list[i])
+                current += list[i];
+            else
+            {
+                extensions.push_back(current);
+                current.clear();
+            }
+        }
+    }
 
     for (uint32_t i = 0; i < count; ++i)
     {
@@ -165,12 +233,62 @@ static long long TableSize(const std::string& pamtPath)
             if (!U32(d, row, &fileName) || !U32(d, row + 12, &unpacked))
                 return -1;
 
-            if (files.Full(fileName) == TABLE_FILE)
+            std::string full = files.Full(fileName);
+
+            if (compact && row + 20 <= d.size())
+            {
+                uint8_t ext = d[row + 19];
+                full += ext < extensions.size() ? extensions[ext] : "";
+            }
+
+            if (full == TABLE_FILE)
                 return unpacked;
         }
     }
 
     return 0;
+}
+
+static long long TableSize(const std::string& pamtPath)
+{
+    long long size = TableSize(pamtPath, true);
+
+    if (size > 0)
+        return size;
+
+    long long old = TableSize(pamtPath, false);
+    return old > 0 ? old : size;
+}
+
+// DMM 4.5 (the game's archive index is signed since game 2.04) changes no
+// archive: its plugin serves the files of bin64\dmm\manifest.tsv, lines
+// "file <game path> <file>". The size of the table it serves, -1 if none.
+static long long ServedTableSize(const std::string& root)
+{
+    std::vector<uint8_t> manifest;
+
+    if (!ReadFile(root + "\\bin64\\dmm\\manifest.tsv", &manifest))
+        return -1;
+
+    std::string text(manifest.begin(), manifest.end());
+    std::string key = std::string("file\t") + TABLE_FOLDER + "/" + TABLE_FILE + "\t";
+    size_t at = text.find(key);
+
+    if (at == std::string::npos)
+        return -1;
+
+    at += key.size();
+    size_t end = text.find_first_of("\r\n", at);
+    std::string path = text.substr(at, end == std::string::npos ? std::string::npos : end - at);
+    FILE* f = NULL;
+
+    if (fopen_s(&f, path.c_str(), "rb") != 0 || !f)
+        return -1;
+
+    _fseeki64(f, 0, SEEK_END);
+    long long size = _ftelli64(f);
+    fclose(f);
+    return size;
 }
 
 bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count)
@@ -184,6 +302,20 @@ bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count)
     {
         Log("part table: could not be checked - using the characters' own heads");
         return true;
+    }
+
+    long long served = ServedTableSize(root);
+
+    if (served > 0)
+    {
+        bool ours = false;
+
+        for (int i = 0; i < count; ++i)
+            ours = ours || served == sizes[i];
+
+        Log("part table: DMM's plugin serves one of %lld bytes - %s", served,
+            ours ? "the package's (or Female Armor Fit's)" : "another mod's: the characters' own heads (and eye colour) are off");
+        return ours;
     }
 
     for (const std::string& group : Groups(papgt))

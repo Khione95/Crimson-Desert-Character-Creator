@@ -12,6 +12,8 @@
 #include "hotkeys.h"
 #include "identity.h"
 #include "lipsync.h"
+#include "eyes.h"
+#include "faceshape.h"
 #include "log.h"
 #include "menu.h"
 #include "overlay.h"
@@ -65,7 +67,7 @@ static void LogGameBuild()
     const BYTE* base = (const BYTE*)GetModuleHandleA(NULL);
     const IMAGE_DOS_HEADER* dos = (const IMAGE_DOS_HEADER*)base;
     const IMAGE_NT_HEADERS* nt = (const IMAGE_NT_HEADERS*)(base + dos->e_lfanew);
-    Log("Character Creator %s, game build %08lX / %08lX", PLUGIN_VERSION,
+    Log("%s %s, game build %08lX / %08lX", PLUGIN_NAME, PLUGIN_VERSION,
         (unsigned long)nt->FileHeader.TimeDateStamp, (unsigned long)nt->OptionalHeader.SizeOfImage);
 }
 
@@ -78,8 +80,14 @@ static DWORD WINAPI MainThread(LPVOID)
     sprintf_s(logPath, "%s\\CharacterCreator.log", folder);
     LogOpen(logPath);
     Log("Character Creator starting");
+
+#if CC_RESEARCH
+    // Before the game loads its customization files (the bone list).
+    EyesResearchEarly(folder);
+#endif
     SwitchesLoad(folder);
 
+#if !CC_BARBER
     char pluginFolder[MAX_PATH];
     PluginFolder(pluginFolder, sizeof(pluginFolder));
     HotkeysLoad(pluginFolder);
@@ -87,6 +95,7 @@ static DWORD WINAPI MainThread(LPVOID)
     // Before the game creates its swap chain.
     if (!PartDisabled("overlay"))
         OverlayEarlyInit();
+#endif
 
     DataPackUnpack(g_module, folder);
 
@@ -104,14 +113,24 @@ static DWORD WINAPI MainThread(LPVOID)
 
     if (!PartDisabled("controller") && !gameReady)
     {
-        Log("this game version is not supported by Character Creator " PLUGIN_VERSION " - the editor only shows a notice");
+#if CC_BARBER
+        Log("this game version is not supported by " PLUGIN_NAME " " PLUGIN_VERSION " - nothing of the game is changed");
+#else
+        Log("this game version is not supported by " PLUGIN_NAME " " PLUGIN_VERSION " - the editor only shows a notice");
+#endif
         MenuSetUnsupported();
     }
 
     ProfileInit(folder);
     CommandsInit(folder);
     MenuInit(folder);
+#if CC_BARBER
+    // The look is the one the barber gave, kept in the game's save: no saved
+    // look of the plugin's (the Anywhere edition's choices) is put over it.
+    Log("Barber edition: the look is changed at the game's barber - no editor, no saved look of its own");
+#else
     ProfileLoad();
+#endif
     LipSyncInit();
 
     if (gameReady && !PartDisabled("glide") && FixEnabled("Glide"))
@@ -127,6 +146,16 @@ static DWORD WINAPI MainThread(LPVOID)
     if (gameReady && !PartDisabled("height"))
         HeightInit();
 
+#if CC_BARBER
+    while (true)
+    {
+        CommandsPoll();
+        if (!PartDisabled("table"))
+            IdentityPoll();
+        MenuPoll();
+        Sleep(100);
+    }
+#else
     if (!PartDisabled("overlay") && OverlayInit())
         OverlaySetCallbacks(MenuDraw, MenuKey);
 
@@ -139,6 +168,8 @@ static DWORD WINAPI MainThread(LPVOID)
         if (!PartDisabled("table"))
             IdentityPoll();
         MenuPoll();
+        if (gameReady)
+            FacePoll();
 
 
         // F6 / F7 / F8 (CharacterCreator.ini) open and close the editor for
@@ -166,6 +197,7 @@ static DWORD WINAPI MainThread(LPVOID)
 
         Sleep(100);
     }
+#endif
 
     return 0;
 }

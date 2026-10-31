@@ -13,8 +13,8 @@
 //   controller +0x10          the character entity
 //   scale component           class at module+0x5B4C6C0, +0x10 = the entity
 //     +0x1C0                  scale object, class at module+0x5B4D168
-//       +0x84 float           body scale (CharacterScale of the base file)
-//       +0x88 float           head scale
+//       +0x98 float           body scale (CharacterScale of the base file)
+//       +0x9C float           head scale (+0x84 and +0x88 before the 2026-10-30 update)
 //
 // The component is found by scanning memory once per character controller.
 // The base character file also gets the height when it is parsed (see

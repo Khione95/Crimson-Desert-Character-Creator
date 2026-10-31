@@ -1,0 +1,273 @@
+﻿<!-- Alarm(jinpark) :	인덱스에 빈 공간이 있어서는 안됩니다. -->
+<!--					중간에 계획 변경으로 인해 일부 커마 파라메터를 사용하지 않을 예정이시라면 dummy 데이터를 세팅하시는 것을 권장드립니다. -->
+<!-- Glossiness 	:	이발소에서 윤기로 표현 및 동기화를 위해 Glossiness 값을 사용 / 실제 CustomizationEditor 에서는 혼동 방지를 위해 Glossiness의 반대인 Roughness로 표기 및 적용된다. 커마 저장시 paccd 에서는 뒤집어서 Glossiness 로 저장-->
+
+<DecorationParam>
+	<!-- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 헤어 Decoration Param ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ -->
+	<!-- 형태 -->
+	<ParamDesc Index="0" Min="0" Max="100" Default="100"  	MeshParamIndex="2"	UIKey="hairLength1" 	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair" BlendSlot="3" MaskIndex="3" Method="MaskLayering" MethodValue="Metallic"/> <!--길이1-->
+	<ParamDesc Index="1" Min="0" Max="100" Default="100"  	MeshParamIndex="2"	UIKey="hairLength2" 	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair" BlendSlot="4" MaskIndex="3" Method="MaskLayering" MethodValue="Metallic"/> <!--길이2-->
+	<ParamDesc Index="2" Min="0" Max="100" Default="100"  	MeshParamIndex="2"	UIKey="hairLength3" 	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair" BlendSlot="5" MaskIndex="3" Method="MaskLayering" MethodValue="Metallic"/> <!--길이3-->
+	<ParamDesc Index="3" Min="0" Max="100" Default="0"  		UIKey="hairCurl" 		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair" BlendSlot="1" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!--컬세기-->
+	<ParamDesc Index="4" Min="0" Max="100" Default="0"  		UIKey="hairLevel" 		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair" BlendSlot="2" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!--컬단계-->
+	
+	<ParamDesc Index="5" Min="0" Max="100" Default="56"			UIKey="hairBaseGlossiness" 	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="0" MaskIndex="1" 	Method="BaseDyeing" MethodValue="Glossiness"/> <!--기본 _ 반짝임 -->
+	<ParamDesc Index="6" Min="0" Max="254" Default="0" 			UIKey="hairBaseColor" 	  	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="0" MaskIndex="-1" 	Method="BaseDyeing" MethodValue="Color" PaletteIndex="50"/> <!--기본 Color팔레트 -->
+	
+	<ParamDesc Index="7" Min="0" Max="100" Default="40"			UIKey="hairTailOpacity" 	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="1" MaskIndex="0" 	Method="MaskDyeing" MethodValue="Opacity"/> <!--머리끝 _ 염색 -->
+	<ParamDesc Index="8" Min="0" Max="100" Default="47"			UIKey="hairTailArea"		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="1" MaskIndex="0" 	Method="MaskDyeing" MethodValue="Area"/> <!--머리끝 _ 영역 -->
+	<ParamDesc Index="9" Min="0" Max="254" Default="53" 		UIKey="hairTailColor" 		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="1" MaskIndex="0"  	Method="MaskDyeing" MethodValue="Color"	PaletteIndex="50"/> <!--머리끝 Color팔레트-->
+	
+	<ParamDesc Index="10" Min="0" Max="100" Default="61"		UIKey="hairInnerOpacity"	PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="2" MaskIndex="1" 	Method="MaskDyeing" MethodValue="Opacity"/> <!--기타 _ 속염색 -->
+	<ParamDesc Index="11" Min="0" Max="100" Default="58"		UIKey="hairInnerArea" 		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="2" MaskIndex="1" 	Method="MaskDyeing" MethodValue="Area"/> <!--기타 _ 속영역 -->
+	<ParamDesc Index="12" Min="0" Max="254" Default="0" 		UIKey="hairInnerColor" 		PartName="CD_Hair,CD_Hair_UpTail,CD_Item_Hair,CD_Item_Hood_Hair,CD_Hair_Front" BlendSlot="2" MaskIndex="1"  	Method="MaskDyeing" MethodValue="Color"	PaletteIndex="50"/> <!--머리 속 Color팔레트-->
+	
+	<!-- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 얼굴 Decoration Param ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ -->
+	<!-- 얼굴 흉터 -->
+	<ParamDesc Index="13" Min="0" Max="254" Default="0"			UIKey="faceScarType"			PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Atlas" PaletteIndex="52"/> <!-- 흉터 종류 -->
+	<ParamDesc Index="14" Min="0" Max="100" Default="50"		UIKey="faceScarLocationX"		PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="TranslationX"/> <!-- 흉터 위치X -->
+	<ParamDesc Index="15" Min="0" Max="100" Default="50"		UIKey="faceScarLocationY"		PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="TranslationY"/> <!-- 흉터 위치Y-->
+	<ParamDesc Index="16" Min="0" Max="100" Default="50"		UIKey="faceScarRotation"		PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Rotation"/> <!-- 흉터 회전 -->
+	<ParamDesc Index="17" Min="0" Max="100" Default="100"		UIKey="faceScarSizeX"			PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="ScaleX"/> <!-- 흉터 크기X -->
+	<ParamDesc Index="18" Min="0" Max="100" Default="100"		UIKey="faceScarSizeY"			PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="ScaleY"/> <!-- 흉터 크기Y -->
+	<ParamDesc Index="19" Min="0" Max="100" Default="100"		UIKey="faceScarOpacity"			PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Opacity"/> <!-- 흉터 농도 -->
+	<ParamDesc Index="20" Min="0" Max="100" Default="0"			UIKey="faceScarGlossiness"		PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Glossiness"/> <!-- 흉터 환경 -->
+	<ParamDesc Index="21" Min="0" Max="254" Default="1"			UIKey="faceScarColor"			PartName="CD_Head" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Color"	PaletteIndex="54"/> <!-- 흉터 Color팔레트 -->
+	
+	<!-- 피부 -->
+	<ParamDesc Index="22" Min="0" Max="254" Default="12"		UIKey="skinColor" 				PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub CD_Tail" BlendSlot="1" MaskIndex="-1" Method="BaseDyeing" MethodValue="Color"	PaletteIndex="52" /> <!--피부색-->
+	<ParamDesc Index="23" Min="0" Max="100" Default="11"		UIKey="skinGlossiness" 			PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub CD_Tail" BlendSlot="1" MaskIndex="-1" Method="BaseDyeing" MethodValue="Glossiness"/> <!--반짝임-->
+	
+	<!-- 수염 & 눈썹 -->
+	<ParamDesc Index="24" Min="0" Max="254" Default="0"			UIKey="Reserved0"		PartName="CD_Head" BlendSlot="5" MaskIndex="-1" Method="Reserved" MethodValue="Atlas" PaletteIndex="51"/> <!-- 수염 기본  종류 -->
+	<ParamDesc Index="25" Min="0" Max="100" Default="27"		UIKey="Reserved1"		PartName="CD_Head" BlendSlot="5" MaskIndex="-1" Method="Reserved" MethodValue="Opacity"/> <!-- 수염 기본  농도 -->
+	<ParamDesc Index="26" Min="0" Max="100" Default="52"		UIKey="Reserved2"		PartName="CD_Head" BlendSlot="5" MaskIndex="-1" Method="Reserved" MethodValue="Glossiness"/> <!-- 수염 기본  반짝임 -->
+	<ParamDesc Index="27" Min="0" Max="100" Default="62"		UIKey="Reserved3"		PartName="CD_Head" BlendSlot="5" MaskIndex="-1" Method="Reserved" MethodValue="Reserved"/> <!-- 수염 기본  영역(영역없음) -->
+	<ParamDesc Index="28" Min="0" Max="254" Default="3"			UIKey="Reserved4"		PartName="CD_Head" BlendSlot="5" MaskIndex="-1" Method="Reserved" MethodValue="Color"	PaletteIndex="50"/> <!-- 수염 기본 Color팔레트-->
+	
+	<ParamDesc Index="29" Min="0" Max="100" Default="100"  		MeshParamIndex="3" UIKey="beardLength" PartName="CD_Beard,CD_Beard_Long" BlendSlot="3" MaskIndex="3" Method="MaskLayering" MethodValue="Metallic"/> <!-- 턱수염 길이-->
+	<ParamDesc Index="30" Min="0" Max="100" Default="0"  		UIKey="beardCurl" 	PartName="CD_Beard,CD_Beard_Long" BlendSlot="1" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!-- 턱수염 컬세기-->
+	<ParamDesc Index="31" Min="0" Max="100" Default="0"  		UIKey="beardLevel" 	PartName="CD_Beard,CD_Beard_Long" BlendSlot="2" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!-- 턱수염 컬단계-->
+	<ParamDesc Index="32" Min="0" Max="254" Default="3"			UIKey="beardColor" 	PartName="CD_Beard,CD_Beard_Long" BlendSlot="0" MaskIndex="-1" Method="BaseDyeing" MethodValue="Color"	PaletteIndex="50"/> <!-- 턱수염  Color팔레트-->
+	
+	<ParamDesc Index="33" Min="0" Max="100" Default="100"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="3" Method="Reserved" MethodValue="Reserved"/> <!-- 콧수염 길이-->
+	<ParamDesc Index="34" Min="0" Max="100" Default="50"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="0" Method="Reserved" MethodValue="Reserved"/> <!-- 콧수염 컬세기-->
+	<ParamDesc Index="35" Min="0" Max="100" Default="50"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="0" Method="Reserved" MethodValue="Reserved"/> <!-- 콧수염 컬단계-->
+	<ParamDesc Index="36" Min="0" Max="99" Default="3"			PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="-1" Method="Reserved" MethodValue="Reserved"	PaletteIndex="50"/> <!-- 콧수염 Color팔레트-->
+	
+	<ParamDesc Index="37" Min="0" Max="100" Default="100"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="3" Method="Reserved" MethodValue="Reserved"/> <!-- 구렛나루 길이-->
+	<ParamDesc Index="38" Min="0" Max="100" Default="50"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="0" Method="Reserved" MethodValue="Reserved"/> <!-- 구렛나루 컬세기-->
+	<ParamDesc Index="39" Min="0" Max="100" Default="50"  		PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="0" Method="Reserved" MethodValue="Reserved"/> <!-- 구렛나루 컬단계-->
+	<ParamDesc Index="40" Min="0" Max="99" Default="3"			PartName="CD_Beard,CD_Beard_Long" BlendSlot="-1" MaskIndex="-1" Method="Reserved" MethodValue="Reserved"	PaletteIndex="50"/> <!-- 구렛나루 Color팔레트-->
+
+	<!-- ■■■■■■■■■■■■ 눈썹 ■■■■■■■■■■■■-->
+
+	<ParamDesc Index="41" Min="0" Max="8" Default="0"			UIKey="eyebrowMakeupType"			PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="Atlas"/> <!-- 눈썹 기본 종류 -->
+	<ParamDesc Index="42" Min="0" Max="100" Default="62"		UIKey="eyebrowMakeupOpacity"		PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="Opacity"/> <!-- 눈썹 기본 농도 -->
+	<ParamDesc Index="43" Min="0" Max="100" Default="24"		UIKey="eyebrowMakeupTranslationY"	PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="TranslationY"/> <!-- 눈썹 기본 높이 -->
+	<ParamDesc Index="44" Min="0" Max="100" Default="0"			UIKey="eyebrowMakeupGlossiness"		PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="Glossiness"/> <!-- 눈썹 기본 반짝임 -->
+	<ParamDesc Index="45" Min="0" Max="100" Default="100"		UIKey="eyebrowMakeupArea"			PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="Area"/> <!-- 눈썹 기본 영역 -->
+	<ParamDesc Index="46" Min="0" Max="254" Default="1"			UIKey="eyebrowMakeupColor"			PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="4" MaskIndex="1" Method="MaskLayering" MethodValue="Color"	PaletteIndex="50"/> <!-- 눈썹 기본 Color팔레트-->
+		
+	<ParamDesc Index="47" Min="0" Max="100" Default="100"  		UIKey="eyeblowsLength"	PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="3" MaskIndex="3" Method="MaskLayering" MethodValue="Metallic"/> <!-- 눈썹 길이-->
+	<ParamDesc Index="48" Min="0" Max="100" Default="0"  		UIKey="eyeblowsCurl"	PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="1" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!-- 눈썹 컬세기-->
+	<ParamDesc Index="49" Min="0" Max="100" Default="0"  		UIKey="eyeblowsLevel"	PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="2" MaskIndex="0" Method="MaskLayering" MethodValue="Metallic"/> <!-- 눈썹 컬단계-->
+	<ParamDesc Index="50" Min="0" Max="254" Default="3"			UIKey="eyeblowsColor"	PartName="CD_Eyebrows,CD_Head_Sub@CD_Eyebrows" BlendSlot="0" MaskIndex="-1" Method="BaseDyeing" MethodValue="Color"	PaletteIndex="50"/> <!-- 눈썹 Color팔레트-->
+	
+	<!-- 화장 -->
+	<ParamDesc Index="51" Min="0" Max="9" Default="0"			UIKey="Reserved5"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Atlas"/> <!-- 눈화장 종류 -->
+	<ParamDesc Index="52" Min="0" Max="100" Default="100"		UIKey="Reserved6"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Opacity"/> <!-- 눈화장 농도 -->
+	<ParamDesc Index="53" Min="0" Max="100" Default="0"			UIKey="Reserved7"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Metallic"/> <!-- 눈화장 반사 -->
+	<ParamDesc Index="54" Min="0" Max="100" Default="0"			UIKey="Reserved8"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Glossiness"/> <!-- 눈화장 반짝임 -->
+	<ParamDesc Index="55" Min="0" Max="100" Default="0"			UIKey="Reserved9"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Area"/> <!-- 눈화장 영역 -->
+	<ParamDesc Index="56" Min="0" Max="254" Default="0"			UIKey="Reserved10"		PartName="CD_Head" BlendSlot="3" MaskIndex="0" Method="Reserved" MethodValue="Color"	PaletteIndex="53"/> <!-- 눈화장 Color팔레트-->
+	
+	<ParamDesc Index="57" Min="0" Max="15" Default="0"			UIKey="Reserved11"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Atlas"/> <!-- 입술 종류 -->
+	<ParamDesc Index="58" Min="0" Max="100" Default="100"		UIKey="Reserved12"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Opacity"/> <!-- 입술 농도 -->
+	<ParamDesc Index="59" Min="0" Max="100" Default="0"			UIKey="Reserved13"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Metallic"/> <!-- 입술 반사 -->
+	<ParamDesc Index="60" Min="0" Max="100" Default="0"			UIKey="Reserved14"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Glossiness"/> <!-- 입술 반짝임 -->
+	<ParamDesc Index="61" Min="0" Max="100" Default="0"			UIKey="Reserved15"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Area"/> <!-- 입술 영역 -->
+	<ParamDesc Index="62" Min="0" Max="254" Default="0"			UIKey="Reserved16"		PartName="CD_Head" BlendSlot="2" MaskIndex="3" Method="Reserved" MethodValue="Color"	PaletteIndex="53"/> <!-- 입술 Color팔레트-->
+		
+	<!-- 얼굴 타투 -->
+	<ParamDesc Index="63" Min="0" Max="254" Default="0"			UIKey="faceTattooType"			PartName="CD_Head"	BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="Atlas" PaletteIndex="50"/> <!-- 타투 종류 -->
+	<ParamDesc Index="64" Min="0" Max="100" Default="50"		UIKey="faceTattooLocationX"		PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="TranslationX"/> <!-- 타투 위치X -->
+	<ParamDesc Index="65" Min="0" Max="100" Default="50"		UIKey="faceTattooLocationY"		PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="TranslationY"/> <!-- 타투 위치Y-->
+	<ParamDesc Index="66" Min="0" Max="100" Default="50"		UIKey="faceTattooRotation"		PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="Rotation"/> <!-- 타투 회전 -->
+	<ParamDesc Index="67" Min="0" Max="100" Default="100"		UIKey="faceTattooSizeX"			PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="ScaleX"/> <!-- 타투 크기X -->
+	<ParamDesc Index="68" Min="0" Max="100" Default="100"		UIKey="faceTattooSizeY"			PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="ScaleY"/> <!-- 타투 크기Y -->
+	<ParamDesc Index="69" Min="0" Max="100" Default="100"		UIKey="faceTattooOpacity"		PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="Opacity"/> <!-- 타투 농도 -->
+	<ParamDesc Index="70" Min="0" Max="100" Default="0"			UIKey="faceTattooGlossiness"		PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="Glossiness"/> <!-- 타투 환경 -->
+	<ParamDesc Index="71" Min="0" Max="254" Default="1"			UIKey="faceTattooColor"			PartName="CD_Head" BlendSlot="6" MaskIndex="0" Method="TextureLayering2" MethodValue="Color"	PaletteIndex="53"/> <!-- 타투 Color팔레트 -->
+	<!-- 얼굴 더러움 -->
+	<ParamDesc Index="72" Min="0" Max="254" Default="0"			UIKey="faceDirtyType"			PartName="CD_Head"	BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Atlas" PaletteIndex="53"/> <!-- 더러움 종류 -->
+	<ParamDesc Index="73" Min="0" Max="100" Default="50"		UIKey="faceDirtyLocationX"		PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="TranslationX"/> <!-- 더러움 위치X -->
+	<ParamDesc Index="74" Min="0" Max="100" Default="50"		UIKey="faceDirtyLocationY"		PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="TranslationY"/> <!-- 더러움 위치Y-->
+	<ParamDesc Index="75" Min="0" Max="100" Default="50"		UIKey="faceDirtyRotation"		PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Rotation"/> <!-- 더러움 회전 -->
+	<ParamDesc Index="76" Min="0" Max="100" Default="100"		UIKey="faceDirtySizeX"			PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="ScaleX"/> <!-- 더러움 크기X -->
+	<ParamDesc Index="77" Min="0" Max="100" Default="100"		UIKey="faceDirtySizeY"			PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="ScaleY"/> <!-- 더러움 크기Y -->
+	<ParamDesc Index="78" Min="0" Max="100" Default="100"		UIKey="faceDirtyOpacity"		PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Opacity"/> <!-- 더러움 농도 -->
+	<ParamDesc Index="79" Min="0" Max="100" Default="0"			UIKey="faceDirtyGlossiness"		PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Glossiness"/> <!-- 더러움 환경 -->
+	<ParamDesc Index="80" Min="0" Max="254" Default="1"			UIKey="faceDirtyColor"			PartName="CD_Head" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Color"	PaletteIndex="54"/> <!-- 더러움 Color팔레트 -->
+	
+	<!-- 주름 -->
+	<ParamDesc Index="81" Min="0" Max="100" Default="0"			PartName="CD_Head" BlendSlot="-1" MaskIndex="0" Method="Reserved" MethodValue="Reserved"/> <!-- 이마 주름 -->
+	<ParamDesc Index="82" Min="0" Max="100" Default="0"			PartName="CD_Head" BlendSlot="-1" MaskIndex="1" Method="Reserved" MethodValue="Reserved"/> <!-- 눈 주름 -->
+	<ParamDesc Index="83" Min="0" Max="100" Default="0"			PartName="CD_Head" BlendSlot="-1" MaskIndex="2" Method="Reserved" MethodValue="Reserved"/> <!-- 팔자 주름 -->
+	
+	<!-- 아이라인 -->
+	<ParamDesc Index="84" Min="0" Max="5" Default="0"			UIKey="eyelashesType"			PartName="CD_Eyelashes,CD_Head_Sub@CD_Eyelashes" BlendSlot="0" MaskIndex="-1" Method="BaseDyeing" MethodValue="Atlas"/> <!-- 속눈썹 종류 -->
+	<ParamDesc Index="85" Min="0" Max="100" Default="100"		UIKey="eyelashesLength"			PartName="CD_Eyelashes,CD_Head_Sub@CD_Eyelashes" BlendSlot="0" MaskIndex="-1" Method="BaseDyeing" MethodValue="Opacity"/> <!-- 속눈썹 길이 -->
+	<ParamDesc Index="86" Min="0" Max="254" Default="121"		UIKey="eyelashesColor"			PartName="CD_Eyelashes,CD_Head_Sub@CD_Eyelashes" BlendSlot="0" MaskIndex="-1" Method="BaseDyeing" MethodValue="Color"	PaletteIndex="50"/> <!-- 속눈썹 Color팔레트 -->
+
+	<ParamDesc Index="87" Min="0" Max="5" Default="0"			UIKey="Reserved17"			PartName="CD_Eyelashes" BlendSlot="2" MaskIndex="1"	Method="Reserved" MethodValue="Atlas"/> <!-- 아이라인 종류 -->
+	<ParamDesc Index="88" Min="0" Max="100" Default="15"		UIKey="Reserved18"			PartName="CD_Eyelashes" BlendSlot="2" MaskIndex="1"	Method="Reserved" MethodValue="Opacity"/> <!-- 아이라인 농도 -->
+	<ParamDesc Index="89" Min="0" Max="254" Default="0"			UIKey="Reserved19"			PartName="CD_Eyelashes" BlendSlot="2" MaskIndex="1"	Method="Reserved" MethodValue="Color"	PaletteIndex="53"/> <!-- 아이라인 Color팔레트 -->
+	
+	<ParamDesc Index="90" Min="0" Max="5" Default="0"			UIKey="eyelineBottomType"		PartName="CD_Eyelashes" BlendSlot="1" MaskIndex="2"	Method="MaskLayering" MethodValue="Atlas"/> <!-- 아래라인 종류 -->
+	<ParamDesc Index="91" Min="0" Max="100" Default="35"		UIKey="eyelineBottomOpacity"	PartName="CD_Eyelashes" BlendSlot="1" MaskIndex="2"	Method="MaskLayering" MethodValue="Opacity"/> <!-- 아래라인 농도 -->
+	<ParamDesc Index="92" Min="0" Max="254" Default="0"			UIKey="eyelineBottomColor"		PartName="CD_Eyelashes" BlendSlot="1" MaskIndex="2"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> <!-- 아래라인 Color팔레트 -->
+	
+	<!-- 왼쪽 눈 -->
+	<ParamDesc Index="93" Min="0" Max="10" Default="0"			UIKey="pupilType"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="Atlas"/> <!-- 왼쪽 눈 동공 종류 --> <!-- 현재 사용안됨 -->
+	<ParamDesc Index="94" Min="0" Max="100" Default="100"		UIKey="pupilOpacity"	PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="PupilOpacity"/> <!-- 왼쪽 눈 동공 투명 --> <!-- 현재 사용안됨 -->
+	<ParamDesc Index="95" Min="0" Max="100" Default="10"		UIKey="pupilStretchMin"	PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="PupilStretchMinSize"/> <!-- 왼쪽 눈 동공 최소 사이즈 -->
+	<ParamDesc Index="96" Min="0" Max="100" Default="25"		UIKey="pupilStretchMax"	PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="PupilStretchMaxSize"/> <!-- 왼쪽 눈 동공 최대 사이즈 -->
+	<ParamDesc Index="97" Min="0" Max="100" Default="0"			UIKey="pupilArea"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="PupilSize"/> <!-- 왼쪽 눈 동공 최대-최소 배율 -->
+	<ParamDesc Index="98" Min="0" Max="254" Default="0"			UIKey="pupilColor"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="PupilColor"	PaletteIndex="53"/> <!-- 왼쪽 눈 동공 Color팔레트 -->	
+	
+	<ParamDesc Index="99" Min="0" Max="8" Default="0"			UIKey="irisType"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Atlas"/> <!-- 왼쪽 눈 홍채 종류 -->
+	<ParamDesc Index="100" Min="0" Max="100" Default="91"		UIKey="irisOpacity"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Opacity"/> <!-- 왼쪽 눈 홍채 투명 -->
+	<ParamDesc Index="101" Min="0" Max="100" Default="50"		UIKey="irisSize"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="ScaleY"/> <!-- 왼쪽 눈 홍채 크기(상하폭으로 대체) -->
+	<ParamDesc Index="102" Min="0" Max="100" Default="63"		UIKey="irisWidth"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="ScaleX"/> <!-- 왼쪽 눈 홍채 좌우폭 -->
+	<ParamDesc Index="103" Min="0" Max="100" Default="0"		UIKey="irisArea"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Area"/> <!-- 왼쪽 눈 홍채 영역 -->
+	<ParamDesc Index="104" Min="0" Max="254" Default="93"		UIKey="irisColor"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> <!-- 왼쪽 눈 홍채 Color팔레트 -->
+	
+	<ParamDesc Index="105" Min="0" Max="15" Default="0"			UIKey="lensType"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Atlas"/> <!-- 왼쪽 눈 렌즈 종류 -->
+	<ParamDesc Index="106" Min="0" Max="100" Default="94"		UIKey="lensOpacity"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Opacity"/> <!-- 왼쪽 눈 렌즈 투명 -->
+	<ParamDesc Index="107" Min="0" Max="100" Default="50"		UIKey="lensHeight"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="TranslationY"/> <!-- 왼쪽 눈 렌즈 높이 -->
+	<ParamDesc Index="108" Min="0" Max="100" Default="50"		UIKey="lensMetallic"	PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Metallic"/> <!-- 왼쪽 눈 렌즈 반사 -->
+	<ParamDesc Index="109" Min="0" Max="100" Default="0"		UIKey="lensGlossiness"	PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Glossiness"/> <!-- 왼쪽 눈 렌즈 반짝임 -->
+	<ParamDesc Index="110" Min="0" Max="254" Default="0"		UIKey="lensColor"		PartName="CD_EyeLeft CD_EyeRight,CD_Head_Sub@CD_EyeLeft,CD_Head_Sub@CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> <!-- 왼쪽 눈 렌즈 Color팔레트 -->
+	
+	<!-- 오른쪽 눈 -->
+	<!-- <ParamDesc Index="111" Min="0" Max="10" Default="0"			UIKey="pupilType"		PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="Atlas"/> --> <!-- 오른쪽 눈 동공 종류 --> 
+	<!-- <ParamDesc Index="112" Min="0" Max="100" Default="34"		UIKey="pupilOpacity"	PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="Opacity"/> --> <!-- 오른쪽 눈 동공 투명 --> 
+	<!-- <ParamDesc Index="113" Min="0" Max="100" Default="66"		UIKey="pupilSize"		PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="ScaleY"/> --> <!-- 오른쪽 눈 동공 크기(상하폭으로 대체) --> 
+	<!-- <ParamDesc Index="114" Min="0" Max="100" Default="61"		UIKey="pupilWidth"		PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="ScaleX"/> --> <!-- 오른쪽 눈 동공 좌우폭 --> 
+	<!-- <ParamDesc Index="115" Min="0" Max="100" Default="0"		UIKey="pupilArea"		PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="Area"/> --> <!-- 오른쪽 눈 동공 영역 --> 
+	<!-- <ParamDesc Index="116" Min="0" Max="254" Default="0"			UIKey="pupilColor"		PartName="CD_EyeRight"	BlendSlot="1" MaskIndex="0"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> --> <!-- 오른쪽 눈 동공 팔레트 --> 
+	                                                            
+	<!-- <ParamDesc Index="117" Min="0" Max="8" Default="0"			UIKey="irisType"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Atlas"/> --> <!-- 오른쪽 눈 홍채 종류 --> 
+	<!-- <ParamDesc Index="118" Min="0" Max="100" Default="91"		UIKey="irisOpacity"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Opacity"/> --> <!-- 오른쪽 눈 홍채 투명 --> 
+	<!-- <ParamDesc Index="119" Min="0" Max="100" Default="50"		UIKey="irisSize"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="ScaleY"/> --> <!-- 오른쪽 눈 홍채 크기(상하폭으로 대체) --> 
+	<!-- <ParamDesc Index="120" Min="0" Max="100" Default="63"		UIKey="irisWidth"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="ScaleX"/> --> <!-- 오른쪽 눈 홍채 좌우폭 --> 
+	<!-- <ParamDesc Index="121" Min="0" Max="100" Default="0"		UIKey="irisArea"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Area"/> --> <!-- 오른쪽 눈 홍채 영역 --> 
+	<!-- <ParamDesc Index="122" Min="0" Max="254" Default="93"		UIKey="irisColor"		PartName="CD_EyeRight"	BlendSlot="2" MaskIndex="1"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> --> <!-- 오른쪽 눈 홍채 팔레트 --> 
+	                                                            
+	<!-- <ParamDesc Index="123" Min="0" Max="15" Default="0"			UIKey="lensType"		PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Atlas"/> --> <!-- 오른쪽 눈 렌즈 종류 --> 
+	<!-- <ParamDesc Index="124" Min="0" Max="100" Default="94"		UIKey="lensOpacity"		PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Opacity"/> --> <!-- 오른쪽 눈 렌즈 투명 --> 
+	<!-- <ParamDesc Index="125" Min="0" Max="100" Default="50"		UIKey="lensHeight"		PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="TranslationY"/> --> <!-- 오른쪽 눈 렌즈 높이 --> 
+	<!-- <ParamDesc Index="126" Min="0" Max="100" Default="50"		UIKey="lensMetallic"	PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Metallic"/> --> <!-- 오른쪽 눈 렌즈 반사 --> 
+	<!-- <ParamDesc Index="127" Min="0" Max="100" Default="0"		UIKey="lensGlossiness"	PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Glossiness"/> --> <!-- 오른쪽 눈 렌즈 반짝임 --> 
+	<!-- <ParamDesc Index="128" Min="0" Max="254" Default="0"			UIKey="lensColor"		PartName="CD_EyeRight"	BlendSlot="3" MaskIndex="2"	Method="MaskLayering" MethodValue="Color"	PaletteIndex="53"/> --> <!-- 오른쪽 눈 렌즈 팔레트 --> 
+		
+
+
+	<!-- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 바디 Decoration Param ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ -->
+
+	<!-- 근육 -->
+	<ParamDesc Index="111" Min="0" Max="100" Default="0"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="-1" MaskIndex="0"	Method="Reserved" MethodValue="Reserved"/> <!-- 근육량 1 -->
+	<ParamDesc Index="112" Min="0" Max="100" Default="0"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="-1" MaskIndex="1"	Method="Reserved" MethodValue="Reserved"/> <!-- 근육량 2 -->
+	<ParamDesc Index="113" Min="0" Max="100" Default="0"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="-1" MaskIndex="2"	Method="Reserved" MethodValue="Reserved"/> <!-- 근육량 3-->
+	
+	<!-- 몸통 타투 -->
+	<ParamDesc Index="114" Min="0" Max="254" Default="0"		UIKey="BodyTattooType"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="Atlas" PaletteIndex="54"/> <!-- 몸통 타투 종류 --> 
+	<ParamDesc Index="115" Min="0" Max="100" Default="50"		UIKey="BodyTattooLocationX"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="TranslationX"/> <!-- 타투 위치X -->
+	<ParamDesc Index="116" Min="0" Max="100" Default="50"		UIKey="BodyTattooLocationY"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="TranslationY"/> <!-- 타투 위치Y-->
+	<ParamDesc Index="117" Min="0" Max="100" Default="50"		UIKey="BodyTattooRotation"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="Rotation"/> <!-- 타투 회전 -->
+	<ParamDesc Index="118" Min="0" Max="100" Default="100"		UIKey="BodyTattooSizeX"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="ScaleX"/> <!-- 타투 크기X -->
+	<ParamDesc Index="119" Min="0" Max="100" Default="100"		UIKey="BodyTattooSizeY"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="ScaleY"/> <!-- 타투 크기Y -->
+	<ParamDesc Index="120" Min="0" Max="100" Default="100"		UIKey="BodyTattooOpacity"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="Opacity"/> <!-- 타투 농도 -->
+	<ParamDesc Index="121" Min="0" Max="100" Default="0"		UIKey="BodyTattooGlossiness"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="Glossiness"/> <!-- 타투 환경 -->
+	<ParamDesc Index="122" Min="0" Max="254" Default="1"		UIKey="BodyTattooColor"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="6" MaskIndex="-1" Method="TextureLayering2" MethodValue="Color"	PaletteIndex="53"/> <!-- 타투 Color팔레트 -->
+	
+	<!-- 몸통 더러움 -->
+	<ParamDesc Index="123" Min="0" Max="254" Default="0"		UIKey="bodyDirtyType"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Atlas" PaletteIndex="55"/> <!-- 더러움 종류 -->
+	<ParamDesc Index="124" Min="0" Max="100" Default="50"		UIKey="bodyDirtyLocationX"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="TranslationX"/> <!-- 더러움 위치X -->
+	<ParamDesc Index="125" Min="0" Max="100" Default="50"		UIKey="bodyDirtyLocationY"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="TranslationY"/> <!-- 더러움 위치Y-->
+	<ParamDesc Index="126" Min="0" Max="100" Default="50"		UIKey="bodyDirtyRotation"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Rotation"/> <!-- 더러움 회전 -->
+	<ParamDesc Index="127" Min="0" Max="100" Default="100"		UIKey="bodyDirtySizeX"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="ScaleX"/> <!-- 더러움 크기X -->
+	<ParamDesc Index="128" Min="0" Max="100" Default="100"		UIKey="bodyDirtySizeY"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="ScaleY"/> <!-- 더러움 크기Y -->
+	<ParamDesc Index="129" Min="0" Max="100" Default="100"		UIKey="bodyDirtyOpacity"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Opacity"/> <!-- 더러움 농도 -->
+	<ParamDesc Index="130" Min="0" Max="100" Default="0"		UIKey="bodyDirtyGlossiness"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Glossiness"/> <!-- 더러움 환경 -->
+	<ParamDesc Index="131" Min="0" Max="254" Default="1"		UIKey="bodyDirtyColor"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="7" MaskIndex="0" Method="TextureLayering3" MethodValue="Color"	PaletteIndex="54"/> <!-- 더러움 Color팔레트 -->
+	
+	<!-- 몸통 흉터 -->
+	<ParamDesc Index="132" Min="0" Max="254" Default="0"		UIKey="bodyScarType"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub"	BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Atlas" PaletteIndex="56"/> <!-- 흉터 종류 -->
+	<ParamDesc Index="133" Min="0" Max="100" Default="50"		UIKey="bodyScarLocationX"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="TranslationX"/> <!-- 흉터 위치X -->
+	<ParamDesc Index="134" Min="0" Max="100" Default="50"		UIKey="bodyScarLocationY"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="TranslationY"/> <!-- 흉터 위치Y-->
+	<ParamDesc Index="135" Min="0" Max="100" Default="50"		UIKey="bodyScarRotation"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Rotation"/> <!-- 흉터 회전 -->
+	<ParamDesc Index="136" Min="0" Max="100" Default="100"		UIKey="bodyScarSizeX"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="ScaleX"/> <!-- 흉터 크기X -->
+	<ParamDesc Index="137" Min="0" Max="100" Default="100"		UIKey="bodyScarSizeY"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="ScaleY"/> <!-- 흉터 크기Y -->
+	<ParamDesc Index="138" Min="0" Max="100" Default="100"		UIKey="bodyScarOpacity"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Opacity"/> <!-- 흉터 농도 -->
+	<ParamDesc Index="139" Min="0" Max="100" Default="0"		UIKey="bodyScarGlossiness"		PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Glossiness"/> <!-- 흉터 환경 -->
+	<ParamDesc Index="140" Min="0" Max="254" Default="1"		UIKey="bodyScarColor"			PartName="CD_Nude,CD_Nude@CD_Nude_Sub" BlendSlot="0" MaskIndex="0" Method="TextureLayering1" MethodValue="Color"	PaletteIndex="54"/> <!-- 흉터 Color팔레트 -->
+
+
+	<!-- 얼굴 화장 / 위 기본 데이터 셋으로는 명확하게 데이터 구분이 어려워서 양식을 좀 바꿈. 어짜피 코드에서 구분해서 가져갈거라면 BlendSlot을 하드코딩 해서 가져가는게 아니라 Key를 기술하는게 더 직관적 -->	
+	<ParamDesc Index="141" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceHighlighterType"				MaterialParameterPrefix="_faceHighlighter" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Atlas" TexuterBindingKey="0"		PaletteIndex="107" HeadTexturePaletteIndex="107"/>
+	<ParamDesc Index="142" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceHighlighterOpacity"			MaterialParameterPrefix="_faceHighlighter" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Opacity"/>
+	<ParamDesc Index="143" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceHighlighterColor"			MaterialParameterPrefix="_faceHighlighter" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Color"							PaletteIndex="55"/>
+
+	<ParamDesc Index="144" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceShadingType"					MaterialParameterPrefix="_faceShading" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Atlas" TexuterBindingKey="1"	 PaletteIndex="108" HeadTexturePaletteIndex="118"/>
+	<ParamDesc Index="145" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceShadingOpacity"				MaterialParameterPrefix="_faceShading" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Opacity"/>
+	<ParamDesc Index="146" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceShadingColor"				MaterialParameterPrefix="_faceShading" PartName="CD_Head CD_Nude,CD_Nude@CD_Nude_Sub" MethodValue="Color"			PaletteIndex="55"/>
+
+	<ParamDesc Index="147" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceCheekType"					MaterialParameterPrefix="_faceCheek" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="2"			PaletteIndex="109"  HeadTexturePaletteIndex="107"/>
+	<ParamDesc Index="148" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceCheekOpacity"				MaterialParameterPrefix="_faceCheek" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="149" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceCheekColor"					MaterialParameterPrefix="_faceCheek" PartName="CD_Head" MethodValue="Color"									PaletteIndex="55"/>
+
+	<ParamDesc Index="150" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyelineType"					MaterialParameterPrefix="_faceEyeline" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="3"			PaletteIndex="110"/>
+	<ParamDesc Index="151" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyelineOpacity"				MaterialParameterPrefix="_faceEyeline" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="152" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyelineColor"				MaterialParameterPrefix="_faceEyeline" PartName="CD_Head" MethodValue="Color"								PaletteIndex="55"/>
+
+	<ParamDesc Index="153" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyelineLowerType"			MaterialParameterPrefix="_faceEyelineLower" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="4"	PaletteIndex="111"/>
+	<ParamDesc Index="154" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyelineLowerOpacity"			MaterialParameterPrefix="_faceEyelineLower" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="155" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyelineLowerColor"			MaterialParameterPrefix="_faceEyelineLower" PartName="CD_Head" MethodValue="Color"							PaletteIndex="55"/>
+
+	<ParamDesc Index="156" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceLipType"						MaterialParameterPrefix="_faceLip" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="5"				PaletteIndex="112"/>
+	<ParamDesc Index="157" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceLipOpacity"					MaterialParameterPrefix="_faceLip" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="158" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceLipColor"					MaterialParameterPrefix="_faceLip" PartName="CD_Head" MethodValue="Color"									PaletteIndex="55"/>
+
+	<ParamDesc Index="159" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceLipSubType"					MaterialParameterPrefix="_faceLipSub" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="6"			PaletteIndex="113"/>
+	<ParamDesc Index="160" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceLipSubOpacity"				MaterialParameterPrefix="_faceLipSub" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="161" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceLipSubColor"					MaterialParameterPrefix="_faceLipSub" PartName="CD_Head" MethodValue="Color"								PaletteIndex="55"/>
+
+	<ParamDesc Index="162" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyeShadowDownType"			MaterialParameterPrefix="_faceEyeShadowDown" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="7"	PaletteIndex="114"/>
+	<ParamDesc Index="163" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyeShadowDownOpacity"		MaterialParameterPrefix="_faceEyeShadowDown" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="164" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceEyeShadowDownGlossiness"		MaterialParameterPrefix="_faceEyeShadowDown" PartName="CD_Head" MethodValue="Glossiness"/>
+	<ParamDesc Index="165" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceEyeShadowDownMetallic"		MaterialParameterPrefix="_faceEyeShadowDown" PartName="CD_Head" MethodValue="Metallic"/>
+	<ParamDesc Index="166" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyeShadowDownColor"			MaterialParameterPrefix="_faceEyeShadowDown" PartName="CD_Head" MethodValue="Color"							PaletteIndex="55"/>
+
+	<ParamDesc Index="167" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyeShadowUpType"				MaterialParameterPrefix="_faceEyeShadowUp" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="8"		PaletteIndex="115"/>
+	<ParamDesc Index="168" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyeShadowUpOpacity"			MaterialParameterPrefix="_faceEyeShadowUp" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="169" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceEyeShadowUpGlossiness"		MaterialParameterPrefix="_faceEyeShadowUp" PartName="CD_Head" MethodValue="Glossiness"/>
+	<ParamDesc Index="170" Min="0" Max="100" Default="0"		Category="Face" UIKey="faceEyeShadowUpMetallic"			MaterialParameterPrefix="_faceEyeShadowUp" PartName="CD_Head" MethodValue="Metallic"/>
+	<ParamDesc Index="171" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyeShadowUpColor"			MaterialParameterPrefix="_faceEyeShadowUp" PartName="CD_Head" MethodValue="Color"							PaletteIndex="55"/>
+
+	<ParamDesc Index="172" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyeShadowMainType"			MaterialParameterPrefix="_faceEyeShadowMain" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="9"	PaletteIndex="116"/>
+	<ParamDesc Index="173" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyeShadowMainOpacity"		MaterialParameterPrefix="_faceEyeShadowMain" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="174" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceEyeShadowMainGlossiness"		MaterialParameterPrefix="_faceEyeShadowMain" PartName="CD_Head" MethodValue="Glossiness"/>
+	<ParamDesc Index="175" Min="0" Max="100" Default="0"		Category="Face" UIKey="faceEyeShadowMainMetallic"		MaterialParameterPrefix="_faceEyeShadowMain" PartName="CD_Head" MethodValue="Metallic"/>
+	<ParamDesc Index="176" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyeShadowMainColor"			MaterialParameterPrefix="_faceEyeShadowMain" PartName="CD_Head" MethodValue="Color"		PaletteIndex="55"/>
+
+	<ParamDesc Index="177" Min="0" Max="254" Default="0"		Category="Face" UIKey="faceEyelineGlitterType"			MaterialParameterPrefix="_faceEyelineGlitter" PartName="CD_Head" MethodValue="Atlas" TexuterBindingKey="10"	PaletteIndex="117"/>
+	<ParamDesc Index="178" Min="0" Max="100" Default="100"		Category="Face" UIKey="faceEyelineGlitterOpacity"		MaterialParameterPrefix="_faceEyelineGlitter" PartName="CD_Head" MethodValue="Opacity"/>
+	<ParamDesc Index="179" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceEyelineGlitterGlossiness"	MaterialParameterPrefix="_faceEyelineGlitter" PartName="CD_Head" MethodValue="Glossiness"/>
+	<ParamDesc Index="180" Min="0" Max="100" Default="0"		Category="Face" UIKey="faceEyelineGlitterMetallic"		MaterialParameterPrefix="_faceEyelineGlitter" PartName="CD_Head" MethodValue="Metallic"/>
+	<ParamDesc Index="181" Min="0" Max="254" Default="1"		Category="Face" UIKey="faceEyelineGlitterColor"			MaterialParameterPrefix="_faceEyelineGlitter" PartName="CD_Head" MethodValue="Color"						PaletteIndex="55"/>
+
+	<ParamDesc Index="182" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceLipGlossiness"				MaterialParameterPrefix="_faceLip" PartName="CD_Head" MethodValue="Glossiness"/>
+	<ParamDesc Index="183" Min="0" Max="100" Default="50"		Category="Face" UIKey="faceLipSubGlossiness"			MaterialParameterPrefix="_faceLipSub" PartName="CD_Head" MethodValue="Glossiness"/>
+</DecorationParam>

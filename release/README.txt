@@ -1,36 +1,44 @@
-Character Creator 9.1.15 - Crimson Desert
+Character Creator Enhanced - Anywhere 9.1.17 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
 no barber needed, and see every change live.
 
+There are two editions; install one of them:
+  - Anywhere (this one): the editor opens anywhere with F6 / F7 / F8.
+  - Barber: no editor of its own - the game's barber offers the mod's heads,
+    hair, beards and bodies. Every other part (gliding, two-handed swords,
+    lip sync, Equip All Armor) is the same.
+
 
 INSTALL
 -------
 First remove the previous version:
-  - uninstall the old "Character Creator" package in your mod manager
+  - uninstall the old "Character Creator" package (or the other edition) in
+    your mod manager
   - delete "Character Creator.asi" from <game>\bin64 if it is still there
   - remove "Female Animations.field.json" if you use it - the mod now switches
     gender itself
 
-With DMM (recommended)
+With DMM (recommended; DMM 4.5 Beta 2 or newer: older versions can't mount mods
+for the game update of 2026-10-30)
   1. Import the downloaded zip in DMM as it is (don't unzip and re-zip it).
-  2. Make sure all parts are enabled: "Character Creator / Character Creator
-     Enhanced" and the Equip All Armor module in the mod list, and
-     "CharacterCreator" in the ASI plugins.
+  2. Make sure all parts are enabled: "Character Creator Enhanced - Anywhere /
+     Character Creator Enhanced" and the Equip All Armor module in the mod
+     list, and "CharacterCreator" in the ASI plugins.
   3. Click Apply. DMM installs the game files, places CharacterCreator.asi in
      bin64 and sets up the ASI loader.
   4. Start the game, load a save and press F6.
 
 Manual install (another mod manager, or no .asi support)
   1. Install the game files with your mod manager as usual: the "Character
-     Creator Enhanced" folder inside "Character Creator" holds the 0009, 0010
-     and 0012 folders ("Equip All Armor.json" is a DMM mod: every character can
-     wear each other's armor).
+     Creator Enhanced" folder inside "Character Creator Enhanced - Anywhere"
+     holds the 0009, 0010 and 0012 folders ("Equip All Armor.json" is a DMM
+     mod: every character can wear each other's armor).
   2. Install the Ultimate ASI Loader into <game>\bin64 if you do not have it
      yet (many mods use it, usually as winmm.dll).
-  3. Copy "CharacterCreator.asi" from the "Character Creator" folder into
-     <game>\bin64.
+  3. Copy "CharacterCreator.asi" from the "Character Creator Enhanced -
+     Anywhere" folder into <game>\bin64.
   4. Start the game, load a save and press F6.
 
 On its first start the plugin creates <game>\bin64\CharacterCreator with its
@@ -67,9 +75,19 @@ WHAT YOU CAN CHANGE
   Height           -20% to +20% (previewed live, exact after a restart)
   Head             every head of the character's gender, from all races
   Face Details     mix features of a second head into the chosen one
+  Face Shape       24 sliders: face and jaw width, cheekbones, chin, nose,
+                   mouth and lips, eye spacing, height, size and depth,
+                   brows, ears (on any head; only your character's face
+                   changes, not NPCs'; a new head starts unsculpted; X resets
+                   a Face or Body Shape page)
+  Body Shape       19 sliders with their own bones for men and women: chest
+                   or bust (size, shape, sides), shoulders, upper arms, biceps,
+                   triceps, forearms, neck, waist, belly, hips, glutes, thighs,
+                   quads, outer and inner thighs, calves (clothes and armor
+                   follow; a few bodies in the list have no shape to change)
   Hair             every style of every race and gender, colour, length, shine
   Beard            every beard, for everyone (with "None"), colour, length
-  Eyebrow          type, colour, length
+  Eyebrow          colour, length
   Face / Body Tattoo   type, colour, opacity, position, rotation, size
   Eye Colour       21 iris colours
   Scars            face and body: type, colour, opacity, position, size

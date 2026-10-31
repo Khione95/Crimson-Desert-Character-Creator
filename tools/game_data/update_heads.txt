@@ -1,0 +1,24 @@
+# heads the 2026-10-30 update added (with eyes and a face shape of their own): prefab, skeleton variation
+phm_00_head_00_0601 1_pc/1_phm/head/head/phm_00_head_00_0601.pabc
+phm_00_head_00_0602 1_pc/1_phm/head/head/phm_00_head_00_0602.pabc
+phm_00_head_00_0603 1_pc/1_phm/head/head/phm_00_head_00_0603.pabc
+phm_00_head_00_0604 1_pc/1_phm/head/head/phm_00_head_00_0604.pabc
+phm_00_head_00_0651 1_pc/1_phm/head/head/phm_00_head_00_0651.pabc
+phm_00_head_00_0652 1_pc/1_phm/head/head/phm_00_head_00_0652.pabc
+phm_00_head_00_0653 1_pc/1_phm/head/head/phm_00_head_00_0653.pabc
+phm_00_head_00_0654 1_pc/1_phm/head/head/phm_00_head_00_0654.pabc
+phm_00_head_00_0655 1_pc/1_phm/head/head/phm_00_head_00_0655.pabc
+phm_00_head_00_0656 1_pc/1_phm/head/head/phm_00_head_00_0656.pabc
+phm_00_head_00_0651_player 1_pc/1_phm/head/head/phm_00_head_00_0651_player.pabc
+phw_00_head_00_0550 1_pc/2_phw/head/head/phw_00_head_00_0550.pabc
+phw_00_head_00_0551 1_pc/2_phw/head/head/phw_00_head_00_0551.pabc
+phw_00_head_00_0552 1_pc/2_phw/head/head/phw_00_head_00_0552.pabc
+phw_00_head_00_0553 1_pc/2_phw/head/head/phw_00_head_00_0553.pabc
+phw_00_head_00_0554 1_pc/2_phw/head/head/phw_00_head_00_0554.pabc
+phw_00_head_00_0555 1_pc/2_phw/head/head/phw_00_head_00_0555.pabc
+phw_00_head_00_0556 1_pc/2_phw/head/head/phw_00_head_00_0556.pabc
+phw_00_head_00_0601 1_pc/2_phw/head/head/phw_00_head_00_0601.pabc
+phw_00_head_00_0602 1_pc/2_phw/head/head/phw_00_head_00_0602.pabc
+phw_00_head_00_0603 1_pc/2_phw/head/head/phw_00_head_00_0603.pabc
+phw_00_head_00_0604 1_pc/2_phw/head/head/phw_00_head_00_0604.pabc
+phw_00_head_50_5001 1_pc/2_phw/head/head/phw_00_head_50_5001.pabc

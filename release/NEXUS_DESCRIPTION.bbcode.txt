@@ -16,10 +16,12 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]Gender and race[/b]: male or female, Human, Orc, Dwarf or Goblin - for each of the three characters. Kliff can also be [b]Female (male animations)[/b]: a female body that keeps his own animations, so his crow wings and two-handed swords work as usual
 • [b]Body[/b]: body shape, skin colour (with extra skin tones), skin shine
 • [b]Height[/b]: from -20% to +20%, previewed live
+• [b]Face Shape[/b]: 24 sliders on any head - face and jaw width, cheekbones, chin, nose, mouth and lips, eyes, brows, ears. Only your character changes, not NPCs. A new head starts unsculpted
+• [b]Body Shape[/b]: 19 sliders, with their own bones for men and women - chest or bust, shoulders, arms, biceps, triceps, forearms, neck, waist, belly, hips, glutes, thighs, quads, calves. Clothes and armor follow. Only your character changes, not NPCs
 • [b]Head[/b]: every head of the character's gender, from all four races - and [b]Face details[/b]: mix features of a second head into the chosen one, for many more faces
 • [b]Hair[/b]: every hair style of every race and gender, colour, length, shine
 • [b]Beard[/b]: every beard for every character (with a "None" option), colour, length
-• [b]Eyebrows[/b]: type, colour, length
+• [b]Eyebrows[/b]: colour, length
 • [b]Face and body tattoos[/b]: type, colour, opacity, position, rotation and size
 • [b]Eye colour[/b]: 21 iris colours, from natural browns, blues and greens to red, gold, ice and cat eyes
 • [b]Scars[/b]: face and body, with colour, opacity, position and size
@@ -32,9 +34,10 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]Q / E[/b] (or [b][ / ][/b]) - previous / next page of an area
 • [b]Arrows or WASD[/b] - choose; on sliders Up/Down picks a value and Left/Right changes it ([b]Shift[/b] for steps of 10)
 • [b]Space / Enter[/b] - keep and close; [b]Esc[/b] - cancel everything changed since the editor was opened
+• [b]X[/b] - reset the sliders on a Face Shape or Body Shape page
 
 [size=4][b]Requirements[/b][/size]
-• [b]DMM[/b] (recommended) - it installs everything, including the .asi and the ASI loader
+• [b]DMM 4.5 Beta 2 or newer[/b] (recommended) - it installs everything, including the .asi and the ASI loader. Older versions can't mount mods for the game update of 2026-10-30
 • Or: another mod manager for the game files, plus the [b]Ultimate ASI Loader[/b] in the game's bin64 folder
 
 [size=4][b]Installation[/b][/size]
@@ -56,7 +59,7 @@ On its first start the plugin creates [i]<game>\bin64\CharacterCreator[/i] with 
 
 [size=4][b]Female Armor Fit (optional)[/b][/size]
 A separate download in the Files tab. Most armor in the game only exists for men, and on a woman it looked broad, flat and had wobbly arms. With Female Armor Fit, over 800 male armor parts (chest, legs, gloves, boots, helmets, shoulders, cloaks...) are reshaped to the female body: bust, narrower waist and shoulders, arms and sleeves that fit. The game switches to the reshaped version only while a woman (any race) wears the piece - men and NPCs keep the original.
-1. Import [i]Female Armor Fit[/i] in DMM next to Character Creator and click [b]Mount Mods[/b] (it is a pre-built archive, so it mounts in seconds).
+1. Import [i]Female Armor Fit[/i] in DMM next to Character Creator and click [b]Mount Mods[/b] (with its Dyes part, so reshaped armor can be dyed).
 2. Don't use it together with mods that also replace the game's part table (for example Cloak Remover) or that swap the same armor pieces to other armor for women (for example my Female Armor Module) - use one or the other.
 3. It is made for the current game version. After a game update, disable it until an updated version is out.
 A few pieces with unusual models still keep their male shape.

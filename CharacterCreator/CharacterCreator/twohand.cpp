@@ -12,11 +12,11 @@
 // does it, nexusmods.com/crimsondesert/mods/3477 - thank you).
 //
 // The women's description (phw_description_player_001.xml) puts a two-handed
-// sword (CD_TwoHandWeapon_Sword) in the left hand; Kliff's puts it in the
+// sword (TwoHandWeapon_Sword) in the left hand; Kliff's puts it in the
 // right. A woman plays the women's moves with it, made for the left hand, but
 // Kliff's attacks from the two-handed chart, made for the right: there the
 // sword sat in the wrong hand, held by the blade. The same description has a
-// right-hand sword entry (CD_MainWeapon_Sword_R, RHand_Socket); for the
+// right-hand sword entry (MainWeapon_Sword_R, RHand_Socket); for the
 // attacks listed below the sword goes to that hand, for everything else back
 // to the left.
 //
@@ -29,15 +29,16 @@
 //    moves, it gets the record of the right hand.
 // ---------------------------------------------------------------------------
 
-// mov rax,[rsp+48h] / mov [r15+18h],rax / mov rax,[rsp+48h] / mov rcx,[rax+38h]:
-// in the chart update (rva 23281B7 on the known build); the hook replaces the
+// mov rax,[rsp+48h] / mov [r14+18h],rax / mov rax,[rsp+48h] / mov rcx,[rax+28h]:
+// in the chart update (rva 2511284 on the known build, 25100D4 on the patch of 11:19); the hook replaces the
 // last two (9 bytes, at +9). There: rbx = the action type (0x4CB714A1 for the
-// women's), r12 = the chart layer (0: upper), r14 = the character, r15 = its
-// upper body's action holder.
+// women's), r12 = the chart layer (0: upper), r15 = the character, r14 = its
+// upper body's action holder (before the 2026-10-30 update the other way
+// round, with [rax+38h]).
 static const unsigned char COMBAT_CODE[] = {
-    0x48, 0x8B, 0x44, 0x24, 0x48, 0x49, 0x89, 0x47, 0x18, 0x48, 0x8B, 0x44, 0x24, 0x48, 0x48, 0x8B, 0x48, 0x38 };
+    0x48, 0x8B, 0x44, 0x24, 0x48, 0x49, 0x89, 0x46, 0x18, 0x48, 0x8B, 0x44, 0x24, 0x48, 0x48, 0x8B, 0x48, 0x28 };
 static const size_t COMBAT_AT = 9, COMBAT_SIZE = 9;
-static const uintptr_t COMBAT_KNOWN_RVA = 0x23281B7;
+static const uintptr_t COMBAT_KNOWN_RVA = 0x2511284;
 
 // mov rax,rsp / mov [rax+20h],r9: the attach function's first 7 bytes.
 static const unsigned char ATTACH_CODE[] = { 0x48, 0x8B, 0xC4, 0x4C, 0x89, 0x48, 0x20 };
@@ -115,6 +116,17 @@ static bool NameIs(uint32_t index, const char* text)
     return n && strcmp(n, text) == 0;
 }
 
+// A part's socket name (with "CD_" before the 2026-10-30 update).
+static bool PartIs(uint32_t index, const char* text)
+{
+    const char* n = Name(index);
+
+    if (n && strncmp(n, "CD_", 3) == 0)
+        n += 3;
+
+    return n && strcmp(n, text) == 0;
+}
+
 static uintptr_t Player()
 {
     uintptr_t p = Ptr(g_world);
@@ -176,7 +188,7 @@ static bool FindGrip(uintptr_t character, Grip* g)
 
         uint32_t name = U32(e + 4);
 
-        if (NameIs(name, "CD_TwoHandWeapon_Sword"))
+        if (PartIs(name, "TwoHandWeapon_Sword"))
         {
             if (twoHand)
                 return false;
@@ -184,7 +196,7 @@ static bool FindGrip(uintptr_t character, Grip* g)
             twoHand = e + 8;
             twoHandName = name;
         }
-        else if (NameIs(name, "CD_MainWeapon_Sword_R"))
+        else if (PartIs(name, "MainWeapon_Sword_R"))
         {
             if (swordR)
                 return false;
@@ -207,7 +219,7 @@ static bool FindGrip(uintptr_t character, Grip* g)
 
     uintptr_t manager = Ptr(character + 0x130);
 
-    for (uintptr_t off : { (uintptr_t)0, (uintptr_t)8, (uintptr_t)0x78 })
+    for (uintptr_t off : { (uintptr_t)0, (uintptr_t)8, (uintptr_t)0xB0 })
         manager = manager ? Ptr(manager + off) : 0;
 
     if (!manager)
@@ -260,10 +272,10 @@ static void __stdcall OnCombat(Registers* r)
     {
         uintptr_t player = Player();
 
-        if (!player || player != r->r14 || !r->r15 || Ptr(player + 0x88) != r->r15)
+        if (!player || player != r->r15 || !r->r14 || Ptr(player + 0x88) != r->r14)
             return;
 
-        uintptr_t action = Ptr(r->r15 + 0x18);
+        uintptr_t action = Ptr(r->r14 + 0x18);
         Grip g;
 
         if (!action || !InTwoHandChart(action) || !FindGrip(player, &g))
@@ -422,7 +434,8 @@ static uintptr_t FindCombat()
 
     for (int i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++sec)
     {
-        if (!(sec->Characteristics & IMAGE_SCN_MEM_EXECUTE) || memcmp(sec->Name, ".text", 5) != 0)
+        // The game's code (its section names change from build to build).
+        if (!(sec->Characteristics & IMAGE_SCN_CNT_CODE) || (sec->Characteristics & IMAGE_SCN_MEM_WRITE))
             continue;
 
         const unsigned char* p = (const unsigned char*)(module + sec->VirtualAddress);

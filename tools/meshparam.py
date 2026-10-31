@@ -1,5 +1,8 @@
-"""Reads meshparam_example_*.xml files (the game's per-character mesh lists)."""
+"""Reads meshparam_example_*.xml files (the game's per-character mesh lists).
+Part names are read as the game names them now (names.rename_text)."""
 import re
+
+import names as part_names
 
 SLOT_NAMES = {0: 'Body', 1: 'Head', 2: 'Hair', 3: 'Beard', 4: 'Mustache', 5: 'Whiskers', 6: 'Eyebrows'}
 
@@ -15,6 +18,7 @@ def parse(path):
     MeshList children and the list of mesh file names.
     """
     text = strip_comments(open(path, encoding='utf-8-sig', errors='replace').read())
+    text = part_names.rename_text(text, part_names.game_pabc_paths())
     result = {}
     for pd in re.finditer(r'<ParamDesc\s+Index="(\d+)"([^>]*)>(.*?)</ParamDesc>', text, re.S):
         slot = int(pd.group(1))
@@ -36,9 +40,9 @@ def mesh_key(meshset):
 
 
 def race_code(meshset):
-    """cd_phw_... -> 'phw' (human woman), cd_pom_... -> 'pom' (orc man), ..."""
+    """(cd_)phw_... -> 'phw' (human woman), (cd_)pom_... -> 'pom' (orc man), ..."""
     for n in meshset['names']:
-        m = re.match(r'cd_(p[a-z]{2})_', n)
-        if m:
-            return m.group(1)
+        code = part_names.race_code(n)
+        if code:
+            return code
     return ''

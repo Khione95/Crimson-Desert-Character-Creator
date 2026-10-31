@@ -8,10 +8,13 @@
 // skeleton, animations and appearance the character is built with - the same
 // fields Female Animations.field.json changes:
 //
-//   +0x8C  u16  appearance_name        +0x96  u16  lookup_24
-//   +0x8E  u16  character_prefab_path  +0x98  u16  lookup_25
-//   +0x90  u16  skeleton_name          +0xBA  u16  f36
-//   +0x1CC u32  default_action_action_index
+//   +0x7C  u16  appearance_name        +0x88  u16  lookup_24
+//   +0x7A  u16  character_prefab_path  +0x80  u16  lookup_25
+//   +0x8E  u16  skeleton_name          +0x94  u16  f36
+//   +0xE0  u32  default_action_action_index
+//
+// (Since the 2026-10-30 update. Told by the values: Kliff 7, 8, 9, 11, 12, f36
+// 1, action 0; Damian 20, 21, 22, 24, 25, f36 2, action 0x4CB714A1.)
 //
 // Changing them takes effect when the character is next built (loading a save).
 
@@ -26,6 +29,9 @@ bool CharTableAvailable();
 
 // Identifies the table the game currently uses; changes if it is rebuilt.
 uintptr_t CharTableInstance();
+
+// The manager's list of entries: replaced while the game starts.
+uintptr_t CharTableList();
 
 // Finds the table, falling back to a slow memory search if the game's
 // pointer is not where this game version keeps it.

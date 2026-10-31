@@ -32,6 +32,11 @@ extern const int EYE_COLOUR_COUNT;
 
 void EyesInit(const char* folder);
 
+#if CC_RESEARCH
+// Research: the bone list and XML loaders hooked at the start (eyes.cpp).
+void EyesResearchEarly(const char* folder);
+#endif
+
 // A character's colour (index into EYE_COLOURS), used the next time their
 // eyes load. Stored in eyes.txt (Kliff), eyes_damiane.txt, eyes_oongka.txt.
 void EyesChoose(int ch, int colour);

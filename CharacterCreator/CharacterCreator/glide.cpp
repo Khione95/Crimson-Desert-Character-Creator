@@ -23,13 +23,13 @@
 // ---------------------------------------------------------------------------
 
 // mov rbx,[rax+40h] / mov ebx,[rbx+18h] / mov [rsp+30h],ebx / mov rax,[rcx] /
-// mov dl,2 / call [rax+188h]: in the state change (rva 1EC373C on the known
-// build). The first 7 bytes are replaced by a jump.
+// mov dl,2 / call [rax+188h]: in the state change (rva 206E16C on the known
+// build, 206D13C on the patch of 11:19, 206BEDC on the 2026-10-30 update's first; 1EC373C before the 2026-10-30 update). The first 7 bytes are replaced by a jump.
 static const unsigned char STATE_CHANGE_CODE[] = {
     0x48, 0x8B, 0x58, 0x40, 0x8B, 0x5B, 0x18, 0x89, 0x5C, 0x24, 0x30, 0x48, 0x8B, 0x01, 0xB2, 0x02,
     0xFF, 0x90, 0x88, 0x01, 0x00, 0x00 };
 static const size_t PATCH_SIZE = 7;
-static const uintptr_t KNOWN_RVA = 0x1EC373C;
+static const uintptr_t KNOWN_RVA = 0x206E16C;
 
 // The flight states (basic_upper_glide / basic_lower_glide), by the id at
 // +0x18 of the state ([r15+0x10] at the hook): starting, gliding, fast and

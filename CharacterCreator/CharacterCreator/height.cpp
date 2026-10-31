@@ -7,7 +7,7 @@
 
 static const size_t OWNER = 0x10;           // component / controller -> entity
 static const size_t SCALE_OBJECT = 0x1C0;   // component -> scale object
-static const size_t BODY_SCALE = 0x84;      // scale object -> float
+static const size_t BODY_SCALE = 0x98;      // scale object -> float
 
 static const DWORD POLL_MS = 100;
 
@@ -193,6 +193,20 @@ static void Apply()
         __try
         {
             float current = *scale;
+
+            // Not a body scale after all (the object's layout changed with a
+            // game update): left alone. The character's own scale is within
+            // 20% of the height they were built with.
+            float built = base * (100 + IdentityLoadedHeight(ch)) / 100.0f;
+            float lowest = wanted < built ? wanted : built, highest = wanted > built ? wanted : built;
+
+            if (!(current > lowest * 0.8f && current < highest * 1.2f))
+            {
+                Log("height: %S's scale object holds %f, not a body scale - the live height preview stays off", CHARACTER_NAMES[ch], current);
+                f.object = 0;
+                f.searches = SEARCHES_MAX;
+                continue;
+            }
 
             if (current - wanted > 0.00001f || wanted - current > 0.00001f)
             {

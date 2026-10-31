@@ -4,7 +4,7 @@ The game's dye slots per model (gamedata/binarystaticinfo__/bin/
 partprefabdyeslotinfo.staticinfoheader / .staticinfobody):
 
   header: u16 count, then (u32 key, u32 offset in the body) per entry
-  body:   per entry u32 key, ... the part's name, its dye slots (materials),
+  body:   per entry u32 0, u32 key, ... the part's name, its dye slots (materials),
           and the model path the entry belongs to
   key:    hashlittle(model path, 810718), as the archive paths are hashed
 
@@ -39,7 +39,12 @@ def build(group, out):
     body = game_files.read(next(game_files.entries('^' + BASE + r'\.staticinfobody$')))
     by_key, rows = entries(header, body)
 
-    models = sorted(p for p in read_group(group) if p.startswith('character/model/') and
+    # A loose folder (DMM 4.5 prefers those) or a packed group.
+    if os.path.exists(os.path.join(group, '0.pamt')):
+        paths = read_group(group)
+    else:
+        paths = [os.path.relpath(os.path.join(d, f), group).replace(os.sep, '/') for d, _, fs in os.walk(group) for f in fs]
+    models = sorted(p for p in paths if p.startswith('character/model/') and
                     p.rsplit('/', 1)[1].startswith('zz_') and p.endswith('.pac'))
     new_body = bytearray(body)
     new_rows = list(rows)
@@ -56,7 +61,7 @@ def build(group, out):
         if copy_key in by_key:
             continue
         clone = bytearray(record.replace(original.encode(), copy.encode()))
-        struct.pack_into('<I', clone, 0, copy_key)
+        struct.pack_into('<I', clone, 4, copy_key)
         # The part's name (u32 length and text after the key and 9 bytes)
         # becomes the copy's (zz_... as the copied prefab is named).
         name_len, = struct.unpack_from('<I', clone, 13)

@@ -17,4 +17,12 @@
 #define CC_RESEARCH 0
 #endif
 
+// The Barber edition (msbuild /p:CcBarber=1): no editor and no hotkeys - the
+// look is changed at the game's barber, which shows the package's lists, and
+// the plugin keeps no look of its own. Everything else (glide, two-handed
+// grip, part table, eyes) is the same in both editions.
+#ifndef CC_BARBER
+#define CC_BARBER 0
+#endif
+
 #endif //PCH_H

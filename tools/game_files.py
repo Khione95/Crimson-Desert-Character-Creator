@@ -19,6 +19,11 @@ import lz4.block
 
 GAME = r'E:\SteamLibrary\steamapps\common\Crimson Desert'
 INDEX = os.path.join(os.path.expanduser('~'), 'Desktop', r'Crimson Browser Sharp\cache\archive_index.json')
+# game_index.py's index (made from the game's own group indexes) wins when it
+# is there: right after a game update the other one is out of date.
+OWN_INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache', 'archive_index.json')
+if os.path.exists(OWN_INDEX):
+    INDEX = OWN_INDEX
 
 ENTRY = re.compile(rb'\{"ArchiveId":"(\d+)","EntryIndex":\d+,"RelativePath":"([^"]+)"[^{}]*?"PackedSize":(\d+),'
                    rb'"UnpackedSize":(\d+),"Offset":(\d+),"PazIndex":(\d+),"Compression":"(\w+)","Encryption":"(\w+)"')

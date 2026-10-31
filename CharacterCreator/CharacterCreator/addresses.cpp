@@ -11,40 +11,45 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// The build the addresses were taken from (game 2.03.01 / 2.03.02)
+// The build the addresses were taken from (the second patch of the 2026-10-30
+// game update, the DLC: 20:07)
 // ---------------------------------------------------------------------------
 
-static const DWORD KNOWN_TIMESTAMP = 0x6AB28F00, KNOWN_IMAGE_SIZE = 0x173AB000;
+static const DWORD KNOWN_TIMESTAMP = 0x6AE46DD0, KNOWN_IMAGE_SIZE = 0x14268000;
 
+// 0: not known on this build (the part that needs it stays off).
 static const uintptr_t KNOWN_RVAS[ADDR_COUNT] = {
-    0x72BF80,       // SetDecoration(controller, index, value)
-    0x72CFB0,       // QueueMeshChange(controller + 0xF8, {slot, old, new})
-    0x726C50,       // Rebuild(controller)
-    0x3D2BE0,       // GrowBytes(vector, count)
-    0x142BDD0,      // LoadXml(path, root out, ...)
-    0x2438A40,      // ParseAppearance(table, root, ...)
-    0x6D69A48,      // CharacterInfoManager*
-    0x5B4C6C0,      // scale component vtable
-    0x5B4D168,      // scale object vtable
-    0x559DD98,      // CharacterCustomizationController vtable
-    0x58FE780,      // CharacterInfoManager vtable
-    0x2E8C460,      // BuildLipSyncPath(out, model folder, line)
-    0x6D20E78,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
-    0x2C7C300,      // AttachPart(part, part manager, socket record, child socket, ...)
-    0x6D69190,      // the world (the player: +0x30 +0x58 +0xD8 +0x68 +0x40)
-    0x6C8CCE8,      // the name table (+0x58: 16 bytes a name)
+    0x803140,       // SetDecoration(controller, index, value, unused)
+    0x804780,       // QueueMeshChange(controller + 0xF8, {slot, old, new})
+    0x7FD820,       // Rebuild(controller, appearance list holder)
+    0x441B30,       // GrowBytes(vector, count)
+    0x160B0B0,      // LoadXml(path, root out, ...)
+    0x26267F0,      // ParseAppearance(table, root, ...)
+    0x71B2960,      // CharacterInfoManager*
+    0x5F087A8,      // scale component vtable
+    0x5F09F40,      // scale object vtable
+    0x59205A0,      // CharacterCustomizationController vtable
+    0x5CA7790,      // CharacterInfoManager vtable
+    0x31339E0,      // BuildLipSyncPath(out, model folder, line)
+    0x7167BA8,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
+    0x2F18470,      // AttachPart(part, part manager, socket record, child socket, ...)
+    0x71B1A40,      // the world (the player: +0x30 +0x58 +0xD8 +0x68 +0x40)
+    0x70CDC60,      // the name table (+0x58: 16 bytes a name)
+    0x803010,       // NormalizeDecoration(controller, index, value): the value SetDecoration takes
+    0x5D76218,      // AppearanceTableData vtable (the controller's +0x138: Rebuild's second argument)
 };
 
 static const char* const NAMES[ADDR_COUNT] = {
     "SetDecoration", "QueueMeshChange", "Rebuild", "GrowBytes", "LoadXml", "ParseAppearance",
     "ManagerPointer", "ScaleComponentVtable", "ScaleObjectVtable", "ControllerVtable", "ManagerVtable", "LipSyncPath",
-    "CameraSettings", "AttachPart", "WorldPointer", "NamesPointer",
+    "CameraSettings", "AttachPart", "WorldPointer", "NamesPointer", "NormalizeDecoration", "AppearanceTableVtable",
 };
 
 // Classes found by their RTTI name on other builds.
 static const struct { AddressId id; const char* name; } RTTI_CLASSES[] = {
     { ADDR_CONTROLLERVTABLE, ".?AVCharacterCustomizationController@pa@@" },
     { ADDR_MANAGERVTABLE, ".?AVCharacterInfoManager@pa@@" },
+    { ADDR_APPEARANCETABLEVTABLE, ".?AVAppearanceTableData@pa@@" },
 };
 
 struct Signature
@@ -327,6 +332,7 @@ static bool Plausible(AddressId id, uintptr_t address)
     case ADDR_SCALEOBJECTVTABLE:
     case ADDR_CONTROLLERVTABLE:
     case ADDR_MANAGERVTABLE:
+    case ADDR_APPEARANCETABLEVTABLE:
         return InRanges(g_data, address) && InRanges(g_code, *(const uintptr_t*)address);
 
     default:
@@ -347,7 +353,7 @@ void AddressesInit()
     if (g_knownBuild && !test)
     {
         for (int i = 0; i < ADDR_COUNT; ++i)
-            g_addresses[i] = g_base + KNOWN_RVAS[i];
+            g_addresses[i] = KNOWN_RVAS[i] ? g_base + KNOWN_RVAS[i] : 0;
 
         Log("addresses: known game build");
         return;

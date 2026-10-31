@@ -87,6 +87,15 @@ void GameRequestValues(int ch);
 // Writes what the plugin knows about a character's controllers to the log.
 void GameLogCharacter(int ch);
 
+#if CC_RESEARCH
+// Research: the controller's arrays, and writing one bone value (game.cpp).
+void GameResearchArrays(int ch);
+void GameResearchBoneGrow(int ch);
+void GameResearchBone(int ch, size_t offset, bool object, uint32_t slot, uint32_t value, int width, bool rebuild);
+void GameResearchRebuild(int ch);
+bool GameResearchStandIn(int ch);   // research builds without the package: a controller stands in for them
+#endif
+
 // A player character's appearance controller (Kliff's first), 0 if none yet.
 uintptr_t GameMainController();
 
@@ -107,6 +116,9 @@ static const int HEAD_AWAY_MS = 1000;
 // on the way back - wanted for a new eye colour, not for the face shape.
 void GameReloadHead(int ch, int awayMs = HEAD_AWAY_MS, int awayOption = -1, bool retry = true);
 
+// Rebuilds the character (what the barber does): shows changed face and body shapes.
+void GameRebuild(int ch);
+
 // Picks the head shown during a rebuild when none was given (the menu knows
 // which heads have other eyes): chooser(character, current head) -> option.
 typedef int (*HeadChooser)(int ch, int currentHead);
@@ -115,3 +127,7 @@ void GameSetHeadChooser(HeadChooser chooser);
 // True while a character's head rebuild is requested or running (their head
 // is briefly another one).
 bool GameHeadRebuilding(int ch);
+
+// The character's values sent again and the game's Rebuild, on a game thread, a
+// moment after the last request (the barber's way: no head swap).
+void GameRequestRebuild(int ch);
