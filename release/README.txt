@@ -13,7 +13,7 @@ First remove the previous version:
   - remove "Female Animations.field.json" if you use it - the mod now switches
     gender itself
 
-With DMM (recommended; DMM 4.5 Beta 2 or newer: older versions can't mount mods
+With DMM (recommended; DMM 4.5 or newer: older versions can't mount mods
 for the game update of 2026-10-30)
   1. Import the downloaded zip in DMM as it is (don't unzip and re-zip it).
   2. Make sure all parts are enabled: "Character Creator Enhanced - Anywhere /

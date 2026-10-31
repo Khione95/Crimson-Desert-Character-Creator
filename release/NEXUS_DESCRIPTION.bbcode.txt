@@ -28,6 +28,7 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]Scars[/b]: face and body, with colour, opacity, position and size
 • [b]Paint and dirt[/b]: face and body war paint and grime, with colour, opacity, position and size
 • [b]Female Armor Fit[/b] (optional download): male armor reshaped for a woman's body - bust, waist, shoulders, arms - used only when a woman wears it; men keep the original look
+• [b]Icons[/b]: every hair, beard, head and body has a picture drawn from its own model on one mannequin, in the style of the game's barber icons; tattoos, scars, dirt and makeup have pictures too
 
 [size=4][b]Controls[/b][/size]
 • [b]F6 / F7 / F8[/b] - open the editor for Kliff / Damiane / Oongka (the same key closes it and keeps your changes)
@@ -39,7 +40,7 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]X[/b] - reset the sliders on a Face Shape or Body Shape page; [b]Shift+X[/b] - reset the character's whole look (Esc undoes it; gender and race stay)
 
 [size=4][b]Requirements[/b][/size]
-• [b]DMM 4.5 Beta 2 or newer[/b] (recommended) - it installs everything, including the .asi and the ASI loader. Older versions can't mount mods for the game's DLC update; until it is out on Nexus, get the beta from DMM's Discord
+• [b]DMM 4.5 or newer[/b] (recommended) - it installs everything, including the .asi and the ASI loader. Older versions can't mount mods for the game's DLC update
 • Or: another mod manager for the game files, plus the [b]Ultimate ASI Loader[/b] in the game's bin64 folder
 
 [size=4][b]Installation[/b][/size]
@@ -64,6 +65,7 @@ A separate download in the Files tab. Most armor in the game only exists for men
 1. Import [i]Female Armor Fit[/i] in DMM next to Character Creator and click [b]Apply[/b]. Keep its [i]Dyes[/i] part enabled, so reshaped armor can be dyed.
 2. Don't use it together with mods that also replace the game's part table (for example Cloak Remover) or that swap the same armor pieces to other armor for women (for example my Female Armor Module) - use one or the other.
 3. It is made for the current game version. After a game update, disable it until an updated version is out.
+4. Update it together with Character Creator: women's weapons and shields need the matching versions (Character Creator 9.1.18 with Female Armor Fit 1.0.6).
 A few pieces with unusual models still keep their male shape.
 
 [size=4][b]Good to know[/b][/size]
