@@ -22,6 +22,7 @@ import re
 import shutil
 import sys
 
+import icon_render
 from meshparam import SLOT_NAMES, mesh_key, parse, race_code, strip_comments
 
 # The mod's source folders sit on the Desktop.
@@ -34,6 +35,7 @@ META = r'0009\character\descriptors\customizationmeta'
 MESHPARAM = META + r'\meshparam_example_kliff.xml'
 PALETTE = META + r'\customizationcolorpalette.xml'
 ICONS = r'0012\ui\texture\image\customizeimage'
+ICON_RENDERS = icon_render.OUT
 DECORATION = META + r'\decorationparam_player.xml'
 CUSTOMIZATION_FOLDER = r'0009\character\descriptors\customization'
 
@@ -44,7 +46,7 @@ EXTRACT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cache'
 ORIGINAL_META = os.path.join(EXTRACT, META)
 ORIGINAL_FILES = [r'^character/descriptors/customizationmeta/[^/]+$',
                   r'^character/descriptors/characterdescription/ph[mw]_description_player_(001|kliff)\.xml$',
-                  r'^character/descriptors/socketbonedata/1_pc/[12]_ph[mw]/ph[mw]_(damian_|kliff_)?01\.pab\.sockets\.xml$',
+                  r'^character/descriptors/socketbonedata/1_pc/[12]_ph[mw]/ph[mw]_(damian_|kliff_|oongka_)?01\.pab\.sockets\.xml$',
                   r'^character/appearance/1_pc/(1_phm/cd_phm_(macduff|oongka)|2_phw/cd_phw_damian)/[^/]+_00000\.app_xml$']
 
 
@@ -57,7 +59,9 @@ WOMEN_DESCRIPTION = r'0009\character\descriptors\characterdescription\phw_descri
 MEN_DESCRIPTION = r'0009\character\descriptors\characterdescription\phm_description_player_kliff.xml'
 WOMEN_SOCKETS = [r'0009\character\descriptors\socketbonedata\1_pc\2_phw\phw_01.pab.sockets.xml',
                  r'0009\character\descriptors\socketbonedata\1_pc\2_phw\phw_damian_01.pab.sockets.xml']
+MEN_DESCRIPTION_001 = r'0009\character\descriptors\characterdescription\phm_description_player_001.xml'
 MEN_SOCKETS = r'0009\character\descriptors\socketbonedata\1_pc\1_phm\phm_01.pab.sockets.xml'
+OONGKA_SOCKETS = r'0009\character\descriptors\socketbonedata\1_pc\1_phm\phm_oongka_01.pab.sockets.xml'
 SOCKET_ATTRIBUTES = ('InSocketBone', 'OutSocketBone', 'InChildSocketBone', 'OutChildSocketBone', 'BagSocketBone',
                      'VehicleBagSocketBone')
 
@@ -81,46 +85,108 @@ def _definitions(text):
     return out
 
 
+def _socket_list(text):
+    """The file's <SocketList> part: StackEquipInfo after it names sockets too, without a parent."""
+    start = text.index('<SocketList')
+    return text[start:text.index('</SocketList>', start)]
+
+
 def _sockets(text):
     """Socket name -> its <Socket .../> line."""
-    return {m.group(1): m.group(0) for m in re.finditer(r'<Socket\s+Name="([^"]+)"[^>]*/>', text)}
+    return {m.group(1): m.group(0) for m in re.finditer(r'<Socket\s+Name="([^"]+)"[^>]*/>', _socket_list(text))}
+
+
+def _insert_in_section(text, opener, lines):
+    """The lines at the end of a section. Since the 2026-10-30 update the game's
+    files close elements with a bare </>, so the closing tag can't be searched for."""
+    rows = text.split('\n')
+    first = next((i for i, row in enumerate(rows) if row.strip() == f'<{opener}>'), None)
+    if first is None:
+        raise SystemExit(f'no <{opener}> in the description')
+    close = next((i for i in range(first + 1, len(rows)) if rows[i].strip() in ('</>', f'</{opener}>')), None)
+    if close is None:
+        raise SystemExit(f'<{opener}> is not closed in the description')
+    indent = rows[close][:len(rows[close]) - len(rows[close].lstrip())] + '\t'
+    return '\n'.join(rows[:close] + [f'{indent}{line} <!-- Character Creator -->' for line in lines] + rows[close:])
+
+
+def _dock_overrides(text):
+    """PartName -> its line in <Bag_For_Dock>."""
+    rows = text.split('\n')
+    first = next((i for i, row in enumerate(rows) if row.strip() == '<Bag_For_Dock>'), None)
+    out = {}
+    for row in rows[first + 1:] if first is not None else ():
+        if row.strip() in ('</>', '</Bag_For_Dock>'):
+            break
+        m = re.search(r'PartName="([^"]+)"', row)
+        if m:
+            out[m.group(1)] = row.strip()
+    return out
 
 
 def women_weapon_files(base, game_out):
+    import game_files
     from names import rename_text
+    from pab import read_pab
     mod = _definitions(rename_text(_read(os.path.join(base, WOMEN_DESCRIPTION))))
-    game_text = _read(os.path.join(EXTRACT, WOMEN_DESCRIPTION))
+    game_text = _read(os.path.join(EXTRACT, WOMEN_DESCRIPTION)).replace('\r\n', '\n')
     game = _definitions(game_text)
-    men = _definitions(_read(os.path.join(EXTRACT, MEN_DESCRIPTION)))
-    added = [men.get(part, line) for part, line in mod.items() if part not in game]
-    if added:
-        indent = '\t'
-        block = ''.join(f'{indent}{line} <!-- Character Creator -->\n' for line in added)
-        game_text = game_text.replace('</PartInOutSocketInfo>', block + '</PartInOutSocketInfo>', 1)
+    men_texts = [_read(os.path.join(EXTRACT, path)).replace('\r\n', '\n') for path in (MEN_DESCRIPTION, MEN_DESCRIPTION_001)]
+    men = {}
+    for text in men_texts:
+        for part, line in _definitions(text).items():
+            men.setdefault(part, line)
+    # Everything a man or the mod's old copy can carry and the game's women can't:
+    # a woman wearing Kliff's or Oongka's weapons keeps them in hand and on her back.
+    added = [men.get(part) or mod[part] for part in {**men, **mod} if part not in game]
+    if not added:
+        raise SystemExit('the women\'s description: no weapon entries to add')
+    game_text = _insert_in_section(game_text, 'PartInOutSocketInfo', added)
+    docked = _dock_overrides(game_text)
+    dock = []
+    for text in men_texts:
+        for part, line in _dock_overrides(text).items():
+            if part not in docked:
+                docked[part] = line
+                dock.append(line)
+    if dock:
+        game_text = _insert_in_section(game_text, 'Bag_For_Dock', dock)
     _write(os.path.join(game_out, WOMEN_DESCRIPTION), game_text)
-    print(f'  women\'s description: the game\'s own with {len(added)} weapon entries of the mod:',
+    written = _definitions(_read(os.path.join(game_out, WOMEN_DESCRIPTION)))
+    if len(written) != len(game) + len(added):
+        raise SystemExit(f'the women\'s description: {len(written)} entries written, {len(game) + len(added)} wanted')
+    print(f'  women\'s description: the game\'s own with {len(added)} weapon entries and {len(dock)} dock overrides:',
           ', '.join(re.search(r'PartName="([^"]+)"', l).group(1) for l in added))
 
-    needed = set()
-    for line in added:
-        for attr in SOCKET_ATTRIBUTES:
-            m = re.search(attr + r'="([^"]+)"', line)
-            if m:
-                needed.add(m.group(1))
-    men_sockets = _sockets(_read(os.path.join(EXTRACT, MEN_SOCKETS)))
+    # Every socket the men have: what a woman carries may name any of them, and
+    # a socket her file lacks puts the part at her feet.
+    bones = {b['name'] for b in read_pab(game_files.read(next(game_files.entries(r'^character/model/1_pc/2_phw/phw_01\.pab$'))))[1]}
+    men_sockets = {}
+    for path in (MEN_SOCKETS, OONGKA_SOCKETS):
+        for name, line in _sockets(_read(os.path.join(EXTRACT, path))).items():
+            men_sockets.setdefault(name, line)
     for path in WOMEN_SOCKETS:
-        text = _read(os.path.join(EXTRACT, path))
+        text = _read(os.path.join(EXTRACT, path)).replace('\r\n', '\n')
         have = _sockets(text)
         mod_sockets = _sockets(rename_text(_read(os.path.join(base, path)))) if os.path.exists(os.path.join(base, path)) else {}
-        extra = [men_sockets.get(n) or mod_sockets.get(n) for n in sorted(needed) if n not in have and (men_sockets.get(n) or mod_sockets.get(n))]
-        missing = [n for n in sorted(needed) if n not in have and not (men_sockets.get(n) or mod_sockets.get(n))]
+        extra, no_parent = [], []
+        for name, line in {**mod_sockets, **men_sockets}.items():
+            if name in have:
+                continue
+            parent = re.search(r'Parent="([^"]+)"', line)
+            if parent and parent.group(1) in bones:
+                extra.append(line)
+            else:
+                no_parent.append(name)
         if extra:
             text = text.replace('</SocketList>', ''.join(f'\t\t{l}\n' for l in extra) + '\t</SocketList>', 1)
-            count = len(_sockets(text.split('</SocketList>')[0]))
+            count = len(_sockets(text))
             text = re.sub(r'<SocketList Count="\d+">', f'<SocketList Count="{count}">', text, count=1)
         _write(os.path.join(game_out, path), text)
-        print(f'  {os.path.basename(path)}: the game\'s own with {len(extra)} sockets for them'
-              + (f' (not defined anywhere: {", ".join(missing)})' if missing else ''))
+        if len(_sockets(_read(os.path.join(game_out, path)))) != len(have) + len(extra):
+            raise SystemExit(f'{path}: the sockets were not written')
+        print(f'  {os.path.basename(path)}: the game\'s own with {len(extra)} sockets'
+              + (f' (their bone is not in the woman\'s skeleton: {", ".join(sorted(no_parent))})' if no_parent else ''))
 
 
 def extract_originals():
@@ -159,7 +225,7 @@ RACE_ORDER = ['phm', 'phw', 'pom', 'pow', 'pdm', 'pdw', 'pgm', 'pgw', 'ptm', '']
 FOLDER_ORDER = ['Human Male', 'Human Female', 'Orc Male', 'Orc Female',
                 'Dwarf Male', 'Dwarf Female', 'Goblin Male', 'Goblin Female']
 
-VERSION = '9.1.17'
+VERSION = '9.1.18'
 # Body scales that replace the source's: its goblin woman (0.50) was about half
 # a goblin man's height; 0.88 as for the goblin man.
 BASE_SCALE_FIXES = {'Goblin Female': '0.88'}
@@ -660,14 +726,15 @@ def read_decoration_params(path):
 
 
 def read_texture_palettes(path):
-    """{palette index: [texture file, ...]}"""
+    """{palette index: [(texture file, icon path), ...]}"""
     if not os.path.exists(path):
         print('  texture palette not found, tattoo types will use the parameter range')
         return {}
     text = strip_comments(open(path, encoding='utf-8-sig', errors='replace').read())
     result = {}
     for m in re.finditer(r'<TexturePalette\s+Index="(\d+)"[^>]*>(.*?)</TexturePalette>', text, re.S):
-        result[int(m.group(1))] = re.findall(r'File="([^"]*)"', m.group(2))
+        result[int(m.group(1))] = [(re.search(r'File="([^"]*)"', t).group(1), (re.search(r'IconPath="([^"]*)"', t) or [''] * 2)[1])
+                                   for t in re.findall(r'<Texture\b[^>]*File="[^>]*>', m.group(2))]
     return result
 
 
@@ -704,6 +771,26 @@ def convert_icon(src, dst):
         flat = Image.new('RGBA', im.size, ICON_BACKGROUND + (255,))
         flat.alpha_composite(im)
         flat.convert('RGB').save(dst, 'JPEG', quality=85, optimize=True)
+
+
+def game_icon(path, dst):
+    """A tattoo's or makeup's icon: the game's own (ui/...)."""
+    import io
+    import game_files
+    from PIL import Image
+    if path.lower().startswith('ui/'):
+        found = next(game_files.entries('(?i)^' + re.escape(path) + '$'), None)
+        if not found:
+            return False
+        im = Image.open(io.BytesIO(game_files.read(found)))
+    else:
+        return False
+    im = im.convert('RGBA')
+    im.thumbnail((ICON_SIZE, ICON_SIZE))
+    flat = Image.new('RGBA', im.size, ICON_BACKGROUND + (255,))
+    flat.alpha_composite(im)
+    flat.convert('RGB').save(dst, 'JPEG', quality=85, optimize=True)
+    return True
 
 
 def pack_runtime_data(folder, out_path):
@@ -921,7 +1008,8 @@ def main():
              '# mesh <slot> <Kliff option> <race> <shown 0/1> <icon or -> <mesh file> <Damiane option> <Oongka option>',
              '# color <palette> <index> <r> <g> <b> <name>',
              '# param <index> <uikey> <min> <max> <default> <palette or -1>',
-             '# texture <palette> <index> <file or ->',
+             '# texture <palette> <index> <file or -> <icon or ->',
+             '# uiicon <key> <icon>: none, gender0, gender1, race<gender><race>',
              '# loaded <gender 0 male / 1 female> <race 0 human / 1 orc / 2 dwarf / 3 goblin>',
              f'loaded {GENDERS.index(gender_name)} {RACES.index(race_name)}',
              '# marker <slot> <kliff option count>: Damiane has one more option, Oongka two',
@@ -938,7 +1026,15 @@ def main():
             icon = '-'
             src_name = os.path.basename(ms['icon'].replace('/', os.sep))
             src = os.path.join(icon_dir, src_name)
-            if src_name and os.path.exists(src):
+            # Drawn from the option's own model (icon_render.py), else the old picture.
+            part = icon_render.original(ms['names'][0]) if ms['names'] else ''
+            rendered = os.path.join(ICON_RENDERS, part + '.png')
+            if part and os.path.exists(rendered):
+                icon = part + '.jpg'
+                if icon not in converted:
+                    convert_icon(rendered, os.path.join(runtime_out, 'icons', icon))
+                    converted[icon] = icon
+            elif src_name and os.path.exists(src):
                 icon = converted.get(src_name)
                 if not icon:
                     icon = os.path.splitext(src_name)[0].lower() + '.jpg'
@@ -952,6 +1048,20 @@ def main():
                 shown = 0
             lines.append(f'mesh {slot} {i} {race_code(ms) or "-"} {shown} {icon} {name} '
                          f'{orders[1][slot][id(ms)]} {orders[2][slot][id(ms)]}')
+
+    # The gender and race pages show a head of each; "none" is the game's empty picture.
+    for key, code in (('gender0', 'phm'), ('gender1', 'phw'),
+                      *((f'race{g}{r}', 'p' + 'hodg'[r] + 'mw'[g]) for g in range(2) for r in range(4))):
+        head = icon_render.MANNEQUINS.get(code, (None,))[0]
+        if not head:
+            head = next((p for p in sorted(f[:-4] for f in os.listdir(ICON_RENDERS)) if '_head_' in p and p.replace('cd_', '').startswith(code + '_')), None)
+        if head and os.path.exists(os.path.join(ICON_RENDERS, head + '.png')):
+            if head + '.jpg' not in converted:
+                convert_icon(os.path.join(ICON_RENDERS, head + '.png'), os.path.join(runtime_out, 'icons', head + '.jpg'))
+                converted[head + '.jpg'] = head + '.jpg'
+            lines.append(f'uiicon {key} {head}.jpg')
+    if game_icon('ui/texture/image/customizeimage/cd_customize_empty_image.dds', os.path.join(runtime_out, 'icons', 'cc_none.jpg')):
+        lines.append('uiicon none cc_none.jpg')
 
     for index, colors in sorted(read_palettes(os.path.join(game_out, PALETTE)).items()):
         counts = {}
@@ -1047,8 +1157,30 @@ def main():
     # Slinky's older copy if the game's has not been extracted.
     game_palette = os.path.join(ORIGINAL_META, TEXTURE_PALETTE_FILE)
     for index, files in sorted(read_texture_palettes(game_palette if os.path.exists(game_palette) else TEXTURE_PALETTE).items()):
-        for i, f in enumerate(files):
-            lines.append(f'texture {index} {i} {os.path.basename(f) or "-"}')
+        for i, (f, path) in enumerate(files):
+            icon = '-'
+            # The game's picture, also when its list names only the texture.
+            picture = icon_render.game_picture(os.path.basename(f)[:-4]) if f else None
+            if picture:
+                path = picture
+            if path.lower().startswith('ui/') and 'cd_customize_empty_image' not in path.lower():
+                icon = 'type_' + os.path.basename(path).lower().replace('.dds', '.jpg')
+                if icon not in converted:
+                    if game_icon(path, os.path.join(runtime_out, 'icons', icon)):
+                        converted[icon] = icon
+                    else:
+                        print('  no icon', path)
+                        icon = '-'
+            elif f:
+                # The game has no picture: icon_render.py made one.
+                name = 'type_' + os.path.basename(f)[:-4].lower()
+                rendered = os.path.join(ICON_RENDERS, name + '.png')
+                if os.path.exists(rendered):
+                    icon = name + '.jpg'
+                    if icon not in converted:
+                        convert_icon(rendered, os.path.join(runtime_out, 'icons', icon))
+                        converted[icon] = icon
+            lines.append(f'texture {index} {i} {os.path.basename(f) or "-"} {icon}')
 
     with open(os.path.join(runtime_out, 'menu.txt'), 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
@@ -1071,6 +1203,9 @@ def main():
     # The makeup mask on the offered human heads (tools/head_makeup.py).
     import head_makeup
     head_makeup.build(os.path.join(game_out, '0009'), os.path.join(runtime_out, 'menu.txt'))
+    # The eye colours the game has no texture for (tools/iris_colours.py).
+    import iris_colours
+    iris_colours.build(os.path.join(game_out, '0009'))
     # Each character's own copies of the heads' face shapes, marked, so the
     # Face Shape sliders reach only them (tools/private_shapes.py); then the
     # sliders' data for the plugin (tools/face_sliders.py, faceshape_data.inc).

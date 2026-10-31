@@ -215,11 +215,11 @@ def moves_for(bones, axes):
 
 
 def pabc_records(data):
-    size = {0x34: 196, 0x35: 392}[data[4]]
+    # Version 5 has a second table after these (private_shapes.marked).
     count = struct.unpack_from('<I', data, 16)[0]
     out = {}
     for i in range(count):
-        at = 20 + size * i
+        at = 20 + 196 * i
         h = struct.unpack_from('<I', data, at)[0]
         out[h] = struct.unpack_from('<3f', data, at + 4 + 39 * 4)
     return out
@@ -316,11 +316,11 @@ def body_data(available):
     Oongka's body comes from their appearance file, slot 0 empty: the plugin
     sets their own option so their copy is used)."""
     tag_hash = private_shapes.tag_bone_hash(private_shapes.BODY_TAG_BONE)
-    prints, by_path, option_print, own, away, bones = [], {}, [], [], [], set()
+    prints, by_path, option_print, own, bones, folders = [], {}, [], [], set(), {}
     for name, appearance in zip(LISTS, APPEARANCES):
         text = re.sub(r'<!--.*?-->', '', open(os.path.join(META, name), encoding='utf-8-sig').read(), flags=re.S)
         body = re.search(r'<Nude>\s*<Prefab Name="([^"]+)"', read_one(appearance).decode('utf-8-sig')).group(1)
-        row, mine, sets = [-1] * 256, -1, []
+        row, mine = [-1] * 256, -1
         pd = re.search(r'<ParamDesc\s+Index="0"[^>]*>(.*?)</ParamDesc>', text, re.S)
         for ms in re.finditer(r'<MeshSet\s+Index="(\d+)"([^>]*)>(.*?)</MeshSet>', pd.group(1), re.S):
             if mine < 0 and re.search(r'MeshFileName="%s"' % re.escape(body), ms.group(3)):
@@ -340,13 +340,8 @@ def body_data(available):
                 by_path[path] = len(prints)
                 prints.append((path, gender, recs[tag_hash], struct.unpack_from('<I', data, 16)[0]))
             row[int(ms.group(1))] = by_path[path]
-            sets.append((int(ms.group(1)), path, re.findall(r'MeshFileName="([^"]+)"', ms.group(3))))
         option_print.append(row)
         own.append(mine)
-        # Another body of the same skeleton, for loading the marked copy of their own.
-        mine_set = next((s for s in sets if s[0] == mine), None)
-        away.append(next((s[0] for s in sets if mine_set and s[0] != mine and row[s[0]] >= 0 and s[2] != mine_set[2]
-                          and s[1].rsplit('/', 1)[0] == mine_set[1].rsplit('/', 1)[0]), -1))
     out = ['', '// ---------------------------------------------------------------------------',
            '// Body Shape', '// ---------------------------------------------------------------------------', '',
            f'static const int BODY_SLIDER_COUNT = {len(BODY_SLIDERS)};',
@@ -380,9 +375,11 @@ def body_data(available):
     out += ['    { ' + ', '.join(str(v) for v in row) + ' },' for row in option_print]
     out += ['};', '', "// Each character's own body (their appearance file's) in their list.",
             'static const int BODY_OWN_OPTION[3] = { ' + ', '.join(str(v) for v in own) + ' };',
-            'static const int BODY_AWAY_OPTION[3] = { ' + ', '.join(str(v) for v in away) + ' };']
+            '',
+            '// Each body shape\'s skeleton folder: another body to go through and back keeps the skeleton.',
+            'static const uint8_t BODY_PRINT_FOLDER[] = { ' + ', '.join(str(folders.setdefault(p[0].rsplit('/', 2)[0], len(folders))) for p in prints) + ' };']
     print(f'body: {len(BODY_SLIDERS)} sliders, {counts[0]} / {counts[1]} bone scales (men / women), '
-          f'{len(prints)} body shapes, own options {own}, away {away}')
+          f'{len(prints)} body shapes, own options {own}, skeleton folders {folders}')
     return out
 
 

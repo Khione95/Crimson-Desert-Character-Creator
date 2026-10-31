@@ -36,7 +36,7 @@ Version 9.0 is a complete rewrite. The old version edited characters through the
 • [b]Arrows or WASD[/b] - choose; on sliders Up/Down picks a value and Left/Right changes it ([b]Shift[/b] for steps of 10)
 • [b]R[/b] - camera: whole body / face (the mouse turns it)
 • [b]Space / Enter[/b] - keep and close; [b]Esc[/b] - cancel everything changed since the editor was opened
-• [b]X[/b] - reset the sliders on a Face Shape or Body Shape page
+• [b]X[/b] - reset the sliders on a Face Shape or Body Shape page; [b]Shift+X[/b] - reset the character's whole look (Esc undoes it; gender and race stay)
 
 [size=4][b]Requirements[/b][/size]
 • [b]DMM 4.5 Beta 2 or newer[/b] (recommended) - it installs everything, including the .asi and the ASI loader. Older versions can't mount mods for the game's DLC update; until it is out on Nexus, get the beta from DMM's Discord

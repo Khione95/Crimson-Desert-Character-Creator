@@ -128,8 +128,9 @@ class Model:
 
     def lod_section(self, lod):
         """Geometry section of a LOD: the lowest detail is section 1."""
-        n = max(d_lods for d_lods in [len(self.descs[0]['vcounts'])])
-        return self.sections.get(n - lod) or self.sections.get(self.lod_count - lod)
+        # Section numbers can start above 1 (a model with 3 levels: 2, 3, 4).
+        levels = sorted(k for k in self.sections if 1 <= k <= 4)
+        return self.sections[levels[-1 - lod]] if lod < len(levels) else None
 
     def geometry(self, lod=0):
         """Per submesh: vertex offsets (absolute), positions, normals,

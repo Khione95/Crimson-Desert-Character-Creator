@@ -60,22 +60,26 @@ def tag_bone_hash(name=TAG_BONE):
 
 def marked(data, bone, steps):
     """The shape with the tag bone moved sideways by steps * TAG_STEP, or None
-    if the shape has no record for it. Records (version 4: 196 bytes, 5: 392):
-    hash, world matrix 16, local matrix 16, scale 3, rotation 4, position 3,
-    shape 3, inverse 3 (version 5 repeats the floats after one more value)."""
-    size = {0x34: 196, 0x35: 392}[data[4]]
+    if the shape has no record for it. Records (196 bytes): hash, world matrix
+    16, local matrix 16, scale 3, rotation 4, position 3, shape 3, inverse 3.
+    Version 5 has a second table after the first: u32 hash, u32 count, records."""
     count = struct.unpack_from('<I', data, 16)[0]
     out = bytearray(data)
-    for i in range(count):
-        at = 20 + size * i
-        if struct.unpack_from('<I', data, at)[0] != bone:
-            continue
-        for block in ((0,) if size == 196 else (0, 49)):
-            for index in (block + 30, block + 41):      # the local matrix's last row, the position: z
+    tables = [20]
+    if data[4] == 0x35:
+        tables.append(20 + 196 * count + 8)
+    found = False
+    for table in tables:
+        for i in range(count):
+            at = table + 196 * i
+            if struct.unpack_from('<I', data, at)[0] != bone:
+                continue
+            found = True
+            for index in (30, 41):      # the local matrix's last row, the position: z
                 where = at + 4 + index * 4
                 struct.pack_into('<f', out, where, struct.unpack_from('<f', out, where)[0] + steps * TAG_STEP)
-        return bytes(out)
-    return None
+            break
+    return bytes(out) if found else None
 
 
 def build(out_dir, meshparam_dir):

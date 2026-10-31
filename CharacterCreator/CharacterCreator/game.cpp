@@ -961,6 +961,13 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         if (!mask.mesh[slot] || current.mesh[slot] == desired.mesh[slot])
             continue;
 
+        // Damiane's and Oongka's body comes from their appearance file. Taken
+        // over by the list while the game was still loading, the game crashed
+        // (players with Body Shape values saved for the character they load as).
+        if (slot == MESH_BODY && current.mesh[slot] == MESH_NONE && ch != CHAR_KLIFF && !preview &&
+            now - t->firstSeen < AUTO_VALUES_MS)
+            continue;
+
         // MESH_NONE removes the part (the barber accepts it without a range check).
         uint32_t options = ReadMeshOptionCount(controller, slot);
 

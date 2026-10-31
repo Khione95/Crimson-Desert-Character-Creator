@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+#include <initializer_list>
 #include <map>
 #include <string>
 #include <vector>
@@ -262,36 +264,69 @@ static long long TableSize(const std::string& pamtPath)
 
 // DMM 4.5 (the game's archive index is signed since game 2.04) changes no
 // archive: its plugin serves the files of bin64\dmm\manifest.tsv, lines
-// "file <game path> <file>". The size of the table it serves, -1 if none.
-static long long ServedTableSize(const std::string& root)
+// "file <game path> <file>". The table it serves, "" if none.
+static std::string ServedTablePath(const std::string& root)
 {
     std::vector<uint8_t> manifest;
 
     if (!ReadFile(root + "\\bin64\\dmm\\manifest.tsv", &manifest))
-        return -1;
+        return std::string();
 
     std::string text(manifest.begin(), manifest.end());
     std::string key = std::string("file\t") + TABLE_FOLDER + "/" + TABLE_FILE + "\t";
     size_t at = text.find(key);
 
     if (at == std::string::npos)
-        return -1;
+        return std::string();
 
     at += key.size();
     size_t end = text.find_first_of("\r\n", at);
-    std::string path = text.substr(at, end == std::string::npos ? std::string::npos : end - at);
-    FILE* f = NULL;
-
-    if (fopen_s(&f, path.c_str(), "rb") != 0 || !f)
-        return -1;
-
-    _fseeki64(f, 0, SEEK_END);
-    long long size = _ftelli64(f);
-    fclose(f);
-    return size;
+    return text.substr(at, end == std::string::npos ? std::string::npos : end - at);
 }
 
-bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count)
+// DMM 4.5 merges every mod's new parts into the table, so its size says little:
+// the table is the package's if it knows the characters' copies of the heads
+// (a sample of them: a table without the copies has none). Names are plain in it.
+static bool HasOwnHeads(const std::vector<uint8_t>& table, const char* dataFolder)
+{
+    FILE* f = NULL;
+
+    if (fopen_s(&f, (std::string(dataFolder) + "\\private_heads.txt").c_str(), "r") != 0 || !f)
+        return false;
+
+    const char* start = (const char*)table.data();
+    const char* end = start + table.size();
+    char line[128];
+    int checked = 0, index = 0;
+    bool all = true;
+
+    while (all && fgets(line, sizeof(line), f))
+    {
+        line[strcspn(line, "\r\n")] = 0;
+
+        if (strlen(line) < 6 || index++ % 25 != 0)
+            continue;
+
+        for (char letter : { 'k', 'd', 'o' })
+        {
+            // The copies' names: tools/private_eyes.py, eyes.cpp's MarkOf.
+            std::string name = line;
+
+            if (name.compare(0, 3, "cd_") == 0)
+                name[0] = 'z', name[1] = letter;
+            else
+                name[4] = letter;
+
+            all = all && std::search(start, end, name.begin(), name.end()) != end;
+            ++checked;
+        }
+    }
+
+    fclose(f);
+    return all && checked > 0;
+}
+
+bool PartTableIsOurs(const char* gameFolder, const char* dataFolder, const uint32_t* sizes, int count)
 {
     std::string root = gameFolder;
     std::vector<uint8_t> papgt;
@@ -304,18 +339,22 @@ bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count)
         return true;
     }
 
-    long long served = ServedTableSize(root);
+    std::string servedPath = ServedTablePath(root);
+    std::vector<uint8_t> servedTable;
 
-    if (served > 0)
+    if (!servedPath.empty() && ReadFile(servedPath, &servedTable))
     {
+        long long served = (long long)servedTable.size();
         bool ours = false;
 
         for (int i = 0; i < count; ++i)
             ours = ours || served == sizes[i];
 
+        bool merged = !ours && HasOwnHeads(servedTable, dataFolder);
         Log("part table: DMM's plugin serves one of %lld bytes - %s", served,
-            ours ? "the package's (or Female Armor Fit's)" : "another mod's: the characters' own heads (and eye colour) are off");
-        return ours;
+            ours ? "the package's (or Female Armor Fit's)" : merged ? "the package's with other mods' parts added"
+                 : "another mod's: the characters' own heads (and eye colour) are off");
+        return ours || merged;
     }
 
     for (const std::string& group : Groups(papgt))

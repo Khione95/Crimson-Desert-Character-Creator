@@ -210,7 +210,7 @@ static const Tab TABS[] =
             { L"Eyeshadow", L"Upper", L"Under-eye", L"Glitter" }, 4 },
         { L"Eyeshadow shimmer", PAGE_SLIDERS, 0, NULL, { 175, 170, 165, 180 },
             { L"Eyeshadow", L"Upper", L"Under-eye", L"Glitter" }, 4 } }, 11 },
-    { L"Face Makeup", {
+    { L"Makeup", {
         { L"Blush", PAGE_TYPE, 147, L"Blush" },
         { L"Blush colour", PAGE_COLOR, 149 },
         { L"Highlighter", PAGE_TYPE, 141, L"Highlighter" },
@@ -455,6 +455,12 @@ static const Page& CurrentPage()
     return TABS[g_tab].pages[g_page[g_tab]];
 }
 
+static std::wstring UiIcon(const char* key)
+{
+    auto it = g_data.uiIcons.find(key);
+    return it == g_data.uiIcons.end() ? L"" : it->second;
+}
+
 static void BuildItems(const Page& page, std::vector<Item>* items, int* selected)
 {
     items->clear();
@@ -467,13 +473,18 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
         // Only Kliff has the choice: the female animations are what break his
         // crow wings and two-handed swords.
         for (int i = 0; i < (g_char == CHAR_KLIFF ? 3 : 2); ++i)
-            items->push_back({ GENDERS[i], L"", i });
+            items->push_back({ GENDERS[i], UiIcon(i == 0 ? "gender0" : "gender1"), i });
         *selected = g_gender == GENDER_FEMALE && !IdentityFemaleMoves(g_char) ? GENDER_CHOICE_FEMALE_MALE_MOVES : g_gender;
         break;
 
     case PAGE_RACE:
         for (int i = 0; i < 4; ++i)
-            items->push_back({ RACES[i], L"", i });
+        {
+            char key[16];
+            sprintf_s(key, "race%d%d", g_gender == GENDER_FEMALE ? 1 : 0, i);
+            items->push_back({ RACES[i], UiIcon(key), i });
+        }
+
         *selected = g_race;
         break;
 
@@ -483,7 +494,7 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
 
         if (page.target == MESH_BEARD)
         {
-            items->push_back({ L"None", L"", NoneOption(g_char, MESH_BEARD) });
+            items->push_back({ L"None", UiIcon("none"), NoneOption(g_char, MESH_BEARD) });
 
             if (IsNone(g_char, MESH_BEARD, g_view.mesh[page.target]))
                 *selected = 0;
@@ -495,7 +506,7 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
 
         if (details)
         {
-            items->push_back({ L"Same as head", L"", -1 });
+            items->push_back({ L"Same as head", UiIcon("none"), -1 });
 
             if (ProfileDetails(g_char) < 0)
                 *selected = 0;
@@ -562,7 +573,9 @@ static void BuildItems(const Page& page, std::vector<Item>* items, int* selected
             else
                 swprintf_s(label, L"%s %d", page.itemWord, i);
 
-            items->push_back({ label, L"", i });
+            bool haveIcons = p.known && p.palette >= 0 && p.palette < 256 && i < (int)g_data.textureIcons[p.palette].size();
+            std::wstring icon = haveIcons ? g_data.textureIcons[p.palette][i] : L"";
+            items->push_back({ label, i == 0 && icon.empty() ? UiIcon("none") : icon, i });
         }
 
         *selected = g_view.decoration[page.target];
@@ -1132,6 +1145,61 @@ static void AdjustSlider(int delta)
     SetValue(index, g_view.decoration[index] + delta);
 }
 
+// The character's look back to what they start with, in one go (Esc undoes it
+// like any change). Gender and race stay: they rebuild the character. A man's
+// beard stays too: the game's starting one is not in the package's lists.
+static void ResetAll()
+{
+    int gender, race, nativeGender, nativeRace;
+    BuiltAs(g_char, &gender, &race);
+    IdentityNative(g_char, &nativeGender, &nativeRace);
+    bool themselves = gender == nativeGender && race == nativeRace && g_data.own[g_char].known;
+    const BaseCharacter& base = themselves ? g_data.own[g_char] : g_data.bases[gender][race];
+
+    for (int i = 0; i < DECORATION_COUNT; ++i)
+        if (g_view.decoration[i] != g_data.start[g_char][i])
+            SetValue(i, g_data.start[g_char][i]);
+
+    const std::pair<int, const std::string*> parts[] = { { MESH_HEAD, &base.head }, { MESH_HAIR, &base.hair }, { MESH_BODY, &base.body } };
+
+    for (const auto& part : parts)
+    {
+        int option = FindOption(g_char, part.first, *part.second);
+
+        if (option >= 0)
+            SetMesh(part.first, option);
+    }
+
+    if (gender == GENDER_FEMALE)
+    {
+        int none = NoneOption(g_char, MESH_BEARD);
+
+        if (none != MESH_NONE)
+            SetMesh(MESH_BEARD, none);
+    }
+
+    ProfileSetDetails(g_char, -1);
+    int details = HeadInSlot5(g_char, g_view.mesh[MESH_HEAD]);
+
+    if (details >= 0)
+        SetMesh(MESH_WHISKERS, details);
+
+    FaceResetAll(g_char);
+
+    for (int i = 0; i < BodySliderCount(); ++i)
+        BodySetValue(g_char, i, 0);
+
+    IdentityChooseHeight(g_char, 0);
+
+    if (EyesChosen(g_char) != 0)
+    {
+        EyesChoose(g_char, 0);
+        ReloadHead();
+    }
+
+    Log("menu: %S's look reset to their start", CHARACTER_NAMES[g_char]);
+}
+
 void MenuKey(int vk)
 {
     AcquireSRWLockExclusive(&g_lock);
@@ -1197,8 +1265,14 @@ void MenuKey(int vk)
         CameraToggleView();
         break;
 
-    // A Face or Body Shape page's sliders back to 0.
+    // A Face or Body Shape page's sliders back to 0; with Shift, the whole look.
     case 'X':
+        if (shift)
+        {
+            ResetAll();
+            break;
+        }
+
         for (int i = 0; sliders && i < page.sliderCount; ++i)
         {
             int index = page.sliders[i];
@@ -1362,9 +1436,15 @@ static void DrawNotice(ID2D1DeviceContext* dc, const OverlayDrawContext& ctx)
     float x0 = ctx.width - 900 * s, x1 = ctx.width - 24 * s, y0 = 50 * s, y1 = y0 + 260 * s;
     dc->FillRectangle(D2D1::RectF(x0, y0, x1, y1), st.panel);
     Text(dc, L"Character Creator", st.title, D2D1::RectF(x0 + 36 * s, y0 + 24 * s, x1, y0 + 80 * s), st.gold);
-    Text(dc, L"This version of the game is not supported by this version of Character Creator. "
-        L"Nothing has been changed. Please check the mod page for an update.",
-        st.big, D2D1::RectF(x0 + 36 * s, y0 + 96 * s, x1 - 36 * s, y1 - 60 * s), st.text);
+    // The build on the notice: it is the first thing a report needs.
+    const BYTE* game = (const BYTE*)GetModuleHandleA(NULL);
+    const IMAGE_NT_HEADERS* nt = (const IMAGE_NT_HEADERS*)(game + ((const IMAGE_DOS_HEADER*)game)->e_lfanew);
+    wchar_t notice[256];
+    swprintf_s(notice, L"This version of the game is not supported by this version of Character Creator. "
+        L"Nothing has been changed. Please check the mod page for an update. (Game build %08lX)",
+        (unsigned long)nt->FileHeader.TimeDateStamp);
+    Text(dc, notice,
+        st.note, D2D1::RectF(x0 + 36 * s, y0 + 96 * s, x1 - 36 * s, y1 - 60 * s), st.text);
     wchar_t close[64];
     swprintf_s(close, L"[%s] Close", HotkeyName(g_char));
     Text(dc, close, st.big, D2D1::RectF(x0 + 36 * s, y1 - 56 * s, x1, y1 - 16 * s), st.dim);
@@ -1732,6 +1812,7 @@ void MenuDraw(const OverlayDrawContext& ctx)
         if (HotkeyName(ch)[0])
             keys += std::wstring(keys.empty() ? L"[" : L"    [") + HotkeyName(ch) + L"] " + CHARACTER_NAMES[ch];
 
+    keys += L"    [Shift+X] Reset all";
     Text(dc, L"[Space] Keep     [Esc] Cancel", st.big, D2D1::RectF(x0, footerTop + 6 * s, x1, footerTop + 40 * s), st.text);
     Text(dc, keys.c_str(), st.caption, D2D1::RectF(x0, footerTop + 40 * s, x1, y1 - 6 * s), st.dim);
 

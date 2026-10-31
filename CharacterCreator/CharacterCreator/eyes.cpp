@@ -14,7 +14,9 @@
 #include "MinHook.h"
 
 // Iris textures shipped with the game. The player eye files use the
-// cd_phm_00_eye_iris_* ones; the animal ones fit the same eye.
+// cd_phm_00_eye_iris_* ones; the animal ones fit the same eye. The game has no
+// green iris and barely a blue one: cc_iris_* are the package's own
+// (tools/iris_colours.py).
 const EyeColour EYE_COLOURS[] =
 {
     { L"Default",      NULL,                                                       110, 115, 120 },
@@ -27,8 +29,8 @@ const EyeColour EYE_COLOURS[] =
     { L"Ringed brown", "character/texture/phm_00_eye_iris_0013.dds",                90,  75,  55 },
     { L"Light brown",  "character/texture/phm_00_eye_iris_0014.dds",               175, 130, 100 },
     { L"Blood red",    "character/texture/phm_00_eye_iris_0011.dds",               120,  10,  15 },
-    { L"Blue",         "character/texture/animal_00_eye_iris_0014.dds",             70,  95, 130 },
-    { L"Green",        "character/texture/cd_animal_00_eye_iris_0010.dds",          70,  85,  60 },
+    { L"Blue",         "character/texture/cc_iris_blue.dds",                        82, 148, 240 },
+    { L"Green",        "character/texture/cc_iris_green.dds",                       86, 190,  92 },
     { L"Olive",        "character/texture/cd_animal_00_eye_iris_0004.dds",         105, 105,  80 },
     { L"Moss",         "character/texture/cd_animal_00_eye_iris_0013.dds",          80,  85,  45 },
     { L"Gold",         "character/texture/cd_animal_00_eye_iris_0005.dds",         185, 135,  40 },
@@ -650,7 +652,7 @@ void EyesInit(const char* folder)
         fclose(f);
     }
 
-    g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, expected, sizes);
+    g_ownHeadsOff = !PartDisabled("parttable") && !PartTableIsOurs(game, folder, expected, sizes);
 
     int gender, race;
     IdentityChosen(CHAR_KLIFF, &gender, &race);

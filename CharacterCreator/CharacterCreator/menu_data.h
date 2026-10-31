@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,8 @@ struct MenuData
     std::vector<MeshOption> meshes;
     std::vector<PaletteColor> palettes[256];
     int textureCounts[256];
+    std::vector<std::wstring> textureIcons[256];    // full paths, empty if none
+    std::map<std::string, std::wstring> uiIcons;    // none, gender0, race<gender><race>
     DecorationParam params[250];
 
     // Race and gender the character is built as (the package's base

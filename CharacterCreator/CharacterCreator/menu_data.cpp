@@ -224,10 +224,37 @@ bool MenuDataLoad(const char* folder, MenuData* out)
         else if (strcmp(kind, "texture") == 0)
         {
             int palette, index;
+            char file[260], icon[260];
+            int fields = sscanf_s(line, "texture %d %d %259s %259s", &palette, &index, file, (unsigned)sizeof(file), icon, (unsigned)sizeof(icon));
 
-            if (sscanf_s(line, "texture %d %d", &palette, &index) == 2 && palette >= 0 && palette < 256 &&
-                index + 1 > out->textureCounts[palette])
-                out->textureCounts[palette] = index + 1;
+            if (fields >= 2 && palette >= 0 && palette < 256 && index >= 0)
+            {
+                if (index + 1 > out->textureCounts[palette])
+                    out->textureCounts[palette] = index + 1;
+
+                std::vector<std::wstring>& icons = out->textureIcons[palette];
+
+                if ((int)icons.size() <= index)
+                    icons.resize(index + 1);
+
+                if (fields == 4 && strcmp(icon, "-") != 0)
+                {
+                    char full[MAX_PATH];
+                    sprintf_s(full, "%s\\icons\\%s", folder, icon);
+                    icons[index] = Widen(full);
+                }
+            }
+        }
+        else if (strcmp(kind, "uiicon") == 0)
+        {
+            char key[32], icon[260];
+
+            if (sscanf_s(line, "uiicon %31s %259s", key, (unsigned)sizeof(key), icon, (unsigned)sizeof(icon)) == 2)
+            {
+                char full[MAX_PATH];
+                sprintf_s(full, "%s\\icons\\%s", folder, icon);
+                out->uiIcons[key] = Widen(full);
+            }
         }
     }
 

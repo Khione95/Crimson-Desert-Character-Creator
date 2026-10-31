@@ -14,6 +14,8 @@
 // Female Armor Fit's (the same table with the armor copies added).
 //
 // gameFolder: the game's folder (the one holding meta and the groups).
+// dataFolder: the plugin's folder (private_heads.txt: DMM 4.5 merges other mods'
+// parts into the table, which is still ours if it has the heads' copies).
 // sizes, count: the tables' sizes (parttable.txt in the data folder); none:
 // nothing can be told.
-bool PartTableIsOurs(const char* gameFolder, const uint32_t* sizes, int count);
+bool PartTableIsOurs(const char* gameFolder, const char* dataFolder, const uint32_t* sizes, int count);

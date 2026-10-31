@@ -1,4 +1,4 @@
-Character Creator Enhanced - Anywhere 9.1.17 - Crimson Desert
+Character Creator Enhanced - Anywhere 9.1.18 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
@@ -51,6 +51,9 @@ CONTROLS
   Shift             steps of 10 on sliders
   R                 camera: whole body / face (the character stands left of
                     the panel; the mouse turns the camera)
+  X                 reset the sliders on a Face or Body Shape page
+  Shift+X           reset the character's whole look (Esc undoes it; gender
+                    and race stay)
   Space / Enter     keep the changes and close
   Esc               cancel everything changed since the editor was opened
 

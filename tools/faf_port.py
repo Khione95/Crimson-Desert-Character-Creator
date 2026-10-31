@@ -74,12 +74,13 @@ def women_versions(have):
     -> Damiane's variant of the same item (faf_native_female's pairing). Parts
     the game's own rules name keep those."""
     import faf_native_female
-    named = game_rule_sources()
+    # The game compares part names without their case; the rule files don't agree on it.
+    named = {n.lower() for n in game_rule_sources()}
     women = faf_native_female.women_parts()
-    added = [(s, t) for s, t in sorted(women.items()) if s not in have and s not in named and s != t]
-    clash = sorted(s for s in have if s in named)
+    added = [(s, t) for s, t in sorted(women.items()) if s not in have and s.lower() not in named and s != t]
+    clash = sorted(s for s in have if s.lower() in named)
     print(f'{len(added)} more parts to the game\'s own women\'s version ({len(women)} have one; '
-          f'{sum(1 for s in women if s in named and s not in have)} left to the game\'s rules)'
+          f'{sum(1 for s in women if s.lower() in named and s not in have)} left to the game\'s rules)'
           + (f'; the game\'s rules now also name {len(clash)} of the package\'s parts: {clash[:10]}' if clash else ''))
     return added
 
@@ -93,6 +94,13 @@ def main():
     rules_text = paz_add.decode(RULES, *old[RULES]).decode('utf-8-sig')
     pairs = re.findall(r'<Condition SourcePartPrefab="([^"]+)">\s*<If Type="Match" TargetPartPrefab="([^"]+)"', rules_text)
     pairs += women_versions({s for s, _ in pairs})
+    # A second rule on a part the game's own files have a rule for: the game
+    # crashes as it starts. The horse tail's own files are in folders deeper
+    # than DMM's first 4.5 betas read; it stays out until tested.
+    named = {n.lower() for n in game_rule_sources()}
+    kept = [(s, t) for s, t in pairs if s.lower() not in named and 'horse_tail_00_0010' not in t]
+    print(f'left out: {sorted(s for s, _ in set(pairs) - set(kept))}')
+    pairs = kept
 
     index = {e['path']: e for e in game_files.entries(
         r'^character/(bin__/prefab/.*\.prefab|modelproperty/.*\.pac_xml|bin__/meshphysics/.*\.hkx)$')}

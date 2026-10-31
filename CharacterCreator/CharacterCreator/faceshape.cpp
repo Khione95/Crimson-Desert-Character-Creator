@@ -86,6 +86,7 @@ static const DWORD RESCAN_AFTER_MS = 1200;
 static const DWORD RESCAN_AGAIN_MS = 3000;
 static bool g_bodySwapped[CHARACTER_COUNT];        // once per time in the world
 static DWORD g_bodyBackAt[CHARACTER_COUNT];
+static uint8_t g_bodyBackTo[CHARACTER_COUNT];
 static const DWORD BODY_AWAY_MS = 1000;
 
 static bool Valid(int ch, int slider)
@@ -1017,18 +1018,32 @@ static void Apply(int ch, DWORD now, bool rescan)
         Log("%S's shape not found in memory (face %d: %d, %d; body %d: %d) - looked for again shortly", CHARACTER_NAMES[ch], shapes, prints[0], prints[1], bodies, body);
         g_nextSearch[ch] = now + SEARCH_AGAIN_MS;
 
-        // Damiane's and Oongka's body comes from their appearance file: chosen
-        // in the list it is the same part, so the game does not read the list's
-        // marked copy of its shape. Through another body and back, it does.
+        // A body that comes from the character's base file (their own, or the
+        // gender's or race's they were built with): chosen in the list it is the
+        // same part, so the game does not read the list's marked copy of its
+        // shape. Through another body of the skeleton and back, it does.
         Appearance worn;
+        int away = -1;
 
-        if (wantBody && !bodies && !StandIn(ch) && !g_bodySwapped[ch] && BODY_AWAY_OPTION[ch] >= 0 && BODY_OWN_OPTION[ch] >= 0 &&
-            (int)(now - g_presentSince[ch] - SETTLE_MS) >= 0 && GameReadAppearance(ch, &worn) && worn.mesh[MESH_BODY] == BODY_OWN_OPTION[ch])
+        if (wantBody && !bodies && body >= 0 && !StandIn(ch) && !g_bodySwapped[ch] &&
+            (int)(now - g_presentSince[ch] - SETTLE_MS) >= 0 && GameReadAppearance(ch, &worn) && worn.mesh[MESH_BODY] != MESH_NONE)
         {
-            g_bodySwapped[ch] = true;
-            g_bodyBackAt[ch] = now + BODY_AWAY_MS;
-            GameSetMesh(ch, MESH_BODY, (uint8_t)BODY_AWAY_OPTION[ch]);
-            Log("%S: body through option %d and back, to load its shape", CHARACTER_NAMES[ch], BODY_AWAY_OPTION[ch]);
+            for (int option = 0; option < 255 && away < 0; ++option)
+            {
+                int other = BODY_OPTION_PRINT[ch][option];
+
+                if (option != worn.mesh[MESH_BODY] && other >= 0 && other != body && BODY_PRINT_FOLDER[other] == BODY_PRINT_FOLDER[body])
+                    away = option;
+            }
+
+            if (away >= 0 && (uint32_t)away < GameMeshOptionCount(ch, MESH_BODY))
+            {
+                g_bodySwapped[ch] = true;
+                g_bodyBackAt[ch] = now + BODY_AWAY_MS;
+                g_bodyBackTo[ch] = worn.mesh[MESH_BODY];
+                GameSetMesh(ch, MESH_BODY, (uint8_t)away);
+                Log("%S: body through option %d and back to %d, to load its shape", CHARACTER_NAMES[ch], away, worn.mesh[MESH_BODY]);
+            }
         }
     }
     else
@@ -1107,7 +1122,7 @@ void FacePoll()
             if ((int)(now - g_bodyBackAt[ch]) >= 0)
             {
                 g_bodyBackAt[ch] = 0;
-                GameSetMesh(ch, MESH_BODY, (uint8_t)BODY_OWN_OPTION[ch]);
+                GameSetMesh(ch, MESH_BODY, g_bodyBackTo[ch]);
             }
 
             continue;

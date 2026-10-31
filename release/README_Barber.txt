@@ -1,4 +1,4 @@
-Character Creator Enhanced - Barber 9.1.17 - Crimson Desert
+Character Creator Enhanced - Barber 9.1.18 - Crimson Desert
 by Khione
 
 The mod's heads, hair, beards and bodies for Kliff, Damiane and Oongka at the
