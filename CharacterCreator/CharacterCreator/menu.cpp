@@ -402,6 +402,55 @@ static int ChooseAwayHead(int ch, int current)
     return away;
 }
 
+bool MenuOptionFits(int ch, int slot, int option)
+{
+    int gender, race, ownGender, ownRace;
+    BuiltAs(ch, &gender, &race);
+    IdentityNative(ch, &ownGender, &ownRace);
+
+    if (gender == ownGender && race == ownRace)
+        return true;
+
+    if (slot == MESH_BEARD && gender == GENDER_FEMALE)
+        return false;
+
+    for (const MeshOption& m : g_data.meshes)
+        if (m.slot == slot && m.index[ch] == option)
+            return OptionFitsFor(m, gender, race);
+
+    return true;
+}
+
+int MenuFittingOptions(int ch, int slot, uint8_t* out, int room)
+{
+    int gender, race, count = 0;
+    BuiltAs(ch, &gender, &race);
+
+    // Women start without a beard, and the barber offers them none.
+    if (slot == MESH_BEARD && gender == GENDER_FEMALE)
+        return 0;
+
+    for (const MeshOption& m : g_data.meshes)
+    {
+        if (m.slot != slot || !m.shown || !OptionFitsFor(m, gender, race) || m.index[ch] < 0 || m.index[ch] >= 255 || count >= room)
+            continue;
+
+        int at = count++;
+
+        for (; at > 0 && out[at - 1] > m.index[ch]; --at)
+            out[at] = out[at - 1];
+
+        out[at] = (uint8_t)m.index[ch];
+    }
+
+    return count;
+}
+
+int MenuAwayHead(int ch, int head)
+{
+    return ChooseAwayHead(ch, head);
+}
+
 static void ReloadHead()
 {
     GameReloadHead(g_char, HEAD_AWAY_MS, ChooseAwayHead(g_char, g_view.mesh[MESH_HEAD]));
@@ -621,6 +670,11 @@ static int HeadInSlot5(int ch, int head)
             return FindOption(ch, MESH_WHISKERS, h.mesh);
 
     return -1;
+}
+
+int MenuHeadDetails(int ch, int head)
+{
+    return HeadInSlot5(ch, head);
 }
 
 static void SetValue(int index, int value)
@@ -994,6 +1048,11 @@ static void FitCharacter(int ch)
         if (slot == MESH_WHISKERS)
         {
             int wanted = -1, details = ProfileDetails(ch);
+
+            // The barber sets slot 5 with the head, then Face Details may change it:
+            // only an empty one is filled here.
+            if (CC_BARBER && look.mesh[MESH_WHISKERS] != MESH_NONE)
+                continue;
 
             if (details >= 0)
             {

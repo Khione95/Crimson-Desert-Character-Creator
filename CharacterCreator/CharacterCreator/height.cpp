@@ -177,49 +177,116 @@ static void FindObjects()
     }
 }
 
+static void ApplyTo(int ch, Found& f)
+{
+    float base = IdentityBaseScale(ch);
+
+    if (!f.object || base <= 0 || !StillValid(f))
+        return;
+
+    float wanted = base * (100 + IdentityHeight(ch)) / 100.0f;
+    float* scale = (float*)(f.object + BODY_SCALE);
+
+    __try
+    {
+        float current = *scale;
+
+        // Not a body scale after all (the object's layout changed with a
+        // game update): left alone. The character's own scale is within
+        // 20% of the height they were built with.
+        float built = base * (100 + IdentityLoadedHeight(ch)) / 100.0f;
+        float lowest = wanted < built ? wanted : built, highest = wanted > built ? wanted : built;
+
+        if (!(current > lowest * 0.8f && current < highest * 1.2f))
+        {
+            Log("height: %S's scale object holds %f, not a body scale - the live height preview stays off", CHARACTER_NAMES[ch], current);
+            f.object = 0;
+            f.searches = SEARCHES_MAX;
+            return;
+        }
+
+        if (current - wanted > 0.00001f || wanted - current > 0.00001f)
+        {
+            *scale = wanted;
+            Log("height: %S %+d%% (body scale %.6f -> %.6f)", CHARACTER_NAMES[ch], IdentityHeight(ch), current, wanted);
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        f.object = 0;
+    }
+}
+
 static void Apply()
 {
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
+        ApplyTo(ch, g_found[ch]);
+}
+
+#if CC_BARBER
+// The barber shows a copy of the character, with a scale object of its own. It
+// is looked for when the height differs from the one built with, a few times:
+// the copy is still being built when it appears.
+static Found g_copies[CHARACTER_COUNT];
+static const int COPY_SEARCHES_MAX = 6;
+static const DWORD COPY_SEARCH_RETRY_MS = 1000;
+
+static void ApplyToCopies()
+{
+    DWORD now = GetTickCount();
+
+    for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
     {
-        Found& f = g_found[ch];
-        float base = IdentityBaseScale(ch);
+        Found& f = g_copies[ch];
+        Appearance look;
+        uintptr_t controller = 0;
+        bool preview = false;
 
-        if (!f.object || base <= 0 || !StillValid(f))
-            continue;
-
-        float wanted = base * (100 + IdentityHeight(ch)) / 100.0f;
-        float* scale = (float*)(f.object + BODY_SCALE);
-
-        __try
+        if (!GameBarberLook(ch, &look, &controller, &preview) || !preview)
         {
-            float current = *scale;
+            f = {};
+            continue;
+        }
 
-            // Not a body scale after all (the object's layout changed with a
-            // game update): left alone. The character's own scale is within
-            // 20% of the height they were built with.
-            float built = base * (100 + IdentityLoadedHeight(ch)) / 100.0f;
-            float lowest = wanted < built ? wanted : built, highest = wanted > built ? wanted : built;
+        if (controller != f.controller)
+            f = { controller };
 
-            if (!(current > lowest * 0.8f && current < highest * 1.2f))
+        if (!f.object && IdentityHeight(ch) != IdentityLoadedHeight(ch) && f.searches < COPY_SEARCHES_MAX &&
+            (!f.searches || now - f.searchedAt >= COPY_SEARCH_RETRY_MS) && ReadPtr(controller + OWNER, &f.entity) && f.entity)
+        {
+            uintptr_t entities[CHARACTER_COUNT] = {};
+            uintptr_t components[CHARACTER_COUNT] = {};
+            entities[ch] = f.entity;
+            ++f.searches;
+            f.searchedAt = now;
+            Scan(entities, components);
+            uintptr_t object = 0, vtable = 0;
+
+            if (components[ch] && ReadPtr(components[ch] + SCALE_OBJECT, &object) && object && ReadPtr(object, &vtable) && vtable == g_objectVtable)
             {
-                Log("height: %S's scale object holds %f, not a body scale - the live height preview stays off", CHARACTER_NAMES[ch], current);
-                f.object = 0;
-                f.searches = SEARCHES_MAX;
-                continue;
+                f.component = components[ch];
+                f.object = object;
+                Log("height: the barber's copy of %S has its scale object (%016llX)", CHARACTER_NAMES[ch], (unsigned long long)object);
             }
-
-            if (current - wanted > 0.00001f || wanted - current > 0.00001f)
+            else
             {
-                *scale = wanted;
-                Log("height: %S %+d%% (body scale %.6f -> %.6f)", CHARACTER_NAMES[ch], IdentityHeight(ch), current, wanted);
+                Log("height: no scale object for the barber's copy of %S (try %d of %d)", CHARACTER_NAMES[ch], f.searches, COPY_SEARCHES_MAX);
             }
         }
-        __except (EXCEPTION_EXECUTE_HANDLER)
+
+        if (f.object)
         {
-            f.object = 0;
+            if (StillValid(f))
+                ApplyTo(ch, f);
+            else
+            {
+                f.object = 0;
+                f.searches = 0;
+            }
         }
     }
 }
+#endif
 
 static DWORD WINAPI HeightThread(LPVOID)
 {
@@ -227,6 +294,9 @@ static DWORD WINAPI HeightThread(LPVOID)
     {
         FindObjects();
         Apply();
+#if CC_BARBER
+        ApplyToCopies();
+#endif
         Sleep(POLL_MS);
     }
 }

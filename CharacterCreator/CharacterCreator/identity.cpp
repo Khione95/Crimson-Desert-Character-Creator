@@ -38,6 +38,7 @@ static float g_baseScale[CHARACTER_COUNT];                          // before th
 static volatile LONG g_femaleMoves[CHARACTER_COUNT] = { 1, 1, 1 };  // female animations for a woman
 static LONG g_startFemaleMoves[CHARACTER_COUNT] = { 1, 1, 1 };      // as the game started
 static volatile LONG g_tableVersion = 1;   // bumped when a gender changes
+static volatile LONG g_keptHead[CHARACTER_COUNT] = { -1, -1, -1 };  // Barber edition
 
 static bool ValidCharacter(int ch)
 {
@@ -51,7 +52,7 @@ static void Save(int ch)
 
     if (f)
     {
-        fprintf(f, "%ld %ld %ld %ld\n", g_gender[ch], g_race[ch], g_height[ch], g_femaleMoves[ch]);
+        fprintf(f, "%ld %ld %ld %ld %ld\n", g_gender[ch], g_race[ch], g_height[ch], g_femaleMoves[ch], g_keptHead[ch]);
         fclose(f);
     }
 }
@@ -63,19 +64,14 @@ static void Load(int ch)
     g_height[ch] = 0;
     g_femaleMoves[ch] = 1;
 
-    // The Barber edition has no editor to change these back: characters are
-    // themselves (an Anywhere edition's choices in the folder are left alone).
-    if (CC_BARBER)
-        return;
-
     FILE* f = NULL;
     fopen_s(&f, g_path[ch], "r");
 
     if (!f)
         return;
 
-    int gender = 0, race = 0, height = 0, moves = 1;
-    int n = fscanf_s(f, "%d %d %d %d", &gender, &race, &height, &moves);
+    int gender = 0, race = 0, height = 0, moves = 1, head = -1;
+    int n = fscanf_s(f, "%d %d %d %d %d", &gender, &race, &height, &moves, &head);
 
     if (n >= 2 && gender >= 0 && gender < 2 && race >= 0 && race < 4)
     {
@@ -87,11 +83,26 @@ static void Load(int ch)
     if (n >= 3 && height >= HEIGHT_MIN && height <= HEIGHT_MAX)
         g_height[ch] = height;
 
-    if (n == 4)
+    if (n >= 4)
         g_femaleMoves[ch] = moves ? 1 : 0;
+
+    if (n == 5)
+        g_keptHead[ch] = head;
 
     fclose(f);
 }
+
+#if CC_BARBER
+void IdentityKeepHead(int ch, int head)
+{
+    if (!ValidCharacter(ch) || g_keptHead[ch] == head)
+        return;
+
+    InterlockedExchange(&g_keptHead[ch], head);
+    Save(ch);
+    Log("%S's head %d kept for the next start", CHARACTER_NAMES[ch], head);
+}
+#endif
 
 void IdentityChoose(int ch, int gender, int race)
 {
@@ -537,20 +548,19 @@ static void LoadPrivateHeads(const char* folder)
     Log("private heads: %zu", g_privateHeads.size());
 }
 
-// The head chosen in the editor (in the Barber edition: the one the barber
-// gave, the character's current head), or "" if none was chosen.
+// The head chosen in the editor (in the Barber edition: the one the barber gave,
+// kept from the last time the character was seen: the file is read before any
+// save is loaded), or "" if none was chosen.
 static std::string ChosenHead(int ch)
 {
     if (!g_data)
         return std::string();
 
 #if CC_BARBER
-    Appearance look;
+    int head = g_keptHead[ch];
 
-    if (!GameReadAppearance(ch, &look) || look.mesh[MESH_HEAD] == MESH_NONE)
+    if (head < 0)
         return std::string();
-
-    int head = look.mesh[MESH_HEAD];
 #else
     Appearance desired;
     AppearanceMask mask;
@@ -1054,7 +1064,9 @@ void IdentityInit(const char* folder, const MenuData* data)
 
     for (int ch = 0; ch < CHARACTER_COUNT; ++ch)
     {
-        CharacterFile(g_path[ch], MAX_PATH, folder, "identity", ch);
+        // The Barber edition's own: its choices live in the save, this file brings
+        // them in at the next start. An Anywhere edition's choices are left alone.
+        CharacterFile(g_path[ch], MAX_PATH, folder, CC_BARBER ? "barber_identity" : "identity", ch);
         Load(ch);
         g_startFemaleMoves[ch] = g_femaleMoves[ch];
         Log("%S identity: gender %ld race %ld height %+ld%%%s", CHARACTER_NAMES[ch], g_gender[ch], g_race[ch], g_height[ch],

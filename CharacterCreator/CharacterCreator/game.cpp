@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "game.h"
+#include "identity.h"
+#include "menu.h"
 #include "eyes.h"
 #include "addresses.h"
 #include "log.h"
@@ -849,6 +851,122 @@ static void RequeueBeard(uintptr_t controller, Tracked* t)
 static const DWORD SHAPE_AFTER_MS = 8000;     // after the last mesh change
 static const DWORD SHAPE_SETTLE_MS = 15000;   // after the character appeared
 
+#if CC_BARBER
+static PVOID volatile g_barberChanged = NULL;
+static const DWORD BARBER_ALIVE_MS = 500;
+
+static PVOID volatile g_barberSwapFor = NULL;
+static volatile LONG g_barberSwapOption = 0;
+
+static void BarberWake(uintptr_t controller)
+{
+    int ch = GameBarberCharacter(controller);
+
+    if (ch >= 0)
+        InterlockedIncrement(&g_desiredVersion[ch]);
+}
+
+void GameBarberMeshChanged(uintptr_t controller)
+{
+    InterlockedExchangePointer(&g_barberChanged, (PVOID)controller);
+    BarberWake(controller);
+}
+
+void GameBarberSwapHead(uintptr_t controller, int option)
+{
+    InterlockedExchange(&g_barberSwapOption, option);
+    InterlockedExchangePointer(&g_barberSwapFor, (PVOID)controller);
+    BarberWake(controller);
+}
+
+bool GameBarberShapesUnset(const Appearance& look)
+{
+    int low = 0;
+
+    for (int i = 0; i < BARBER_FACE_ROWS + BARBER_BODY_ROWS; ++i)
+        low += look.decoration[BARBER_SHAPE_ROW + i] <= 1;
+
+    return low >= 30;
+}
+
+// A look the game asked for by the plugin is done once it is on: the barber
+// changes these slots too, and a choice kept would undo them.
+static void BarberForgetMesh(int ch, int slot)
+{
+    AcquireSRWLockExclusive(&g_desiredLock);
+    g_mask[ch].mesh[slot] = false;
+    ReleaseSRWLockExclusive(&g_desiredLock);
+}
+
+int GameBarberCharacter(uintptr_t controller)
+{
+    int ch = -1;
+    AcquireSRWLockShared(&g_trackedLock);
+
+    for (int i = 0; i < MAX_TRACKED && ch < 0; ++i)
+        if (g_tracked[i].controller == controller)
+            ch = g_tracked[i].character;
+
+    ReleaseSRWLockShared(&g_trackedLock);
+    return ch;
+}
+
+int GameBarberMesh(uintptr_t controller, int slot)
+{
+    Appearance look;
+    return ReadLook(controller, &look) && slot >= 0 && slot < MESH_SLOT_COUNT ? look.mesh[slot] : -1;
+}
+
+int GameBarberValue(uintptr_t controller, int index)
+{
+    Appearance look;
+    return ReadLook(controller, &look) && index >= 0 && index < DECORATION_COUNT ? look.decoration[index] : -1;
+}
+
+bool GameBarberIsPreview(uintptr_t controller)
+{
+    bool preview = false;
+    AcquireSRWLockShared(&g_trackedLock);
+
+    for (int i = 0; i < MAX_TRACKED; ++i)
+        if (g_tracked[i].controller == controller)
+            preview = g_tracked[i].preview;
+
+    ReleaseSRWLockShared(&g_trackedLock);
+    return preview;
+}
+
+bool GameBarberLook(int ch, Appearance* out, uintptr_t* controller, bool* preview)
+{
+    if (!ValidCharacter(ch))
+        return false;
+
+    uintptr_t best = 0;
+    DWORD bestSeen = 0;
+    DWORD now = GetTickCount();
+
+    AcquireSRWLockShared(&g_trackedLock);
+
+    // The newest one the game is still updating; preview copies are the newest.
+    for (int i = 0; i < MAX_TRACKED; ++i)
+    {
+        if (!g_tracked[i].controller || g_tracked[i].character != ch || now - g_tracked[i].lastSeen > BARBER_ALIVE_MS)
+            continue;
+
+        if (!best || g_tracked[i].firstSeen > bestSeen)
+        {
+            best = g_tracked[i].controller;
+            bestSeen = g_tracked[i].firstSeen;
+            *preview = g_tracked[i].preview;
+        }
+    }
+
+    ReleaseSRWLockShared(&g_trackedLock);
+    *controller = best;
+    return best && ReadLook(best, out);
+}
+#endif
+
 static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
 {
     int ch = t->character;
@@ -862,6 +980,78 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     GameGetDesired(ch, &desired, &mask);
 
     bool preview = t->preview;
+
+#if CC_BARBER
+    // The barber queued a head or body of ours: it only shows after a rebuild.
+    if (InterlockedCompareExchangePointer(&g_barberChanged, NULL, (PVOID)controller) == (PVOID)controller)
+    {
+        Log("barber tabs: rebuilding %S after a head or body change (%s)", CHARACTER_NAMES[ch], preview ? "preview" : "character");
+        RebuildController(controller);
+        t->meshChangedAt = now;
+        t->recolorStep = 0;
+    }
+
+    if (InterlockedCompareExchangePointer(&g_barberSwapFor, NULL, (PVOID)controller) == (PVOID)controller)
+    {
+        uint8_t option = (uint8_t)g_barberSwapOption;
+        uint8_t change[3] = { (uint8_t)MESH_HEAD, current.mesh[MESH_HEAD], option };
+        Log("barber tabs: %S's head swapped %d -> %d for the eyes", CHARACTER_NAMES[ch], current.mesh[MESH_HEAD], option);
+        g_queueMeshChange(controller + 0xF8, change);
+
+        uintptr_t mesh;
+        uint32_t count;
+
+        if (ReadArrayHeader(controller, 0xA0, &mesh, &count) && (uint32_t)MESH_HEAD < count)
+            *(uint8_t*)(mesh + MESH_HEAD) = option;
+
+        current.mesh[MESH_HEAD] = option;
+        RebuildController(controller);
+        t->meshChangedAt = now;
+        t->recolorStep = 0;
+    }
+
+    // Slider rows from a save before them start in the middle, on every copy.
+    if (HasDecorations(controller) && GameBarberShapesUnset(current))
+    {
+        for (int i = 0; i < BARBER_FACE_ROWS + BARBER_BODY_ROWS; ++i)
+            if (current.decoration[BARBER_SHAPE_ROW + i] <= 1)
+            {
+                SetDecorationValue(controller, (uint32_t)(BARBER_SHAPE_ROW + i), 50);
+                current.decoration[BARBER_SHAPE_ROW + i] = 50;
+            }
+
+        Log("barber tabs: %S's shape sliders set to the middle (%s)", CHARACTER_NAMES[ch], preview ? "preview" : "character");
+    }
+
+    if (HasDecorations(controller) && current.decoration[BARBER_HEIGHT_ROW] == 0)
+    {
+        // A save from before the row: the height stays what was last chosen.
+        int height = IdentityHeight(ch);
+        uint8_t row = (uint8_t)(50 + (height * 5 + (height > 0 ? 1 : height < 0 ? -1 : 0)) / 2);
+        SetDecorationValue(controller, BARBER_HEIGHT_ROW, row);
+        current.decoration[BARBER_HEIGHT_ROW] = row;
+    }
+
+    // The barber's copy shows the barber's choices alone, except that it starts
+    // from the look in the save: built as another gender or race, parts of that
+    // look do not fit (a beard on a woman). Those come from the character, who
+    // has been fitted already.
+    if (preview)
+    {
+        memset(&mask, 0, sizeof(mask));
+        Appearance own;
+        uintptr_t main = MainFor(ch);
+        static const int FITTED[] = { MESH_BODY, MESH_HEAD, MESH_BEARD, MESH_WHISKERS };
+
+        if (main && main != controller && ReadLook(main, &own))
+            for (int slot : FITTED)
+                if (own.mesh[slot] != MESH_NONE && current.mesh[slot] != own.mesh[slot] && !MenuOptionFits(ch, slot, current.mesh[slot]))
+                {
+                    mask.mesh[slot] = true;
+                    desired.mesh[slot] = own.mesh[slot];
+                }
+    }
+#endif
 
     LONG rebuildWanted = g_rebuildWanted[ch];
 
@@ -958,8 +1148,16 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
     {
         int slot = (step + 1) % MESH_SLOT_COUNT;
 
-        if (!mask.mesh[slot] || current.mesh[slot] == desired.mesh[slot])
+        if (!mask.mesh[slot])
             continue;
+
+        if (current.mesh[slot] == desired.mesh[slot])
+        {
+#if CC_BARBER
+            BarberForgetMesh(ch, slot);
+#endif
+            continue;
+        }
 
         // Damiane's and Oongka's body comes from their appearance file. Taken
         // over by the list while the game was still loading, the game crashed
@@ -981,6 +1179,9 @@ static void ApplyDesired(uintptr_t controller, Tracked* t, DWORD now)
         uint8_t shown = current.mesh[slot] == MESH_NONE && options ? 0 : current.mesh[slot];
         uint8_t change[3] = { (uint8_t)slot, shown, desired.mesh[slot] };
         g_queueMeshChange(controller + 0xF8, change);
+#if CC_BARBER
+        BarberForgetMesh(ch, slot);
+#endif
 
         // A preview copy (shop, barber) starts from a default look and may add
         // that look's beard after this swap, while it builds itself; the beard

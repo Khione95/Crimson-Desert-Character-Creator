@@ -50,6 +50,9 @@ void BodyMarkSaved(int ch);
 // shapes and rebuilds them.
 void FacePoll();
 
+// How many times a character's shapes were written: what shows them must be rebuilt.
+LONG ShapeWrites(int ch);
+
 #if CC_RESEARCH
 // Research (command.txt "facetest <slider> <value> [print]"): one slider on
 // a face shape by its print (default: Kliff's own head), written without

@@ -53,6 +53,7 @@ static const float PRINT_TOLERANCE = 3e-4f;         // the loaded floats differ 
 // A refresh waits for the character to have been in the world this long (a
 // head swap during loading froze the loading screen, see game.cpp).
 static const DWORD SETTLE_MS = 20000;
+static volatile LONG g_shapeWrites[CHARACTER_COUNT] = {};
 static const DWORD QUIET_MS = 350;                  // after the last slider change
 
 static SRWLOCK g_lock = SRWLOCK_INIT;
@@ -898,6 +899,18 @@ static bool Present(int ch)
     return GameCharacterPresent(ch) || StandIn(ch);
 }
 
+// The look the shapes are for: at the barber, what its copy shows.
+static bool ShownLook(int ch, Appearance* look)
+{
+#if CC_BARBER
+    uintptr_t controller;
+    bool preview;
+    return GameBarberLook(ch, look, &controller, &preview);
+#else
+    return GameReadAppearance(ch, look);
+#endif
+}
+
 static void RefreshHead(int ch)
 {
 #if CC_RESEARCH
@@ -922,7 +935,7 @@ static void CurrentPrints(int ch, int prints[2])
         return;
     }
 
-    if (!GameReadAppearance(ch, &look))
+    if (!ShownLook(ch, &look))
         return;
 
     if (look.mesh[MESH_HEAD] != MESH_NONE)
@@ -941,7 +954,7 @@ static int CurrentBody(int ch)
     Appearance look;
     int own = BODY_OWN_OPTION[ch];
 
-    if (StandIn(ch) || !GameReadAppearance(ch, &look) || look.mesh[MESH_BODY] == MESH_NONE)
+    if (StandIn(ch) || !ShownLook(ch, &look) || look.mesh[MESH_BODY] == MESH_NONE)
         return own >= 0 ? BODY_OPTION_PRINT[ch][own] : -1;
 
     return BODY_OPTION_PRINT[ch][look.mesh[MESH_BODY]];
@@ -1063,6 +1076,7 @@ static void Apply(int ch, DWORD now, bool rescan)
     DWORD earliest = g_presentSince[ch] + SETTLE_MS;
     g_refreshDue[ch] = (int)(earliest - now) > 0 ? earliest : now;
     g_rebuildSeen[ch] = false;
+    InterlockedIncrement(&g_shapeWrites[ch]);
     Log("shape: %S - %d bone(s) changed in %d face and %d body shape(s) (face %d, %d; body %d)", CHARACTER_NAMES[ch], moved, shapes, bodies,
         prints[0], prints[1], body);
 }
@@ -1093,6 +1107,11 @@ void FaceResearchTest(int slider, int value, int print)
         GameResearchRebuild(CHAR_KLIFF);
 }
 #endif
+
+LONG ShapeWrites(int ch)
+{
+    return g_shapeWrites[ch];
+}
 
 void FacePoll()
 {
@@ -1134,7 +1153,7 @@ void FacePoll()
         // shapes again and use the new copies. Looked for twice (the reading
         // can take a moment); the sliders go onto what is found.
         Appearance look;
-        int meshes = !StandIn(ch) && GameReadAppearance(ch, &look)
+        int meshes = !StandIn(ch) && ShownLook(ch, &look)
             ? look.mesh[MESH_HEAD] | look.mesh[MESH_WHISKERS] << 8 | look.mesh[MESH_BODY] << 16 : -1;
 
         if (rebuilding || meshes != g_lastMeshes[ch])

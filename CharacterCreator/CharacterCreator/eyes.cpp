@@ -78,10 +78,6 @@ static void Save(int ch)
 
 static void Load(int ch)
 {
-    // The Barber edition has no editor: the characters' own eye colour.
-    if (CC_BARBER)
-        return;
-
     FILE* f = NULL;
     fopen_s(&f, g_path[ch], "r");
 

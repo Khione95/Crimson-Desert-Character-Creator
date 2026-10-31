@@ -49,6 +49,33 @@ struct AppearanceMask
 
 bool GameInit();
 
+#if CC_BARBER
+// The game's barber changed a mesh it would not rebuild for by itself (barbertabs.cpp).
+void GameBarberMeshChanged(uintptr_t controller);
+
+// The character of a controller, or -1, and what it shows in a mesh slot.
+int GameBarberCharacter(uintptr_t controller);
+int GameBarberMesh(uintptr_t controller, int slot);
+int GameBarberValue(uintptr_t controller, int index);
+bool GameBarberIsPreview(uintptr_t controller);
+
+// The look on the screen: the barber's copy while it is open (preview), else
+// the character's own.
+bool GameBarberLook(int ch, Appearance* out, uintptr_t* controller, bool* preview);
+
+// The head of the barber's copy swapped on the game's thread (eye colours).
+void GameBarberSwapHead(uintptr_t controller, int option);
+
+// Rows the Barber edition adds to the game's settings (tools/barber_lists.py):
+// the sliders of Face and Body Shape, 0..100 with 50 the middle, then the eye
+// colour. Nearly all at 0 or 1 is a save from before them, not a choice.
+static const int BARBER_SHAPE_ROW = 184, BARBER_FACE_ROWS = 24, BARBER_BODY_ROWS = 19, BARBER_EYE_ROW = 227;
+// Gender 0 as last chosen, 1 male, 2 female; race 0 as last chosen, then RACE_* + 1;
+// height 1..100 with 50 the middle (0: a save from before it).
+static const int BARBER_GENDER_ROW = 229, BARBER_RACE_ROW = 230, BARBER_HEIGHT_ROW = 231;
+bool GameBarberShapesUnset(const Appearance& look);
+#endif
+
 // Which character a controller belongs to: the package gives Kliff's mesh list
 // kliffCount options in the marker slot, Damiane's one more, Oongka's two more.
 void GameSetMarker(int slot, uint32_t kliffCount);

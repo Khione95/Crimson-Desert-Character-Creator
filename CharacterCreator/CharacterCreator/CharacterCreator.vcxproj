@@ -182,6 +182,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="switches.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="barbertabs.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="addresses.h" />
     <ClInclude Include="lipsync.h" />
@@ -217,6 +218,7 @@
     <ClCompile Include="faceshape.cpp" />
     <ClCompile Include="parttable.cpp" />
     <ClCompile Include="hotkeys.cpp" />
+    <ClCompile Include="barbertabs.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="lipsync.cpp" />

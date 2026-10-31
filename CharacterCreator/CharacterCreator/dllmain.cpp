@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "addresses.h"
 #include "commands.h"
+#include "barbertabs.h"
 #include "game.h"
 #include "glide.h"
 #include "twohand.h"
@@ -147,12 +148,19 @@ static DWORD WINAPI MainThread(LPVOID)
         HeightInit();
 
 #if CC_BARBER
+    if (gameReady && !PartDisabled("barbertabs"))
+        BarberTabsInit();
+
     while (true)
     {
         CommandsPoll();
         if (!PartDisabled("table"))
             IdentityPoll();
         MenuPoll();
+        if (gameReady && !PartDisabled("barbertabs"))
+            BarberTabsPoll();
+        if (gameReady)
+            FacePoll();
         Sleep(100);
     }
 #else

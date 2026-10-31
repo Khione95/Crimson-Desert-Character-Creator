@@ -47,8 +47,8 @@ EDITIONS = {
                  'In-game appearance editor for Kliff, Damiane and Oongka (F6 / F7 / F8): gender, race, body, head, hair, '
                  'beard, eyebrows, eye colour, tattoos, scars and paint. Needs CharacterCreator.asi.'),
     'Barber': ('ReleaseBarber', 'README_Barber.txt',
-               "Every head, hair, beard and body for Kliff, Damiane and Oongka at the game's own barber - no extra "
-               'menu. Needs CharacterCreator.asi.'),
+               "Every option of Character Creator in the game's own barber screen, for Kliff, Damiane and Oongka: "
+               'gender, race, head, body, face and body shape, hair, beard, eyes, tattoos, scars, paint. Needs CharacterCreator.asi.'),
 }
 
 

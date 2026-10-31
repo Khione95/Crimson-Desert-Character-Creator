@@ -56,6 +56,12 @@ float IdentityBaseScale(int ch);
 // them since the plugin started.
 bool IdentityLoaded(int ch, int* gender, int* race);
 
+#if CC_BARBER
+// The character's head (an option number), for the next start: the base character
+// file names it, or the skin is laid out for another head (dark patches).
+void IdentityKeepHead(int ch, int head);
+#endif
+
 // Call regularly: writes the gender fields into the character table as
 // soon as the game has loaded it.
 void IdentityPoll();
