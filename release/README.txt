@@ -4,18 +4,11 @@ by Khione
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,
 no barber needed, and see every change live.
 
-There are two editions; install one of them:
-  - Anywhere (this one): the editor opens anywhere with F6 / F7 / F8.
-  - Barber: no editor of its own - the game's barber offers the mod's heads,
-    hair, beards and bodies. Every other part (gliding, two-handed swords,
-    lip sync, Equip All Armor) is the same.
-
 
 INSTALL
 -------
 First remove the previous version:
-  - uninstall the old "Character Creator" package (or the other edition) in
-    your mod manager
+  - uninstall the old "Character Creator" package in your mod manager
   - delete "Character Creator.asi" from <game>\bin64 if it is still there
   - remove "Female Animations.field.json" if you use it - the mod now switches
     gender itself
@@ -88,15 +81,17 @@ WHAT YOU CAN CHANGE
   Hair             every style of every race and gender, colour, length, shine
   Beard            every beard, for everyone (with "None"), colour, length
   Eyebrow          colour, length
+  Eyelashes        colour, opacity
+  Makeup           lips, eyeliner, eyeshadow, blush, highlighter, contour
   Face / Body Tattoo   type, colour, opacity, position, rotation, size
-  Eye Colour       21 iris colours
+  Eye Colour       21 iris colours, iris tint, brightness and size, pupil size
   Scars            face and body: type, colour, opacity, position, size
   Paint & Dirt     face and body: type, colour, opacity, position, size
 
 
 FEMALE ARMOR FIT (OPTIONAL, SEPARATE DOWNLOAD)
 ----------------------------------------------
-Over 800 male armor parts reshaped for a woman's body (bust, waist,
+Over 1000 male armor parts reshaped for a woman's body (bust, waist,
 shoulders, arms and sleeves), used only while a woman wears them - men and
 NPCs keep the original look. Import "Female Armor Fit" in DMM next to
 Character Creator and apply. Don't combine it with mods that replace the
@@ -144,8 +139,6 @@ GOOD TO KNOW
 - Uninstalling: saves remember body, head, hair and beard by their number in
   the mod's lists. Without the mod, a character may pick up a different one;
   a barber visit sets it again.
-- Makeup and eyelash length are not included: the game does not apply them to
-  the player characters.
 - CharacterCreator.asi disappeared or flagged as a virus? Your antivirus
   removed it by mistake - a plugin that hooks into the game looks suspicious
   to them. Restore it (Windows Security > Virus & threat protection >
