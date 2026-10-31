@@ -11,32 +11,31 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// The build the addresses were taken from (the second patch of the 2026-10-30
-// game update, the DLC: 20:07)
+// The build the addresses were taken from (the game update of 2026-10-31)
 // ---------------------------------------------------------------------------
 
-static const DWORD KNOWN_TIMESTAMP = 0x6AE46DD0, KNOWN_IMAGE_SIZE = 0x14268000;
+static const DWORD KNOWN_TIMESTAMP = 0x6AE58024, KNOWN_IMAGE_SIZE = 0x13EE0000;
 
 // 0: not known on this build (the part that needs it stays off).
 static const uintptr_t KNOWN_RVAS[ADDR_COUNT] = {
-    0x803140,       // SetDecoration(controller, index, value, unused)
-    0x804780,       // QueueMeshChange(controller + 0xF8, {slot, old, new})
-    0x7FD820,       // Rebuild(controller, appearance list holder)
-    0x441B30,       // GrowBytes(vector, count)
-    0x160B0B0,      // LoadXml(path, root out, ...)
-    0x26267F0,      // ParseAppearance(table, root, ...)
-    0x71B2960,      // CharacterInfoManager*
-    0x5F087A8,      // scale component vtable
-    0x5F09F40,      // scale object vtable
-    0x59205A0,      // CharacterCustomizationController vtable
-    0x5CA7790,      // CharacterInfoManager vtable
-    0x31339E0,      // BuildLipSyncPath(out, model folder, line)
-    0x7167BA8,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
-    0x2F18470,      // AttachPart(part, part manager, socket record, child socket, ...)
-    0x71B1A40,      // the world (the player: +0x30 +0x58 +0xD8 +0x68 +0x40)
-    0x70CDC60,      // the name table (+0x58: 16 bytes a name)
-    0x803010,       // NormalizeDecoration(controller, index, value): the value SetDecoration takes
-    0x5D76218,      // AppearanceTableData vtable (the controller's +0x138: Rebuild's second argument)
+    0x803AE0,       // SetDecoration(controller, index, value, unused)
+    0x805120,       // QueueMeshChange(controller + 0xF8, {slot, old, new})
+    0x7FE1C0,       // Rebuild(controller, appearance list holder)
+    0x441FB0,       // GrowBytes(vector, count)
+    0x160E1C0,      // LoadXml(path, root out, ...)
+    0x2629DC0,      // ParseAppearance(table, root, ...)
+    0x71B6BC0,      // CharacterInfoManager*
+    0x5F0C970,      // scale component vtable
+    0x5F0E158,      // scale object vtable
+    0x5924590,      // CharacterCustomizationController vtable
+    0x5CAB8C8,      // CharacterInfoManager vtable
+    0x3137530,      // BuildLipSyncPath(out, model folder, line)
+    0x716BE08,      // camera settings: distance (+0x00), vertical (+0xA0), horizontal (+0xF0)
+    0x2F1BFC0,      // AttachPart(part, part manager, socket record, child socket, ...)
+    0x71B5CA0,      // the world (the player: +0x30 +0x58 +0xD8 +0x68 +0x40)
+    0x70D1D60,      // the name table (+0x58: 16 bytes a name)
+    0x8039B0,       // NormalizeDecoration(controller, index, value): the value SetDecoration takes
+    0x5D7A6C8,      // AppearanceTableData vtable (the controller's +0x138: Rebuild's second argument)
 };
 
 static const char* const NAMES[ADDR_COUNT] = {
@@ -326,6 +325,9 @@ static bool Plausible(AddressId id, uintptr_t address)
     switch (id)
     {
     case ADDR_MANAGERPOINTER:
+    case ADDR_WORLDPOINTER:
+    case ADDR_NAMESPOINTER:
+    case ADDR_CAMERASETTINGS:
         return InRanges(g_data, address);
 
     case ADDR_SCALECOMPONENTVTABLE:

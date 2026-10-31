@@ -28,20 +28,21 @@ from pe import Image
 
 TARGETS = [
     # name, rva, kind ('call' = called function, 'ref' = rip-relative data)
-    ('SetDecoration', 0x803140, 'call'),
-    ('QueueMeshChange', 0x804780, 'call'),
-    ('Rebuild', 0x7FD820, 'call'),
-    ('GrowBytes', 0x441B30, 'call'),
-    ('LoadXml', 0x160B0B0, 'call'),
-    ('ParseAppearance', 0x26267F0, 'call'),
-    ('LipSyncPath', 0x31339E0, 'call'),
-    ('ManagerPointer', 0x71B2960, 'ref'),
-    ('ScaleComponentVtable', 0x5F087A8, 'ref'),
-    ('ScaleObjectVtable', 0x5F09F40, 'ref'),
-    ('AttachPart', 0x2F18470, 'call'),
-    ('WorldPointer', 0x71B1A40, 'ref'),
-    ('NamesPointer', 0x70CDC60, 'ref'),
-    ('NormalizeDecoration', 0x803010, 'call'),
+    ('SetDecoration', 0x803AE0, 'call'),
+    ('QueueMeshChange', 0x805120, 'call'),
+    ('Rebuild', 0x7FE1C0, 'call'),
+    ('GrowBytes', 0x441FB0, 'call'),
+    ('LoadXml', 0x160E1C0, 'call'),
+    ('ParseAppearance', 0x2629DC0, 'call'),
+    ('LipSyncPath', 0x3137530, 'call'),
+    ('ManagerPointer', 0x71B6BC0, 'ref'),
+    ('ScaleComponentVtable', 0x5F0C970, 'ref'),
+    ('ScaleObjectVtable', 0x5F0E158, 'ref'),
+    ('AttachPart', 0x2F1BFC0, 'call'),
+    ('WorldPointer', 0x71B5CA0, 'ref'),
+    ('NamesPointer', 0x70D1D60, 'ref'),
+    ('NormalizeDecoration', 0x8039B0, 'call'),
+    ('CameraSettings', 0x716BE08, 'ref'),
 ]
 
 PATTERNS_PER_TARGET = 5
