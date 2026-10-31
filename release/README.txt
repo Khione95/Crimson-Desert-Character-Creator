@@ -1,4 +1,4 @@
-Character Creator Enhanced - Anywhere 9.1.18 - Crimson Desert
+Character Creator Enhanced - Anywhere 9.1.19 - Crimson Desert
 by Khione
 
 An in-game appearance editor for Kliff, Damiane and Oongka. Open it anywhere,

@@ -1774,12 +1774,9 @@ void MenuDraw(const OverlayDrawContext& ctx)
         note = bodyPage ? L"The body changes a moment after you stop, clothes and armor with it. Only your character changes, not NPCs. X: reset this page."
                         : L"The face changes a moment after you stop. Only your character's face changes, not NPCs'. A new head starts unsculpted. X: reset this page.";
 
-    if (page.kind == PAGE_EYES)
-    {
-        note = EyesOwnHeadsOff()
-            ? L"Eye colour is off: another mod (Cloak Remover or similar) replaces the game's part table."
-            : L"Only your character's eyes change, not NPCs'.";
-    }
+    // Only when it matters: the note would sit over the labels of the list's last row.
+    if (page.kind == PAGE_EYES && EyesOwnHeadsOff())
+        note = L"Eye colour is off: another mod (Cloak Remover or similar) replaces the game's part table.";
 
     wchar_t absent[160];
 

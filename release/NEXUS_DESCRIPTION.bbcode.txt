@@ -65,7 +65,7 @@ A separate download in the Files tab. Most armor in the game only exists for men
 1. Import [i]Female Armor Fit[/i] in DMM next to Character Creator and click [b]Apply[/b]. Keep its [i]Dyes[/i] part enabled, so reshaped armor can be dyed.
 2. Don't use it together with mods that also replace the game's part table (for example Cloak Remover) or that swap the same armor pieces to other armor for women (for example my Female Armor Module) - use one or the other.
 3. It is made for the current game version. After a game update, disable it until an updated version is out.
-4. Update it together with Character Creator: women's weapons and shields need the matching versions (Character Creator 9.1.18 with Female Armor Fit 1.0.6).
+4. Update it together with Character Creator: women's weapons and shields need the matching versions (Character Creator 9.1.18 or newer with Female Armor Fit 1.0.6).
 A few pieces with unusual models still keep their male shape.
 
 [size=4][b]Good to know[/b][/size]

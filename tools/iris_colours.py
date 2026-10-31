@@ -1,5 +1,5 @@
-"""The eye colours the game has no texture for: it has no green iris at all and
-barely a blue one. Each is the game's most detailed iris (phm_00_eye_iris_0003,
+"""The eye colours the game has no texture for: it has no green iris at all,
+barely a blue one, and its "gold" animal eye is orange. Each is the game's most detailed iris (phm_00_eye_iris_0003,
 a light one) tinted by its brightness. DXT5 keeps a block's colours as two
 RGB565 endpoints, so only those change: the detail stays as the game has it.
 
@@ -18,8 +18,10 @@ import lz4.block
 import game_files
 
 SOURCE = 'character/texture/phm_00_eye_iris_0003.dds'
-# name in character/texture/: the colour of the iris at full brightness
-COLOURS = {'cc_iris_green.dds': (86, 190, 92), 'cc_iris_blue.dds': (82, 148, 240)}
+# name in character/texture/: the colour of the iris at full brightness. The game's
+# irises are muted (cat green averages 73, 76, 70) and it brings their colour out:
+# about as bright as the cat eyes, or they glow.
+COLOURS = {'cc_iris_green.dds': (95, 115, 88), 'cc_iris_blue.dds': (88, 102, 129), 'cc_iris_gold.dds': (129, 112, 68)}
 
 
 def raw(entry):
